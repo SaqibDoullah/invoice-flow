@@ -53,12 +53,19 @@ export default function SettingsPage() {
         }
       } catch (error) {
         console.error("Error fetching company info:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load company information.' });
+        if ((error as any).code !== 'unavailable') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load company information.' });
+        }
       } finally {
         setLoading(false);
       }
     };
-    fetchCompanyInfo();
+
+    if (user) {
+        fetchCompanyInfo();
+    } else {
+        setLoading(false);
+    }
   }, [user, form, toast]);
 
   const onSubmit = async (data: CompanyInfoFormData) => {
