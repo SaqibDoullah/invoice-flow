@@ -75,15 +75,22 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
       const price = Number(item.price) || 0;
       const quantity = Number(item.quantity) || 0;
       const lineTotal = price * quantity;
-      form.setValue(`items.${watchedItems.indexOf(item)}.lineTotal`, lineTotal, { shouldValidate: true });
+      // This check prevents unnecessary re-renders if the value is already correct
+      if (form.getValues(`items.${watchedItems.indexOf(item)}.lineTotal`) !== lineTotal) {
+        form.setValue(`items.${watchedItems.indexOf(item)}.lineTotal`, lineTotal);
+      }
       return acc + lineTotal;
     }, 0);
 
     const taxAmount = subtotal * ((Number(watchedTax) || 0) / 100);
     const total = subtotal + taxAmount;
 
-    form.setValue('subtotal', subtotal, { shouldValidate: true });
-    form.setValue('total', total, { shouldValidate: true });
+    if (form.getValues('subtotal') !== subtotal) {
+      form.setValue('subtotal', subtotal);
+    }
+    if (form.getValues('total') !== total) {
+      form.setValue('total', total);
+    }
   }, [watchedItems, watchedTax, form]);
 
   const handleGenerateInvoiceNumber = async () => {
