@@ -66,7 +66,9 @@ export function AuthForm({ mode }: AuthFormProps) {
       if (firebaseError.code === 'auth/email-already-in-use') {
         errorMessage = 'This email is already in use.';
       } else if (firebaseError.code === 'auth/wrong-password' || firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid email or password.';
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (firebaseError.code === 'auth/configuration-not-found') {
+        errorMessage = 'Authentication configuration is missing. Please contact support.';
       }
       toast({
         variant: 'destructive',
