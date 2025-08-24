@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { type InvoiceFormData, invoiceSchema, type Invoice } from '@/types';
 import { Textarea } from '../ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 
 interface InvoiceFormProps {
   initialData?: Invoice;
@@ -41,14 +42,15 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: initialData
-      ? { ...initialData, tax: initialData.tax || 0 }
+      ? { ...initialData, discount: initialData.discount || 0, discountType: initialData.discountType || 'percentage' }
       : {
           invoiceNumber: '',
           customerName: '',
           customerEmail: '',
           status: 'draft',
           items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
-          tax: 0,
+          discount: 0,
+          discountType: 'percentage',
           subtotal: 0,
           total: 0,
           ownerId: '',
@@ -65,9 +67,13 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
     control: form.control,
     name: 'items',
   });
-  const watchedTax = useWatch({
+  const watchedDiscount = useWatch({
     control: form.control,
-    name: 'tax',
+    name: 'discount',
+  });
+    const watchedDiscountType = useWatch({
+    control: form.control,
+    name: 'discountType',
   });
 
   useEffect(() => {
@@ -82,8 +88,11 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
       return acc + lineTotal;
     }, 0);
 
-    const taxAmount = subtotal * ((Number(watchedTax) || 0) / 100);
-    const total = subtotal + taxAmount;
+    const discountAmount = watchedDiscountType === 'percentage' 
+        ? subtotal * ((Number(watchedDiscount) || 0) / 100)
+        : Number(watchedDiscount) || 0;
+    
+    const total = subtotal - discountAmount;
 
     if (form.getValues('subtotal') !== subtotal) {
       form.setValue('subtotal', subtotal);
@@ -91,7 +100,7 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
     if (form.getValues('total') !== total) {
       form.setValue('total', total);
     }
-  }, [watchedItems, watchedTax, form]);
+  }, [watchedItems, watchedDiscount, watchedDiscountType, form]);
 
   const handleGenerateInvoiceNumber = async () => {
     if (!generateInvoiceNumber) return;
@@ -294,16 +303,42 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                     </span>
                 </div>
                 <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Tax (%)</span>
-                    <FormField
-                        control={form.control}
-                        name="tax"
-                        render={({ field }) => (
-                            <FormItem className="w-24">
-                            <FormControl><Input type="number" {...field} /></FormControl>
-                            </FormItem>
-                        )}
+                    <span className="text-muted-foreground">Discount</span>
+                     <div className="flex items-center w-48">
+                        <FormField
+                            control={form.control}
+                            name="discount"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                <FormControl><Input type="number" {...field} className="rounded-r-none" /></FormControl>
+                                </FormItem>
+                            )}
                         />
+                        <FormField
+                            control={form.control}
+                            name="discountType"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <ToggleGroup 
+                                            type="single"
+                                            variant="outline"
+                                            value={field.value}
+                                            onValueChange={(value) => field.onChange(value as 'percentage' | 'fixed')}
+                                            className="rounded-l-none"
+                                            >
+                                            <ToggleGroupItem value="percentage" className="rounded-l-none border-y border-l">
+                                                %
+                                            </ToggleGroupItem>
+                                            <ToggleGroupItem value="fixed">
+                                                $
+                                            </ToggleGroupItem>
+                                        </ToggleGroup>
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                 </div>
                  <Separator />
                  <div className="flex justify-between font-bold text-lg">

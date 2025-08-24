@@ -12,6 +12,16 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
     const formatCurrency = (amount: number) => 
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
+    const getDiscountAmount = () => {
+        if (!invoice.discount) return 0;
+        if (invoice.discountType === 'fixed') {
+            return invoice.discount;
+        }
+        return invoice.subtotal * (invoice.discount / 100);
+    }
+    
+    const discountAmount = getDiscountAmount();
+
   return (
     <div className="text-foreground">
       <header className="mb-8">
@@ -87,8 +97,8 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
                 <span>{formatCurrency(invoice.subtotal)}</span>
             </div>
              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tax ({invoice.tax}%)</span>
-                <span>{formatCurrency(invoice.subtotal * (invoice.tax / 100))}</span>
+                <span className="text-muted-foreground">Discount ({invoice.discountType === 'percentage' ? `${invoice.discount}%` : formatCurrency(invoice.discount)})</span>
+                <span>-{formatCurrency(discountAmount)}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-bold text-xl text-primary">

@@ -18,7 +18,8 @@ export const invoiceSchema = z.object({
   status: z.enum(['draft', 'sent', 'paid', 'void']),
   items: z.array(lineItemSchema).min(1, 'At least one line item is required'),
   subtotal: z.number(),
-  tax: z.coerce.number().min(0, 'Tax must be non-negative'),
+  discount: z.coerce.number().min(0, 'Discount must be non-negative').default(0),
+  discountType: z.enum(['percentage', 'fixed']).default('percentage'),
   total: z.number(),
 });
 
