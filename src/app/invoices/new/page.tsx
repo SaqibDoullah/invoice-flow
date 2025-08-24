@@ -14,6 +14,7 @@ import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData, invoiceSchema } from '@/types';
 import { generateInvoiceNumber } from '@/ai/flows/generate-invoice-number';
+import { Button } from '@/components/ui/button';
 
 export default function NewInvoicePage() {
   const router = useRouter();
