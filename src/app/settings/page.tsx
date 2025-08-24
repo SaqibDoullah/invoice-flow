@@ -44,7 +44,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       try {
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
@@ -53,19 +56,17 @@ export default function SettingsPage() {
         }
       } catch (error) {
         console.error("Error fetching company info:", error);
+        // This specific error code means Firestore is temporarily unavailable.
+        // We can safely ignore it and let the user try again later.
         if ((error as any).code !== 'unavailable') {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not load company information.' });
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not load company information.' });
         }
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) {
-        fetchCompanyInfo();
-    } else {
-        setLoading(false);
-    }
+    fetchCompanyInfo();
   }, [user, form, toast]);
 
   const onSubmit = async (data: CompanyInfoFormData) => {
