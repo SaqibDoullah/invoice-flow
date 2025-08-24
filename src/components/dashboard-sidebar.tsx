@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
-import { FileText, LayoutDashboard } from 'lucide-react'
+import { FileText, Users, BarChart2, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -29,11 +29,47 @@ export default function DashboardSidebar() {
             <SidebarMenuButton
               asChild
               isActive={pathname === '/'}
-              tooltip="Dashboard"
+              tooltip="Invoices"
             >
                 <Link href="/">
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
+                    <FileText />
+                    <span>Invoices</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith('/customers')}
+              tooltip="Customers"
+            >
+                <Link href="/customers">
+                    <Users />
+                    <span>Customers</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith('/reports')}
+              tooltip="Reports"
+            >
+                <Link href="/reports">
+                    <BarChart2 />
+                    <span>Reports</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith('/settings')}
+              tooltip="Settings"
+            >
+                <Link href="/settings">
+                    <Settings />
+                    <span>Settings</span>
                 </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
