@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from "@/components/ui/toaster"
+import { SidebarProvider } from '@/components/ui/sidebar';
+import DashboardSidebar from '@/components/dashboard-sidebar';
 
 export const metadata: Metadata = {
   title: 'InvoiceFlow',
@@ -22,7 +24,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          {children}
+          <SidebarProvider>
+            <DashboardSidebar />
+            {children}
+          </SidebarProvider>
           <Toaster />
         </AuthProvider>
       </body>
