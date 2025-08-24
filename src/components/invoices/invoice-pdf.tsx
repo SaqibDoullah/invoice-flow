@@ -1,14 +1,40 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
+
 import { type Invoice } from '@/types';
 import StatusBadge from './status-badge';
 import { Separator } from '../ui/separator';
 import { FileText } from 'lucide-react';
+import { db, auth } from '@/lib/firebase';
 
 interface InvoicePDFProps {
   invoice: Invoice;
 }
 
+interface CompanyInfo {
+  companyName?: string;
+  companyAddress?: string;
+  companyCity?: string;
+}
+
 export default function InvoicePDF({ invoice }: InvoicePDFProps) {
+    const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({});
+
+    useEffect(() => {
+      const fetchCompanyInfo = async () => {
+        if (!auth.currentUser) return;
+        const docRef = doc(db, 'users', auth.currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setCompanyInfo(docSnap.data());
+        }
+      };
+      fetchCompanyInfo();
+    }, []);
+
     const formatCurrency = (amount: number) => 
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -29,11 +55,10 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
           <div>
             <div className="flex items-center text-3xl font-bold text-primary">
                 <FileText className="h-8 w-8 mr-2"/>
-                <h1>InvoiceFlow</h1>
+                <h1>{companyInfo.companyName || 'InvoiceFlow'}</h1>
             </div>
-            <p className="text-muted-foreground">Your Company Name</p>
-            <p className="text-muted-foreground">123 Business St, Suite 100</p>
-            <p className="text-muted-foreground">City, State, 12345</p>
+            <p className="text-muted-foreground">{companyInfo.companyAddress || '123 Business St, Suite 100'}</p>
+            <p className="text-muted-foreground">{companyInfo.companyCity || 'City, State, 12345'}</p>
           </div>
           <div className="text-right">
             <h2 className="text-4xl font-bold uppercase tracking-wider">Invoice</h2>
@@ -51,8 +76,12 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
           </div>
           <div className="text-right">
             <div className="grid grid-cols-2">
-                <span className="font-semibold text-muted-foreground">Date:</span>
+                <span className="font-semibold text-muted-foreground">Invoice Date:</span>
                 <span>{format(invoice.createdAt.toDate(), 'PPP')}</span>
+            </div>
+             <div className="grid grid-cols-2 mt-1">
+                <span className="font-semibold text-muted-foreground">Due Date:</span>
+                <span>{format(invoice.dueDate.toDate(), 'PPP')}</span>
             </div>
             <div className="grid grid-cols-2 mt-1">
                 <span className="font-semibold text-muted-foreground">Status:</span>

@@ -1,10 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { PlusCircle, Loader2 } from 'lucide-react';
+
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -20,14 +23,60 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import { db, auth } from '@/lib/firebase';
+import { type Invoice } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Mock data for customers - replace with real data from Firestore later
-const customers = [
-  { id: '1', name: 'John Doe', email: 'john.doe@example.com', invoices: 5, totalBilled: 2500 },
-  { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', invoices: 3, totalBilled: 1500 },
-];
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  invoices: number;
+  totalBilled: number;
+}
 
 export default function CustomersPage() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      if (!auth.currentUser) return;
+      setLoading(true);
+      try {
+        const q = query(collection(db, 'invoices'), where('ownerId', '==', auth.currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        const invoices = querySnapshot.docs.map(doc => doc.data() as Invoice);
+
+        const customerData = invoices.reduce((acc, invoice) => {
+          const { customerName, customerEmail, total } = invoice;
+          const customerId = `${customerName}-${customerEmail}`;
+          if (!acc[customerId]) {
+            acc[customerId] = {
+              id: customerId,
+              name: customerName,
+              email: customerEmail,
+              invoices: 0,
+              totalBilled: 0,
+            };
+          }
+          acc[customerId].invoices += 1;
+          acc[customerId].totalBilled += total;
+          return acc;
+        }, {} as Record<string, Customer>);
+
+        setCustomers(Object.values(customerData));
+      } catch (error) {
+        console.error("Error fetching customer data: ", error);
+        // Optionally show a toast notification for the error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomerData();
+  }, []);
+
   return (
     <AuthGuard>
       <SidebarInset>
@@ -45,31 +94,45 @@ export default function CustomersPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Customer List</CardTitle>
-                <CardDescription>A list of all your customers.</CardDescription>
+                <CardDescription>A list of all your customers derived from your invoices.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead className="text-center">Invoices</TableHead>
-                      <TableHead className="text-right">Total Billed</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {customers.map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell className="font-medium">{customer.name}</TableCell>
-                        <TableCell>{customer.email}</TableCell>
-                        <TableCell className="text-center">{customer.invoices}</TableCell>
-                        <TableCell className="text-right">
-                          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(customer.totalBilled)}
-                        </TableCell>
+                {loading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead className="text-center">Invoices</TableHead>
+                        <TableHead className="text-right">Total Billed</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {customers.length > 0 ? (
+                        customers.map((customer) => (
+                          <TableRow key={customer.id}>
+                            <TableCell className="font-medium">{customer.name}</TableCell>
+                            <TableCell>{customer.email}</TableCell>
+                            <TableCell className="text-center">{customer.invoices}</TableCell>
+                            <TableCell className="text-right">
+                              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(customer.totalBilled)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} className="h-24 text-center">
+                            No customer data found. Create an invoice to get started.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
 

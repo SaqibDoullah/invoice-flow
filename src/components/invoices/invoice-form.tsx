@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus, Trash2, Wand2 } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
+import { Loader2, Plus, Trash2, Wand2, CalendarIcon } from 'lucide-react';
+import { Timestamp, doc, getDoc } from 'firebase/firestore';
+import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +29,10 @@ import { Separator } from '@/components/ui/separator';
 import { type InvoiceFormData, invoiceSchema, type Invoice } from '@/types';
 import { Textarea } from '../ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { cn } from '@/lib/utils';
+import { db, auth } from '@/lib/firebase';
 
 interface InvoiceFormProps {
   initialData?: Invoice;
@@ -38,16 +43,30 @@ interface InvoiceFormProps {
 export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumber }: InvoiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      if (!auth.currentUser) return;
+      const docRef = doc(db, 'users', auth.currentUser.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setCompanyName(docSnap.data().companyName);
+      }
+    };
+    fetchCompanyInfo();
+  }, []);
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: initialData
-      ? { ...initialData, discount: initialData.discount || 0, discountType: initialData.discountType || 'percentage' }
+      ? { ...initialData, dueDate: initialData.dueDate.toDate(), discount: initialData.discount || 0, discountType: initialData.discountType || 'percentage' }
       : {
           invoiceNumber: '',
           customerName: '',
           customerEmail: '',
           status: 'draft',
+          dueDate: addDays(new Date(), 30),
           items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
           discount: 0,
           discountType: 'percentage',
@@ -81,7 +100,6 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
       const price = Number(item.price) || 0;
       const quantity = Number(item.quantity) || 0;
       const lineTotal = price * quantity;
-      // This check prevents unnecessary re-renders if the value is already correct
       if (form.getValues(`items.${watchedItems.indexOf(item)}.lineTotal`) !== lineTotal) {
         form.setValue(`items.${watchedItems.indexOf(item)}.lineTotal`, lineTotal);
       }
@@ -120,7 +138,11 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
 
   const processSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
-    await onSubmit(data);
+    const dataToSubmit = {
+      ...data,
+      dueDate: Timestamp.fromDate(data.dueDate),
+    };
+    await onSubmit(dataToSubmit as any); // cast because of date/timestamp difference
     setIsSubmitting(false);
   };
   
@@ -128,7 +150,7 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
     <Form {...form}>
       <form onSubmit={form.handleSubmit(processSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">{initialData ? 'Edit Invoice' : 'New Invoice'}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{initialData ? `Edit Invoice ${initialData.invoiceNumber}` : 'New Invoice'}</h1>
             <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {initialData ? 'Save Changes' : 'Create Invoice'}
@@ -137,7 +159,7 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
 
         <Card>
           <CardContent className="p-6">
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FormField
                 control={form.control}
                 name="customerName"
@@ -164,30 +186,7 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="sent">Sent</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="void">Void</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
+               <FormField
                 control={form.control}
                 name="invoiceNumber"
                 render={({ field }) => (
@@ -207,6 +206,47 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                   </FormItem>
                 )}
               />
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Due Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
             </div>
           </CardContent>
         </Card>
