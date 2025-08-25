@@ -16,8 +16,9 @@ import {
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
 
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import {
   Table,
@@ -49,7 +50,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
-import { useAuth } from '@/context/auth-context';
 
 interface InvoiceListProps {
   searchTerm: string;
@@ -64,19 +64,18 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
+    if (!auth.currentUser) {
+        setIsLoading(false);
+        return;
+    };
     setIsLoading(true);
 
     try {
       let q = query(
         collection(db, 'invoices'),
-        where('ownerId', '==', user.uid),
+        where('ownerId', '==', auth.currentUser.uid),
         orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -97,24 +96,29 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           toast({
             variant: "destructive",
             title: "Error",
-            description: "Failed to fetch invoices.",
+            description: "Failed to fetch invoices. You may need to create a composite index in Firestore. See the browser console for a link to create it.",
           });
        }
     } finally {
       setIsLoading(false);
     }
-  }, [user, lastDoc, toast]);
+  }, [lastDoc, toast]);
   
   useEffect(() => {
-    if (!authLoading && user) {
-        fetchInvoices();
-    }
-    if (!authLoading && !user) {
-        setIsLoading(false);
-        setInvoices([]);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            setInvoices([]);
+            setLastDoc(null);
+            fetchInvoices(false);
+        } else {
+            setInvoices([]);
+            setHasMore(false);
+            setIsLoading(false);
+        }
+    });
+
+    return () => unsubscribe();
+  }, [fetchInvoices]);
 
 
   const handleDelete = async (invoiceId: string) => {
@@ -146,7 +150,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     });
   }, [invoices, searchTerm, statusFilter]);
 
-  if (isLoading || authLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
@@ -176,7 +180,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                   <TableCell>{invoice.customerName}</TableCell>
-                  <TableCell>{format(invoice.createdAt.toDate(), 'PP')}</TableCell>
+                  <TableCell>{invoice.createdAt?.toDate ? format(invoice.createdAt.toDate(), 'PP') : '-'}</TableCell>
                   <TableCell><StatusBadge status={invoice.status} /></TableCell>
                   <TableCell className="text-right">
                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}
