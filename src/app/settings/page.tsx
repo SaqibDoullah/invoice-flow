@@ -101,7 +101,7 @@ export default function SettingsPage() {
                   <CardDescription>Update your company's details. This will be displayed on your invoices.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {dataLoading ? <p>Loading...</p> : (
+                  {dataLoading || authLoading ? <p>Loading...</p> : (
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
