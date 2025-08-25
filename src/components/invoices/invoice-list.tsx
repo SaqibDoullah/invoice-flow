@@ -99,7 +99,15 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   }, [lastDoc, toast]);
 
   useEffect(() => {
-    fetchInvoices();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchInvoices();
+      } else {
+        setInvoices([]);
+        setIsLoading(false);
+      }
+    });
+    return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -150,7 +158,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
             <TableRow>
               <TableHead>Invoice #</TableHead>
               <TableHead>Customer</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead className="w-[50px]"></TableHead>

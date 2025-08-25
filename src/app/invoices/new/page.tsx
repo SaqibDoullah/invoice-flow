@@ -32,7 +32,7 @@ export default function NewInvoicePage() {
         ...data,
         id: newInvoiceRef.id,
         ownerId: auth.currentUser.uid,
-        createdAt: Timestamp.now(), // For internal tracking and ordering
+        createdAt: Timestamp.now(),
         invoiceDate: Timestamp.fromDate(data.invoiceDate),
         dueDate: Timestamp.fromDate(data.dueDate),
       };
