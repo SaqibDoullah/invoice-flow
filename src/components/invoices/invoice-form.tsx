@@ -42,28 +42,7 @@ interface InvoiceFormProps {
 
 export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [companyName, setCompanyName] = useState('');
   const { user, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      if (!user) return;
-      const docRef = doc(db, 'users', user.uid);
-      try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setCompanyName(docSnap.data().companyName);
-        }
-      } catch (error) {
-        if ((error as any).code !== 'unavailable') {
-            console.error("Error fetching company info:", error);
-        }
-      }
-    };
-    if (!authLoading) {
-      fetchCompanyInfo();
-    }
-  }, [user, authLoading]);
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -195,7 +174,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Leave blank to auto-generate" {...field} disabled={!!initialData} />
+                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!initialData}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
