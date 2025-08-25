@@ -9,7 +9,7 @@ import { useReactToPrint } from 'react-to-print';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const componentRef = useRef(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
