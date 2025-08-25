@@ -43,7 +43,10 @@ export default function CustomersPage() {
 
   useEffect(() => {
     const fetchCustomerData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const q = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
