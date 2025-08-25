@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -47,7 +47,12 @@ export default function EditInvoicePage() {
     if (typeof id !== 'string') return;
     try {
       const docRef = doc(db, 'invoices', id);
-      await updateDoc(docRef, data);
+      const dataToUpdate = {
+        ...data,
+        invoiceDate: Timestamp.fromDate(data.invoiceDate),
+        dueDate: Timestamp.fromDate(data.dueDate),
+      };
+      await updateDoc(docRef, dataToUpdate);
       toast({ title: 'Success', description: 'Invoice updated successfully.' });
       router.push(`/invoices/${id}`);
     } catch (error) {

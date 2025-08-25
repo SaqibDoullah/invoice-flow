@@ -14,7 +14,7 @@ export const invoiceSchema = z.object({
   invoiceNumber: z.string().min(1, 'Invoice number is required'),
   customerName: z.string().min(1, 'Customer name is required'),
   customerEmail: z.string().email('Invalid email address'),
-  createdAt: z.custom<Timestamp>(),
+  invoiceDate: z.date(),
   dueDate: z.date(),
   status: z.enum(['draft', 'sent', 'paid', 'void']),
   items: z.array(lineItemSchema).min(1, 'At least one line item is required'),
@@ -30,8 +30,9 @@ export type LineItem = z.infer<typeof lineItemSchema>;
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 // The type for an invoice fetched from Firestore (dueDate is a Timestamp)
-export interface Invoice extends Omit<InvoiceFormData, 'createdAt' | 'dueDate'> {
+export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate'> {
   id: string;
-  createdAt: Timestamp;
+  createdAt: Timestamp; // Keep for ordering/internal tracking
+  invoiceDate: Timestamp;
   dueDate: Timestamp;
 }

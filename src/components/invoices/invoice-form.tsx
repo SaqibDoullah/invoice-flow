@@ -60,12 +60,19 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: initialData
-      ? { ...initialData, dueDate: initialData.dueDate.toDate(), discount: initialData.discount || 0, discountType: initialData.discountType || 'percentage' }
+      ? { 
+          ...initialData,
+          invoiceDate: initialData.invoiceDate.toDate(),
+          dueDate: initialData.dueDate.toDate(),
+          discount: initialData.discount || 0,
+          discountType: initialData.discountType || 'percentage' 
+        }
       : {
           invoiceNumber: '',
           customerName: '',
           customerEmail: '',
           status: 'draft',
+          invoiceDate: new Date(),
           dueDate: addDays(new Date(), 30),
           items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
           discount: 0,
@@ -73,7 +80,6 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
           subtotal: 0,
           total: 0,
           ownerId: '',
-          createdAt: Timestamp.now(),
         },
   });
 
@@ -138,11 +144,7 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
 
   const processSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
-    const dataToSubmit = {
-      ...data,
-      dueDate: Timestamp.fromDate(data.dueDate),
-    };
-    await onSubmit(dataToSubmit as any); // cast because of date/timestamp difference
+    await onSubmit(data);
     setIsSubmitting(false);
   };
   
@@ -206,6 +208,69 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                   </FormItem>
                 )}
               />
+                 <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="sent">Sent</SelectItem>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="void">Void</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+               <FormField
+                  control={form.control}
+                  name="invoiceDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Invoice Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="dueDate"
@@ -236,9 +301,6 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < new Date("1900-01-01")
-                            }
                             initialFocus
                           />
                         </PopoverContent>
@@ -247,30 +309,7 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                     </FormItem>
                   )}
                 />
-                 <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="paid">Paid</SelectItem>
-                            <SelectItem value="void">Void</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                />
-            </div>
+             </div>
           </CardContent>
         </Card>
 

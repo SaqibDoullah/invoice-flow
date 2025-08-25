@@ -77,7 +77,7 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
           <div className="text-right">
             <div className="grid grid-cols-2">
                 <span className="font-semibold text-muted-foreground">Invoice Date:</span>
-                <span>{format(invoice.createdAt.toDate(), 'PPP')}</span>
+                <span>{format(invoice.invoiceDate.toDate(), 'PPP')}</span>
             </div>
              <div className="grid grid-cols-2 mt-1">
                 <span className="font-semibold text-muted-foreground">Due Date:</span>

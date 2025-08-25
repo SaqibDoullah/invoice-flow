@@ -28,12 +28,16 @@ export default function NewInvoicePage() {
 
     try {
       const newInvoiceRef = doc(collection(db, 'invoices'));
-      await setDoc(newInvoiceRef, {
+      const invoiceData = {
         ...data,
         id: newInvoiceRef.id,
         ownerId: auth.currentUser.uid,
-        createdAt: Timestamp.now(),
-      });
+        createdAt: Timestamp.now(), // For internal tracking and ordering
+        invoiceDate: Timestamp.fromDate(data.invoiceDate),
+        dueDate: Timestamp.fromDate(data.dueDate),
+      };
+      
+      await setDoc(newInvoiceRef, invoiceData);
 
       toast({ title: 'Success', description: 'Invoice created successfully.' });
       router.push(`/invoices/${newInvoiceRef.id}`);
