@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -66,7 +66,9 @@ export default function SettingsPage() {
       }
     };
 
-    fetchCompanyInfo();
+    if (user) {
+      fetchCompanyInfo();
+    }
   }, [user, form, toast]);
 
   const onSubmit = async (data: CompanyInfoFormData) => {
