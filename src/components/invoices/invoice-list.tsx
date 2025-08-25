@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
 
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import {
   Table,
@@ -49,6 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
+import { useAuth } from '@/context/auth-context';
 
 interface InvoiceListProps {
   searchTerm: string;
@@ -63,9 +64,10 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
-    if (!auth.currentUser) {
+    if (!user) {
       setIsLoading(false);
       return;
     }
@@ -74,7 +76,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     try {
       let q = query(
         collection(db, 'invoices'),
-        where('ownerId', '==', auth.currentUser.uid),
+        where('ownerId', '==', user.uid),
         orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -87,7 +89,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       const newInvoices = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
 
       setInvoices(prev => loadMore ? [...prev, ...newInvoices] : newInvoices);
-      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
       setHasMore(newInvoices.length === PAGE_SIZE);
     } catch (error) {
        if ((error as any).code !== 'unavailable') {
@@ -101,23 +103,18 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     } finally {
       setIsLoading(false);
     }
-  }, [lastDoc, toast]);
-
+  }, [user, lastDoc, toast]);
+  
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
+    if (!authLoading && user) {
         fetchInvoices();
-      } else {
-        // Clear data when user logs out
-        setInvoices([]);
-        setLastDoc(null);
-        setHasMore(true);
+    }
+    if (!authLoading && !user) {
         setIsLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [fetchInvoices]);
+        setInvoices([]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
 
   const handleDelete = async (invoiceId: string) => {
@@ -149,7 +146,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     });
   }, [invoices, searchTerm, statusFilter]);
 
-  if (isLoading && invoices.length === 0) {
+  if (isLoading || authLoading) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
@@ -242,7 +239,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           </TableBody>
         </Table>
       </div>
-      {hasMore && (
+      {hasMore && filteredInvoices.length > 0 && (
         <div className="text-center mt-6">
           <Button onClick={() => fetchInvoices(true)} disabled={isLoading}>
             {isLoading ? 'Loading...' : 'Load More'}
