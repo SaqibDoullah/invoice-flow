@@ -13,7 +13,6 @@ import InvoiceForm from '@/components/invoices/invoice-form';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData, invoiceSchema } from '@/types';
-import { generateInvoiceNumber } from '@/ai/flows/generate-invoice-number';
 import { Button } from '@/components/ui/button';
 
 export default function NewInvoicePage() {
@@ -28,9 +27,13 @@ export default function NewInvoicePage() {
 
     try {
       const newInvoiceRef = doc(collection(db, 'invoices'));
+      
+      const invoiceNumber = `INV-${Date.now()}`;
+
       const invoiceData = {
         ...data,
         id: newInvoiceRef.id,
+        invoiceNumber,
         ownerId: auth.currentUser.uid,
         createdAt: Timestamp.now(),
         invoiceDate: Timestamp.fromDate(data.invoiceDate),
@@ -62,7 +65,6 @@ export default function NewInvoicePage() {
           </div>
           <InvoiceForm
             onSubmit={handleCreateInvoice}
-            generateInvoiceNumber={generateInvoiceNumber}
           />
         </main>
       </div>

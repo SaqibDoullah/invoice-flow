@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Plus, Trash2, Wand2, CalendarIcon } from 'lucide-react';
+import { Loader2, Plus, Trash2, CalendarIcon } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
@@ -38,12 +38,10 @@ import { useAuth } from '@/context/auth-context';
 interface InvoiceFormProps {
   initialData?: Invoice;
   onSubmit: (data: InvoiceFormData) => Promise<void>;
-  generateInvoiceNumber?: (input: { customerId: string }) => Promise<{ invoiceNumber: string }>;
 }
 
-export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumber }: InvoiceFormProps) {
+export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const { user, loading: authLoading } = useAuth();
 
@@ -51,9 +49,15 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
     const fetchCompanyInfo = async () => {
       if (!user) return;
       const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setCompanyName(docSnap.data().companyName);
+      try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setCompanyName(docSnap.data().companyName);
+        }
+      } catch (error) {
+        if ((error as any).code !== 'unavailable') {
+            console.error("Error fetching company info:", error);
+        }
       }
     };
     if (!authLoading) {
@@ -130,28 +134,20 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
     }
   }, [watchedItems, watchedDiscount, watchedDiscountType, form]);
 
-  const handleGenerateInvoiceNumber = async () => {
-    if (!generateInvoiceNumber) return;
-    setIsGenerating(true);
-    try {
-      const customerName = form.getValues('customerName');
-      const result = await generateInvoiceNumber({ customerId: customerName || 'new-customer' });
-      if (result.invoiceNumber) {
-        form.setValue('invoiceNumber', result.invoiceNumber, { shouldValidate: true });
-      }
-    } catch (error) {
-      console.error('Failed to generate invoice number', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   const processSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
     await onSubmit(data);
     setIsSubmitting(false);
   };
   
+  if (authLoading) {
+      return (
+          <div className="flex items-center justify-center p-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(processSubmit)} className="space-y-8">
@@ -198,16 +194,9 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input placeholder="INV-2024-00001" {...field} />
-                      </FormControl>
-                      {generateInvoiceNumber && (
-                        <Button type="button" variant="outline" size="icon" onClick={handleGenerateInvoiceNumber} disabled={isGenerating}>
-                          {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                        </Button>
-                      )}
-                    </div>
+                    <FormControl>
+                      <Input placeholder="Will be generated" {...field} disabled={!initialData} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -11,7 +11,7 @@ export const lineItemSchema = z.object({
 
 export const invoiceSchema = z.object({
   ownerId: z.string(),
-  invoiceNumber: z.string().min(1, 'Invoice number is required'),
+  invoiceNumber: z.string(),
   customerName: z.string().min(1, 'Customer name is required'),
   customerEmail: z.string().email('Invalid email address'),
   invoiceDate: z.date(),
