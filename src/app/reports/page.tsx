@@ -61,18 +61,18 @@ export default function ReportsPage() {
         const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
         
         const outstanding = invoices
-          .filter(inv => inv.status === 'sent' && !isAfter(now, inv.dueDate.toDate()))
+          .filter(inv => inv.status === 'sent' && inv.dueDate && !isAfter(now, inv.dueDate.toDate()))
           .reduce((acc, inv) => acc + inv.total, 0);
 
         const overdue = invoices
-          .filter(inv => inv.status === 'sent' && isAfter(now, inv.dueDate.toDate()))
+          .filter(inv => inv.status === 'sent' && inv.dueDate && isAfter(now, inv.dueDate.toDate()))
           .reduce((acc, inv) => acc + inv.total, 0);
 
         const last6Months = Array.from({ length: 6 }, (_, i) => subMonths(now, i));
         const monthlyRevenueData = last6Months.map(month => {
             const monthStr = format(month, 'MMM');
             const revenue = invoices
-                .filter(inv => inv.status === 'paid' && format(inv.createdAt.toDate(), 'yyyy-MM') === format(month, 'yyyy-MM'))
+                .filter(inv => inv.status === 'paid' && inv.createdAt && format(inv.createdAt.toDate(), 'yyyy-MM') === format(month, 'yyyy-MM'))
                 .reduce((acc, inv) => acc + inv.total, 0);
             return { name: monthStr, revenue };
         }).reverse();
