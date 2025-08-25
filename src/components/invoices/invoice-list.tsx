@@ -65,7 +65,10 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const { toast } = useToast();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -87,12 +90,14 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
       setHasMore(newInvoices.length === PAGE_SIZE);
     } catch (error) {
-      console.error("Error fetching invoices:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch invoices.",
-      });
+       if ((error as any).code !== 'unavailable') {
+          console.error("Error fetching invoices:", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch invoices.",
+          });
+       }
     } finally {
       setIsLoading(false);
     }
