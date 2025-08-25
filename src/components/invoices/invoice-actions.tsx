@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, Printer, Trash2, ChevronDown } from 'lucide-react';
+import { Edit, Printer, Trash2, ChevronDown, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,11 @@ export default function InvoiceActions({
         <CardTitle>Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {invoice.status !== 'paid' && (
+            <Button onClick={() => onStatusChange('paid')} className="w-full">
+                <CheckCircle className="mr-2 h-4 w-4" /> Mark as Paid
+            </Button>
+        )}
         <Button asChild className="w-full">
           <Link href={`/invoices/${invoice.id}/edit`}>
             <Edit className="mr-2 h-4 w-4" /> Edit Invoice
