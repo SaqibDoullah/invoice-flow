@@ -28,9 +28,9 @@ const companyInfoSchema = z.object({
 type CompanyInfoFormData = z.infer<typeof companyInfoSchema>;
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<CompanyInfoFormData>({
@@ -45,7 +45,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchCompanyInfo = async () => {
       if (!user) {
-        setLoading(false);
+        setDataLoading(false);
         return;
       }
       try {
@@ -56,20 +56,18 @@ export default function SettingsPage() {
         }
       } catch (error) {
         console.error("Error fetching company info:", error);
-        // This specific error code means Firestore is temporarily unavailable.
-        // We can safely ignore it and let the user try again later.
         if ((error as any).code !== 'unavailable') {
           toast({ variant: 'destructive', title: 'Error', description: 'Could not load company information.' });
         }
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     };
 
-    if (user) {
+    if (!authLoading) {
       fetchCompanyInfo();
     }
-  }, [user, form, toast]);
+  }, [user, authLoading, form, toast]);
 
   const onSubmit = async (data: CompanyInfoFormData) => {
     if (!user) return;
@@ -103,7 +101,7 @@ export default function SettingsPage() {
                   <CardDescription>Update your company's details. This will be displayed on your invoices.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {loading ? <p>Loading...</p> : (
+                  {dataLoading ? <p>Loading...</p> : (
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
