@@ -9,18 +9,20 @@ import { useReactToPrint } from 'react-to-print';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import InvoicePDF from '@/components/invoices/invoice-pdf';
 import InvoiceActions from '@/components/invoices/invoice-actions';
+import { useAuth } from '@/context/auth-context';
 
 export default function InvoiceDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,15 +33,20 @@ export default function InvoiceDetailPage() {
   });
 
   useEffect(() => {
-    if (typeof id !== 'string') return;
+    if (authLoading || !user || typeof id !== 'string') {
+        if (!authLoading) setLoading(false);
+        return;
+    };
+    
     const fetchInvoice = async () => {
+      setLoading(true);
       try {
         const docRef = doc(db, 'invoices', id);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
+        if (docSnap.exists() && docSnap.data().ownerId === user.uid) {
           setInvoice({ id: docSnap.id, ...docSnap.data() } as Invoice);
         } else {
-          toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found.' });
+          toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found or you do not have permission to view it.' });
           router.push('/');
         }
       } catch (error) {
@@ -50,7 +57,7 @@ export default function InvoiceDetailPage() {
       }
     };
     fetchInvoice();
-  }, [id, router, toast]);
+  }, [id, router, toast, user, authLoading]);
 
   const handleStatusChange = async (status: Invoice['status']) => {
     if (!invoice) return;
@@ -77,7 +84,7 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <AuthGuard>
         <div className="flex items-center justify-center min-h-screen">
@@ -92,7 +99,14 @@ export default function InvoiceDetailPage() {
       <AuthGuard>
          <Header />
          <main className="container mx-auto p-8 text-center">
-            <p>Invoice not found.</p>
+            <h1 className="text-2xl font-bold mb-4">Invoice Not Found</h1>
+            <p>The invoice you are looking for does not exist or has been deleted.</p>
+            <Button asChild className="mt-4">
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to Invoices
+              </Link>
+            </Button>
          </main>
       </AuthGuard>
     )

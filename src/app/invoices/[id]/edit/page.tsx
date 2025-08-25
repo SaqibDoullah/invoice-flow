@@ -13,22 +13,28 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/auth-context';
 
 export default function EditInvoicePage() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof id !== 'string') return;
+     if (authLoading || !user || typeof id !== 'string') {
+        if (!authLoading) setLoading(false);
+        return;
+    };
     const fetchInvoice = async () => {
+      setLoading(true);
       try {
         const docRef = doc(db, 'invoices', id);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
+        if (docSnap.exists() && docSnap.data().ownerId === user.uid) {
           setInvoice({ id: docSnap.id, ...docSnap.data() } as Invoice);
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found.' });
@@ -41,7 +47,7 @@ export default function EditInvoicePage() {
       }
     };
     fetchInvoice();
-  }, [id, router, toast]);
+  }, [id, router, toast, user, authLoading]);
 
   const handleUpdateInvoice = async (data: InvoiceFormData) => {
     if (typeof id !== 'string') return;
@@ -61,7 +67,7 @@ export default function EditInvoicePage() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <AuthGuard>
         <div className="flex items-center justify-center min-h-screen">
@@ -76,7 +82,14 @@ export default function EditInvoicePage() {
       <AuthGuard>
          <Header />
          <main className="container mx-auto p-8 text-center">
-            <p>Invoice not found.</p>
+            <h1 className="text-2xl font-bold mb-4">Invoice Not Found</h1>
+            <p>The invoice you are looking for does not exist or has been deleted.</p>
+            <Button asChild className="mt-4">
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to Invoices
+              </Link>
+            </Button>
          </main>
       </AuthGuard>
     )
