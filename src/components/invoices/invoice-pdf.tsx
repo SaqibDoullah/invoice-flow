@@ -8,7 +8,8 @@ import { type Invoice } from '@/types';
 import StatusBadge from './status-badge';
 import { Separator } from '../ui/separator';
 import { FileText } from 'lucide-react';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/context/auth-context';
 
 interface InvoicePDFProps {
   invoice: Invoice;
@@ -22,18 +23,21 @@ interface CompanyInfo {
 
 export default function InvoicePDF({ invoice }: InvoicePDFProps) {
     const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({});
+    const { user, loading: authLoading } = useAuth();
 
     useEffect(() => {
       const fetchCompanyInfo = async () => {
-        if (!auth.currentUser) return;
-        const docRef = doc(db, 'users', auth.currentUser.uid);
+        if (!user) return;
+        const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setCompanyInfo(docSnap.data());
         }
       };
-      fetchCompanyInfo();
-    }, []);
+      if (!authLoading) {
+        fetchCompanyInfo();
+      }
+    }, [user, authLoading]);
 
     const formatCurrency = (amount: number) => 
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2, Wand2, CalendarIcon } from 'lucide-react';
-import { Timestamp, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,8 @@ import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/context/auth-context';
 
 interface InvoiceFormProps {
   initialData?: Invoice;
@@ -44,18 +45,21 @@ export default function InvoiceForm({ initialData, onSubmit, generateInvoiceNumb
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [companyName, setCompanyName] = useState('');
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
-      if (!auth.currentUser) return;
-      const docRef = doc(db, 'users', auth.currentUser.uid);
+      if (!user) return;
+      const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setCompanyName(docSnap.data().companyName);
       }
     };
-    fetchCompanyInfo();
-  }, []);
+    if (!authLoading) {
+      fetchCompanyInfo();
+    }
+  }, [user, authLoading]);
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),

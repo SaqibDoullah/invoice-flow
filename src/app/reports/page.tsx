@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { subMonths, format, isAfter } from 'date-fns';
 
@@ -9,9 +9,10 @@ import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/context/auth-context';
 
 interface MonthlyRevenue {
   name: string;
@@ -42,14 +43,15 @@ const COLORS = {
 export default function ReportsPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchReportData = async () => {
-      if (!auth.currentUser) return;
+      if (!user) return;
       setLoading(true);
 
       try {
-        const q = query(collection(db, 'invoices'), where('ownerId', '==', auth.currentUser.uid));
+        const q = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
         const querySnapshot = await getDocs(q);
         const invoices = querySnapshot.docs.map(doc => doc.data() as Invoice);
         
@@ -97,8 +99,11 @@ export default function ReportsPage() {
         setLoading(false);
       }
     };
-    fetchReportData();
-  }, []);
+
+    if (!authLoading) {
+      fetchReportData();
+    }
+  }, [user, authLoading]);
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -134,10 +139,10 @@ export default function ReportsPage() {
             </div>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                {renderSummaryCard('Total Revenue', formatCurrency(reportData?.totalRevenue ?? 0), 'All-time paid invoices', '', loading)}
-                {renderSummaryCard('Invoices Paid', reportData?.paidInvoices ?? 0, 'Total invoices marked as paid', '', loading)}
-                {renderSummaryCard('Outstanding', formatCurrency(reportData?.outstanding ?? 0), 'Invoices sent but not overdue', '', loading)}
-                {renderSummaryCard('Overdue', formatCurrency(reportData?.overdue ?? 0), 'Invoices past their due date', 'text-destructive', loading)}
+                {renderSummaryCard('Total Revenue', formatCurrency(reportData?.totalRevenue ?? 0), 'All-time paid invoices', '', loading || authLoading)}
+                {renderSummaryCard('Invoices Paid', reportData?.paidInvoices ?? 0, 'Total invoices marked as paid', '', loading || authLoading)}
+                {renderSummaryCard('Outstanding', formatCurrency(reportData?.outstanding ?? 0), 'Invoices sent but not overdue', '', loading || authLoading)}
+                {renderSummaryCard('Overdue', formatCurrency(reportData?.overdue ?? 0), 'Invoices past their due date', 'text-destructive', loading || authLoading)}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -146,7 +151,7 @@ export default function ReportsPage() {
                         <CardTitle>Revenue Overview</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {loading ? <Skeleton className="w-full h-[300px]" /> : (
+                        {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
                           <ResponsiveContainer width="100%" height={300}>
                               <BarChart data={reportData?.monthlyRevenue}>
                                   <CartesianGrid strokeDasharray="3 3" />
@@ -172,7 +177,7 @@ export default function ReportsPage() {
                         <CardTitle>Invoice Status</CardTitle>
                     </CardHeader>
                     <CardContent>
-                         {loading ? <Skeleton className="w-full h-[300px]" /> : (
+                         {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
                            <ResponsiveContainer width="100%" height={300}>
                               <PieChart>
                                   <Pie

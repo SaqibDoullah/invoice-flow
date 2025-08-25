@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -23,9 +23,10 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/context/auth-context';
 
 interface Customer {
   id: string;
@@ -38,13 +39,14 @@ interface Customer {
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     const fetchCustomerData = async () => {
-      if (!auth.currentUser) return;
+      if (!user) return;
       setLoading(true);
       try {
-        const q = query(collection(db, 'invoices'), where('ownerId', '==', auth.currentUser.uid));
+        const q = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
         const querySnapshot = await getDocs(q);
         const invoices = querySnapshot.docs.map(doc => doc.data() as Invoice);
 
@@ -74,8 +76,10 @@ export default function CustomersPage() {
       }
     };
 
-    fetchCustomerData();
-  }, []);
+    if (!authLoading) {
+      fetchCustomerData();
+    }
+  }, [user, authLoading]);
 
   return (
     <AuthGuard>
@@ -97,7 +101,7 @@ export default function CustomersPage() {
                 <CardDescription>A list of all your customers derived from your invoices.</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
+                {loading || authLoading ? (
                   <div className="space-y-2">
                     {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                   </div>
