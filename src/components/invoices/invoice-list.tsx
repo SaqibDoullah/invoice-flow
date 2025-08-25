@@ -103,13 +103,17 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       if (user) {
         fetchInvoices();
       } else {
+        // Clear data when user logs out
         setInvoices([]);
+        setLastDoc(null);
+        setHasMore(true);
         setIsLoading(false);
       }
     });
+
     return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchInvoices]);
+
 
   const handleDelete = async (invoiceId: string) => {
     try {
