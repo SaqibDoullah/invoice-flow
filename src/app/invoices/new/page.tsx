@@ -2,18 +2,16 @@
 
 import { useRouter } from 'next/navigation';
 import { doc, setDoc, collection, Timestamp } from 'firebase/firestore';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
 import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { type InvoiceFormData, invoiceSchema } from '@/types';
+import { type InvoiceFormData } from '@/types';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 export default function NewInvoicePage() {
   const router = useRouter();
@@ -28,7 +26,7 @@ export default function NewInvoicePage() {
     try {
       const newInvoiceRef = doc(collection(db, 'invoices'));
       
-      const invoiceNumber = `INV-${Date.now()}`;
+      const invoiceNumber = data.invoiceNumber || `INV-${Date.now()}`;
 
       const invoiceData = {
         ...data,

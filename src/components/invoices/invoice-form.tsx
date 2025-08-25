@@ -76,7 +76,6 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           discountType: initialData.discountType || 'percentage' 
         }
       : {
-          invoiceNumber: '',
           customerName: '',
           customerEmail: '',
           status: 'draft',
@@ -88,6 +87,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           subtotal: 0,
           total: 0,
           ownerId: '',
+          invoiceNumber: '',
         },
   });
 
@@ -195,7 +195,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Will be generated" {...field} disabled={!initialData} />
+                      <Input placeholder="Leave blank to auto-generate" {...field} disabled={!!initialData} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
