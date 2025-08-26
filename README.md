@@ -42,14 +42,17 @@ Follow these instructions to get a copy of the project up and running on your lo
     ```
 
 5.  **Set up Firestore:**
-    - In the Firebase Console, go to **Firestore Database** and create a database.
-    - Start in **production mode**.
-    - Go to the **Rules** tab and paste the following rules:
+    - In the Firebase Console, go to **Firestore Database** and **create a database**.
+    - Start in **production mode**. Select a location closest to you.
+    - Go to the **Rules** tab and paste the following rules, then click **Publish**:
       ```
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
-          // Users can only read and write their own invoices
+          // Users can only read and write their own documents
+          match /users/{userId} {
+             allow read, write: if request.auth != null && request.auth.uid == userId;
+          }
           match /invoices/{invoiceId} {
             allow read, update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
             allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
@@ -57,7 +60,12 @@ Follow these instructions to get a copy of the project up and running on your lo
         }
       }
       ```
-    - Publish the rules.
+    - **CRITICAL:** Go to the **Indexes** tab and create a **composite index**. Firestore will likely provide a link in the browser's developer console to create this automatically when you first run the app. If not, create it manually with these settings:
+        - **Collection ID:** `invoices`
+        - **Fields to index:** 
+            1. `ownerId` (Ascending)
+            2. `createdAt` (Descending)
+        - **Query scope:** Collection
 
 6.  **Enable Firebase Authentication:**
     - In the Firebase Console, go to **Authentication**.
@@ -71,7 +79,7 @@ To run the app in development mode, execute:
 npm run dev
 ```
 
-Open [http://localhost:9002](http://localhost:9002) to view it in the browser.
+Open [http://localhost:9003](http://localhost:9003) to view it in the browser.
 
 ## Deployment
 
