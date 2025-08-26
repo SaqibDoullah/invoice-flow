@@ -12,13 +12,15 @@ import { type InvoiceFormData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/auth-context';
 
 export default function NewInvoicePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleCreateInvoice = async (data: InvoiceFormData) => {
-    if (!auth.currentUser) {
+    if (!user) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
       return;
     }
@@ -32,7 +34,7 @@ export default function NewInvoicePage() {
         ...data,
         id: newInvoiceRef.id,
         invoiceNumber,
-        ownerId: auth.currentUser.uid,
+        ownerId: user.uid,
         createdAt: Timestamp.now(),
         invoiceDate: Timestamp.fromDate(data.invoiceDate),
         dueDate: Timestamp.fromDate(data.dueDate),

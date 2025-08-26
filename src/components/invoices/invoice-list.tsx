@@ -109,6 +109,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
         if (user) {
             setInvoices([]);
             setLastDoc(null);
+            setHasMore(true);
             fetchInvoices(false);
         } else {
             setInvoices([]);
@@ -180,7 +181,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                   <TableCell>{invoice.customerName}</TableCell>
-                  <TableCell>{invoice.createdAt?.toDate ? format(invoice.createdAt.toDate(), 'PP') : '-'}</TableCell>
+                  <TableCell>{invoice.invoiceDate?.toDate ? format(invoice.invoiceDate.toDate(), 'PP') : '-'}</TableCell>
                   <TableCell><StatusBadge status={invoice.status} /></TableCell>
                   <TableCell className="text-right">
                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}
