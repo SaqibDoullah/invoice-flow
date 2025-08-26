@@ -30,12 +30,12 @@ export type LineItem = z.infer<typeof lineItemSchema>;
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 // The type for an invoice fetched from Firestore (dueDate is a Timestamp)
-export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate' | 'invoiceNumber'> {
+export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'discount' | 'discountType'> {
   id: string;
   invoiceNumber: string;
   createdAt: Timestamp;
   invoiceDate: Timestamp;
   dueDate: Timestamp;
-  discount: number;
-  discountType: 'percentage' | 'fixed';
+  discount?: number;
+  discountType?: 'percentage' | 'fixed';
 }
