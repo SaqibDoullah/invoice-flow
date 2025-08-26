@@ -36,4 +36,6 @@ export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate'
   createdAt: Timestamp;
   invoiceDate: Timestamp;
   dueDate: Timestamp;
+  discount: number;
+  discountType: 'percentage' | 'fixed';
 }
