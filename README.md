@@ -72,12 +72,14 @@ Follow these instructions to get a copy of the project up and running on your lo
         }
       }
       ```
-    - **CRITICAL:** Go to the **Indexes** tab and create a **composite index**. Firestore will likely provide a link in the browser's developer console to create this automatically when you first run the app. If not, create it manually with these settings:
+    - **CRITICAL: CREATE COMPOSITE INDEX.** The application's query to list invoices requires a composite index. Go to the **Indexes** tab in the Firestore console and click **"Create composite"**. Configure it with the following settings, then click **"Create"**:
         - **Collection ID:** `invoices`
         - **Fields to index:** 
             1. `ownerId` (Ascending)
             2. `createdAt` (Descending)
         - **Query scope:** Collection
+      
+      *The index will take a few minutes to build. The application will not work correctly until the index status is "Enabled."*
 
 6.  **Enable Firebase Authentication:**
     - In the Firebase Console, go to **Authentication**.
