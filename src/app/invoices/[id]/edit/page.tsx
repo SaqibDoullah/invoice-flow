@@ -40,7 +40,8 @@ export default function EditInvoicePage() {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found.' });
           router.push('/');
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Firestore read failed:', { code: error?.code, message: error?.message });
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch invoice data.' });
       } finally {
         setLoading(false);
@@ -61,8 +62,8 @@ export default function EditInvoicePage() {
       await updateDoc(docRef, dataToUpdate);
       toast({ title: 'Success', description: 'Invoice updated successfully.' });
       router.push(`/invoices/${id}`);
-    } catch (error) {
-      console.error('Error updating invoice:', error);
+    } catch (error: any) {
+      console.error('Error updating invoice:', { code: error?.code, message: error?.message });
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update invoice.' });
     }
   };

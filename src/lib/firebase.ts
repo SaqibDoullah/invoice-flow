@@ -18,8 +18,8 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-  useFetchStreams: true,
+  experimentalForceLongPolling: true,
+  useFetchStreams: false,
   ignoreUndefinedProperties: true,
   localCache: typeof window !== 'undefined'
     ? persistentLocalCache()

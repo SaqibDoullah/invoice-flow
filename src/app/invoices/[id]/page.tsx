@@ -49,8 +49,8 @@ export default function InvoiceDetailPage() {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found or you do not have permission to view it.' });
           router.push('/');
         }
-      } catch (error) {
-        console.error('Error fetching invoice:', error);
+      } catch (error: any) {
+        console.error('Firestore read failed:', { code: error?.code, message: error?.message });
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch invoice data.' });
       } finally {
         setLoading(false);
@@ -66,8 +66,8 @@ export default function InvoiceDetailPage() {
       await updateDoc(docRef, { status });
       setInvoice(prev => prev ? { ...prev, status } : null);
       toast({ title: 'Success', description: `Invoice status updated to ${status}.` });
-    } catch (error) {
-      console.error('Error updating status:', error);
+    } catch (error: any) {
+      console.error('Error updating status:', { code: error?.code, message: error?.message });
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to update status.' });
     }
   };
@@ -78,8 +78,8 @@ export default function InvoiceDetailPage() {
       await deleteDoc(doc(db, 'invoices', invoice.id));
       toast({ title: 'Success', description: 'Invoice deleted successfully.' });
       router.push('/');
-    } catch (error) {
-      console.error('Error deleting invoice:', error);
+    } catch (error: any) {
+      console.error('Error deleting invoice:', { code: error?.code, message: error?.message });
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete invoice.' });
     }
   };

@@ -54,8 +54,8 @@ export default function SettingsPage() {
         if (docSnap.exists()) {
           form.reset(docSnap.data() as CompanyInfoFormData);
         }
-      } catch (error) {
-        console.error("Error fetching company info:", error);
+      } catch (error: any) {
+        console.error("Error fetching company info:", { code: error?.code, message: error?.message });
         if ((error as any).code !== 'unavailable') {
           toast({ variant: 'destructive', title: 'Error', description: 'Could not load company information.' });
         }
@@ -76,8 +76,8 @@ export default function SettingsPage() {
       const docRef = doc(db, 'users', user.uid);
       await setDoc(docRef, data, { merge: true });
       toast({ title: 'Success', description: 'Company information updated successfully.' });
-    } catch (error) {
-      console.error("Error saving company info:", error);
+    } catch (error: any) {
+      console.error("Error saving company info:", { code: error?.code, message: error?.message });
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to save company information.' });
     } finally {
       setIsSaving(false);

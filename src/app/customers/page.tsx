@@ -27,6 +27,7 @@ import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
+import { useToast } from '@/hooks/use-toast';
 
 interface Customer {
   id: string;
@@ -40,6 +41,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchCustomerData = async () => {
@@ -71,9 +73,13 @@ export default function CustomersPage() {
         }, {} as Record<string, Customer>);
 
         setCustomers(Object.values(customerData));
-      } catch (error) {
-        console.error("Error fetching customer data: ", error);
-        // Optionally show a toast notification for the error
+      } catch (error: any) {
+        console.error("Error fetching customer data: ", { code: error?.code, message: error?.message });
+        toast({
+            variant: "destructive",
+            title: "Error Fetching Customers",
+            description: `Code: ${error.code}. ${error.message}`,
+        });
       } finally {
         setLoading(false);
       }
@@ -82,7 +88,7 @@ export default function CustomersPage() {
     if (!authLoading) {
       fetchCustomerData();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, toast]);
 
   return (
     <AuthGuard>
