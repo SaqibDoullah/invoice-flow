@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from "@/components/ui/toaster"
 import { SidebarProvider } from '@/components/ui/sidebar';
-import DashboardSidebar from '@/components/dashboard-sidebar';
+import DashboardLayout from '@/components/dashboard-layout';
 
 export const metadata: Metadata = {
   title: 'InvoiceFlow',
@@ -25,8 +25,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AuthProvider>
           <SidebarProvider>
-            <DashboardSidebar />
-            {children}
+            <DashboardLayout>
+              {children}
+            </DashboardLayout>
           </SidebarProvider>
           <Toaster />
         </AuthProvider>
