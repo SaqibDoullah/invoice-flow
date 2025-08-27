@@ -101,7 +101,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{mode === 'login' ? 'Welcome Back' : 'Create an Account'}</CardTitle>
+        <CardTitle>{mode === 'login' ? 'Log In' : 'Create an Account'}</CardTitle>
         <CardDescription>
           {mode === 'login'
             ? 'Enter your credentials to access your account.'
