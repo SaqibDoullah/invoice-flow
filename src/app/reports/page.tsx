@@ -56,7 +56,10 @@ export default function ReportsPage() {
 
   useEffect(() => {
     const fetchReportData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
 
       try {
@@ -83,7 +86,7 @@ export default function ReportsPage() {
         const monthlyRevenueData = last6Months.map(month => {
             const monthStr = format(month, 'MMM');
             const revenue = invoices
-                .filter(inv => inv.status === 'paid' && inv.createdAt && format(inv.createdAt.toDate(), 'yyyy-MM') === format(month, 'yyyy-MM'))
+                .filter(inv => inv.status === 'paid' && inv.invoiceDate && format(inv.invoiceDate.toDate(), 'yyyy-MM') === format(month, 'yyyy-MM'))
                 .reduce((acc, inv) => acc + inv.total, 0);
             return { name: monthStr, revenue };
         }).reverse();
@@ -148,10 +151,10 @@ export default function ReportsPage() {
             </div>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                {renderSummaryCard('Total Revenue', formatCurrency(reportData?.totalRevenue ?? 0), 'All-time paid invoices', '', loading || authLoading)}
-                {renderSummaryCard('Invoices Paid', reportData?.paidInvoices ?? 0, 'Total invoices marked as paid', '', loading || authLoading)}
-                {renderSummaryCard('Outstanding', formatCurrency(reportData?.outstanding ?? 0), 'Invoices sent but not overdue', '', loading || authLoading)}
-                {renderSummaryCard('Overdue', formatCurrency(reportData?.overdue ?? 0), 'Invoices past their due date', 'text-destructive', loading || authLoading)}
+                {renderSummaryCard('Total Revenue', formatCurrency(reportData.totalRevenue), 'All-time paid invoices', '', loading || authLoading)}
+                {renderSummaryCard('Invoices Paid', reportData.paidInvoices, 'Total invoices marked as paid', '', loading || authLoading)}
+                {renderSummaryCard('Outstanding', formatCurrency(reportData.outstanding), 'Invoices sent but not overdue', '', loading || authLoading)}
+                {renderSummaryCard('Overdue', formatCurrency(reportData.overdue), 'Invoices past their due date', 'text-destructive', loading || authLoading)}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -162,7 +165,7 @@ export default function ReportsPage() {
                     <CardContent>
                         {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
                           <ResponsiveContainer width="100%" height={300}>
-                              <BarChart data={reportData?.monthlyRevenue}>
+                              <BarChart data={reportData.monthlyRevenue}>
                                   <CartesianGrid strokeDasharray="3 3" />
                                   <XAxis dataKey="name" />
                                   <YAxis tickFormatter={(value) => `$${value/1000}k`} />
@@ -190,7 +193,7 @@ export default function ReportsPage() {
                            <ResponsiveContainer width="100%" height={300}>
                               <PieChart>
                                   <Pie
-                                      data={reportData?.invoiceStatus}
+                                      data={reportData.invoiceStatus}
                                       cx="50%"
                                       cy="50%"
                                       labelLine={false}
@@ -199,7 +202,7 @@ export default function ReportsPage() {
                                       dataKey="value"
                                       label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
                                   >
-                                      {reportData?.invoiceStatus.map((entry, index) => (
+                                      {reportData.invoiceStatus.map((entry, index) => (
                                       <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS]} />
                                       ))}
                                   </Pie>

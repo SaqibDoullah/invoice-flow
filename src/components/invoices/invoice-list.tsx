@@ -97,7 +97,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           toast({
             variant: "destructive",
             title: "Error: Missing Database Index",
-            description: "The required database index is missing. Please check the browser console for a link to create it.",
+            description: "The required database index is missing or building. Please check the browser console for a link to create it, or wait a few minutes if you've just created it.",
           });
        } else if (error.code !== 'unavailable') {
           toast({
@@ -179,7 +179,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           <TableBody>
             {filteredInvoices.length > 0 ? (
               filteredInvoices.map(invoice => {
-                const ts = (invoice as any).invoiceDate ?? (invoice as any).createdAt;
+                const ts = invoice.invoiceDate;
                 return (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2, CalendarIcon } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ import { useAuth } from '@/context/auth-context';
 
 interface InvoiceFormProps {
   initialData?: Invoice;
-  onSubmit: (data: InvoiceFormData) => Promise<void>;
+  onSubmit: (data: Omit<InvoiceFormData, 'createdAt'>) => Promise<void>;
 }
 
 export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps) {
@@ -67,6 +67,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           total: 0,
           ownerId: '',
           invoiceNumber: '',
+          createdAt: serverTimestamp()
         },
   });
 

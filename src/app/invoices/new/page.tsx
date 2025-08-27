@@ -39,7 +39,7 @@ export default function NewInvoicePage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleCreateInvoice = async (data: InvoiceFormData) => {
+  const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt'>) => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
