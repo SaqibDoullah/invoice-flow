@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
 
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
 import {
   Table,
@@ -77,7 +77,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       let q = query(
         collection(db, 'invoices'),
         where('ownerId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
+        orderBy('invoiceDate', 'desc'),
         limit(PAGE_SIZE)
       );
 
@@ -113,16 +113,14 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   
   useEffect(() => {
     if (!authLoading && user) {
-        setInvoices([]);
-        setLastDoc(null);
-        setHasMore(true);
-        fetchInvoices(false);
+      fetchInvoices(false);
     } else if (!authLoading && !user) {
         setInvoices([]);
         setHasMore(false);
         setDataLoading(false);
     }
-  }, [authLoading, user, fetchInvoices]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
 
 
   const handleDelete = async (invoiceId: string) => {
@@ -154,7 +152,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     });
   }, [invoices, searchTerm, statusFilter]);
 
-  if (authLoading || dataLoading) {
+  if (authLoading || (dataLoading && invoices.length === 0)) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
