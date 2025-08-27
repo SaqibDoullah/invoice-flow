@@ -91,12 +91,12 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
       setHasMore(newInvoices.length === PAGE_SIZE);
     } catch (error: any) {
-       console.error("Firestore read failed:", { code: error?.code, message: error?.message });
-       if ((error as any).code !== 'unavailable') {
+       console.error("Firestore read failed:", error.message, error);
+       if (error.code !== 'unavailable') {
           toast({
             variant: "destructive",
             title: "Error Fetching Invoices",
-            description: `Code: ${error.code}. You may need to create a composite index. Check the browser console for a link.`,
+            description: "Could not fetch invoices. A composite index is likely required. Check the browser console for a link to create it.",
           });
        }
     } finally {
