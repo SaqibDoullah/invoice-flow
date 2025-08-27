@@ -40,8 +40,17 @@ const COLORS = {
     'void': 'hsl(var(--destructive))',
 };
 
+const initialReportData: ReportData = {
+    totalRevenue: 0,
+    paidInvoices: 0,
+    outstanding: 0,
+    overdue: 0,
+    monthlyRevenue: [],
+    invoiceStatus: [],
+};
+
 export default function ReportsPage() {
-  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [reportData, setReportData] = useState<ReportData>(initialReportData);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
