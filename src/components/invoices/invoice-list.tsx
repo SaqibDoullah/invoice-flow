@@ -92,11 +92,17 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       setHasMore(newInvoices.length === PAGE_SIZE);
     } catch (error: any) {
        console.error("Firestore read failed:", error.message, error);
-       if (error.code !== 'unavailable') {
+       if (error.code === 'failed-precondition') {
+          toast({
+            variant: "destructive",
+            title: "Error: Missing Database Index",
+            description: "The required database index is missing. Please check the browser console for a link to create it.",
+          });
+       } else if (error.code !== 'unavailable') {
           toast({
             variant: "destructive",
             title: "Error Fetching Invoices",
-            description: "Could not fetch invoices. A composite index is likely required. Check the browser console for a link to create it.",
+            description: "Could not fetch invoices. Please check your connection and security rules.",
           });
        }
     } finally {
