@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -10,19 +12,27 @@ import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 
 // Helper to safely convert values to Firestore Timestamps
 function toTimestamp(v: unknown): Timestamp | null {
   if (v instanceof Date) return Timestamp.fromDate(v);
-  if (typeof v === 'string' && v) return Timestamp.fromDate(new Date(v));
+  if (v instanceof Timestamp) return v;
+  if (typeof v === 'string' && v) {
+    const date = new Date(v);
+    if (!isNaN(date.getTime())) return Timestamp.fromDate(date);
+  }
   return null;
 }
 
 // Helper to remove any `undefined` properties from an object
 function stripUndefined<T extends Record<string, any>>(obj: T): T {
-  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as T;
+  const newObj = { ...obj };
+  for (const key in newObj) {
+    if (newObj[key] === undefined) {
+      delete newObj[key];
+    }
+  }
+  return newObj;
 }
 
 export default function NewInvoicePage() {
@@ -52,9 +62,10 @@ export default function NewInvoicePage() {
       
       const subtotal = items.reduce((s, it) => s + it.lineTotal, 0);
 
+      const discountValue = Number(data.discount || 0);
       const discountAmount = data.discountType === 'percentage'
-        ? subtotal * ((Number(data.discount) || 0) / 100)
-        : Number(data.discount) || 0;
+        ? subtotal * (discountValue / 100)
+        : discountValue;
     
       const total = subtotal - discountAmount;
 
@@ -62,28 +73,19 @@ export default function NewInvoicePage() {
 
       // Build a clean payload, ensuring no undefined values are sent to Firestore
       const payload = stripUndefined({
-        // Ownership & metadata
         ownerId: currentUser.uid,
         createdAt: serverTimestamp(),
         invoiceNumber,
-
-        // Dates (allow nulls, but not undefined)
-        invoiceDate: toTimestamp((data as any).invoiceDate) || serverTimestamp(),
-        dueDate: toTimestamp((data as any).dueDate),
-
-        // Customer info
+        invoiceDate: toTimestamp(data.invoiceDate) || serverTimestamp(),
+        dueDate: toTimestamp(data.dueDate),
         customerName: data.customerName || '',
         customerEmail: data.customerEmail || '',
-
-        // Items & totals
         items,
         subtotal,
-        discount: Number(data.discount || 0),
+        discount: discountValue,
         discountType: data.discountType || 'percentage',
         total,
-
-        // Status
-        status: (data.status as any) || 'draft',
+        status: data.status || 'draft',
       });
 
       const docRef = await addDoc(collection(db, 'invoices'), payload);
@@ -91,11 +93,11 @@ export default function NewInvoicePage() {
       toast({ title: 'Success', description: 'Invoice created successfully.' });
       router.push(`/invoices/${docRef.id}`);
     } catch (error: any) {
-      console.error('Firestore write failed:', { code: error?.code, message: error?.message });
+      console.error('Firestore write failed:', error);
       toast({
         variant: 'destructive',
         title: 'Error Creating Invoice',
-        description: `Code: ${error.code}. ${error.message}`,
+        description: `Code: ${error.code || 'N/A'}. ${error.message || 'An unknown error occurred.'}`,
       });
     }
   };
