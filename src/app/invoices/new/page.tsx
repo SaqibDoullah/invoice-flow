@@ -1,16 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { addDoc, collection, serverTimestamp, Timestamp, query, where, getDocs } from 'firebase/firestore';
-import { ArrowLeft } from 'lucide-react';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { addDoc, collection, serverTimestamp, Timestamp, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { type InvoiceFormData } from '@/types';
+import { type InvoiceFormData, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 
@@ -36,10 +38,49 @@ function stripUndefined<T extends Record<string, any>>(obj: T): T {
   return newObj;
 }
 
-export default function NewInvoicePage() {
+function NewInvoiceContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  
+  const [initialData, setInitialData] = useState<Invoice | null>(null);
+  const [loadingInitialData, setLoadingInitialData] = useState(true);
+
+  const duplicateId = searchParams.get('duplicateId');
+
+  useEffect(() => {
+    if (!duplicateId || !user) {
+      setLoadingInitialData(false);
+      return;
+    }
+
+    const fetchInvoiceToDuplicate = async () => {
+      setLoadingInitialData(true);
+      try {
+        const docRef = doc(db, 'users', user.uid, 'invoices', duplicateId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const invoiceData = { id: docSnap.id, ...docSnap.data() } as Invoice;
+          // Clear the invoice number for duplication
+          invoiceData.invoiceNumber = '';
+          setInitialData(invoiceData);
+        } else {
+          toast({ variant: 'destructive', title: 'Error', description: 'Invoice to duplicate not found.' });
+        }
+      } catch (error) {
+        console.error("Error fetching invoice to duplicate:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not load invoice data to duplicate.' });
+      } finally {
+        setLoadingInitialData(false);
+      }
+    };
+
+    if (!authLoading) {
+        fetchInvoiceToDuplicate();
+    }
+  }, [duplicateId, user, authLoading, toast]);
+
 
   const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt' | 'ownerId'>) => {
     if (!user) {
@@ -117,8 +158,15 @@ export default function NewInvoicePage() {
     }
   };
 
+  if (authLoading || loadingInitialData) {
+     return (
+      <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <AuthGuard>
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-1 container mx-auto p-4 md:p-8">
@@ -131,10 +179,20 @@ export default function NewInvoicePage() {
             </Button>
           </div>
           <InvoiceForm
+            initialData={initialData || undefined}
             onSubmit={handleCreateInvoice}
           />
         </main>
       </div>
+  );
+}
+
+export default function NewInvoicePage() {
+  return (
+    <AuthGuard>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>}>
+        <NewInvoiceContent />
+      </Suspense>
     </AuthGuard>
   );
 }

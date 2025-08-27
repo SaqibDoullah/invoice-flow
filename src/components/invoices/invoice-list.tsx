@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react';
 
 import { db } from '@/lib/firebase';
 import { type Invoice } from '@/types';
@@ -201,6 +201,11 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                               <Link href={`/invoices/${invoice.id}/edit`} className="cursor-pointer">
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                               </Link>
+                            </DropdownMenuItem>
+                             <DropdownMenuItem asChild>
+                               <Link href={`/invoices/new?duplicateId=${invoice.id}`} className="cursor-pointer">
+                                <Copy className="mr-2 h-4 w-4" /> Duplicate
+                               </Link>
                             </DropdownMenuItem>
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">

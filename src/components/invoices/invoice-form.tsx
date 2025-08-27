@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2, CalendarIcon } from 'lucide-react';
-import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { serverTimestamp } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -32,11 +32,10 @@ import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/auth-context';
 
 interface InvoiceFormProps {
-  initialData?: Invoice;
+  initialData?: Invoice | null;
   onSubmit: (data: Omit<InvoiceFormData, 'createdAt'>) => Promise<void>;
 }
 
@@ -44,9 +43,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
 
-  const form = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema),
-    defaultValues: initialData
+  const getFreshData = () => initialData
       ? { 
           ...initialData,
           invoiceDate: initialData.invoiceDate.toDate(),
@@ -68,8 +65,18 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           ownerId: '',
           invoiceNumber: '',
           createdAt: serverTimestamp()
-        },
+        };
+
+  const form = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceSchema),
+    defaultValues: getFreshData()
   });
+
+  useEffect(() => {
+    form.reset(getFreshData());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, form.reset]);
+
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -90,6 +97,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
   });
 
   useEffect(() => {
+    if (!watchedItems) return;
     const subtotal = watchedItems.reduce((acc, item) => {
       const price = Number(item.price) || 0;
       const quantity = Number(item.quantity) || 0;
@@ -132,10 +140,10 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     <Form {...form}>
       <form onSubmit={form.handleSubmit(processSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">{initialData ? `Edit Invoice ${initialData.invoiceNumber}` : 'New Invoice'}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{initialData?.id ? `Edit Invoice ${initialData.invoiceNumber}` : 'New Invoice'}</h1>
             <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData ? 'Save Changes' : 'Create Invoice'}
+            {initialData?.id ? 'Save Changes' : 'Create Invoice'}
             </Button>
         </div>
 
@@ -175,7 +183,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!initialData}/>
+                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!initialData?.id}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -347,7 +355,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                      <div className="col-span-4 md:col-span-1">
                         <FormLabel>Total</FormLabel>
                         <div className="font-medium h-10 flex items-center">
-                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watchedItems[index]?.lineTotal || 0)}
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(watchedItems?.[index]?.lineTotal || 0)}
                         </div>
                     </div>
                     <div className="col-span-12 md:col-span-1 flex items-end justify-end">
