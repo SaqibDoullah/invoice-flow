@@ -16,7 +16,6 @@ import {
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
-import { onAuthStateChanged } from 'firebase/auth';
 
 import { db, auth } from '@/lib/firebase';
 import { type Invoice } from '@/types';
@@ -50,6 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
+import { useAuth } from '@/context/auth-context';
 
 interface InvoiceListProps {
   searchTerm: string;
@@ -60,22 +60,23 @@ const PAGE_SIZE = 20;
 
 export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
-    if (!auth.currentUser) {
-        setIsLoading(false);
+    if (!user) {
+        setDataLoading(false);
         return;
     };
-    setIsLoading(true);
+    setDataLoading(true);
 
     try {
       let q = query(
         collection(db, 'invoices'),
-        where('ownerId', '==', auth.currentUser.uid),
+        where('ownerId', '==', user.uid),
         orderBy('createdAt', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -106,26 +107,22 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           });
        }
     } finally {
-      setIsLoading(false);
+      setDataLoading(false);
     }
-  }, [lastDoc, toast]);
+  }, [lastDoc, toast, user]);
   
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-            setInvoices([]);
-            setLastDoc(null);
-            setHasMore(true);
-            fetchInvoices(false);
-        } else {
-            setInvoices([]);
-            setHasMore(false);
-            setIsLoading(false);
-        }
-    });
-
-    return () => unsubscribe();
-  }, [fetchInvoices]);
+    if (!authLoading && user) {
+        setInvoices([]);
+        setLastDoc(null);
+        setHasMore(true);
+        fetchInvoices(false);
+    } else if (!authLoading && !user) {
+        setInvoices([]);
+        setHasMore(false);
+        setDataLoading(false);
+    }
+  }, [authLoading, user, fetchInvoices]);
 
 
   const handleDelete = async (invoiceId: string) => {
@@ -157,7 +154,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     });
   }, [invoices, searchTerm, statusFilter]);
 
-  if (isLoading) {
+  if (authLoading || dataLoading) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
@@ -255,8 +252,8 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       </div>
       {hasMore && filteredInvoices.length > 0 && (
         <div className="text-center mt-6">
-          <Button onClick={() => fetchInvoices(true)} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Load More'}
+          <Button onClick={() => fetchInvoices(true)} disabled={dataLoading}>
+            {dataLoading ? 'Loading...' : 'Load More'}
           </Button>
         </div>
       )}
