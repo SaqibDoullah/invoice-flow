@@ -76,7 +76,7 @@ Follow these instructions to get a copy of the project up and running on your lo
         - **Collection ID:** `invoices`
         - **Fields to index:** 
             1. `ownerId` (Ascending)
-            2. `createdAt` (Descending)
+            2. `invoiceDate` (Descending)
         - **Query scope:** Collection
       
       *The index will take a few minutes to build. The application will not work correctly until the index status is "Enabled."*
