@@ -5,8 +5,6 @@ import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { FileText } from 'lucide-react';
-import Image from 'next/image';
-
 
 export default function RegisterPage() {
   const { user, loading } = useAuth();
@@ -38,16 +36,7 @@ export default function RegisterPage() {
           <AuthForm mode="register" />
         </div>
       </div>
-      <div className="hidden bg-muted lg:block">
-        <Image
-          src="https://picsum.photos/1200/900"
-          alt="Abstract art"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-          data-ai-hint="abstract art"
-        />
-      </div>
+      <div className="hidden bg-muted lg:block" />
     </div>
   );
 }
