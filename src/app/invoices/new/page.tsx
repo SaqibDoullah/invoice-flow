@@ -91,11 +91,11 @@ export default function NewInvoicePage() {
       toast({ title: 'Success', description: 'Invoice created successfully.' });
       router.push(`/invoices/${docRef.id}`);
     } catch (error: any) {
-      console.error('Error creating invoice:', error);
+      console.error('Firestore write failed:', { code: error?.code, message: error?.message });
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: error?.message || 'Failed to create invoice.',
+        title: 'Error Creating Invoice',
+        description: `Code: ${error.code}. ${error.message}`,
       });
     }
   };

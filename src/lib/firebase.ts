@@ -19,7 +19,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 // Use initializeFirestore to enable long-polling and fix transport errors
 const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
+  useFetchStreams: false,
   ignoreUndefinedProperties: true,
   localCache: typeof window !== 'undefined'
     ? persistentLocalCache()
