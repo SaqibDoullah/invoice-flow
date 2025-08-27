@@ -1,44 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 
 import { type Invoice } from '@/types';
 import StatusBadge from './status-badge';
 import { Separator } from '../ui/separator';
 import { FileText } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { useAuth } from '@/context/auth-context';
 
 interface InvoicePDFProps {
   invoice: Invoice;
 }
 
-interface CompanyInfo {
-  companyName?: string;
-  companyAddress?: string;
-  companyCity?: string;
-}
-
 export default function InvoicePDF({ invoice }: InvoicePDFProps) {
-    const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({});
-    const { user, loading: authLoading } = useAuth();
-
-    useEffect(() => {
-      const fetchCompanyInfo = async () => {
-        if (!user) return;
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setCompanyInfo(docSnap.data());
-        }
-      };
-      if (!authLoading) {
-        fetchCompanyInfo();
-      }
-    }, [user, authLoading]);
-
     const formatCurrency = (amount: number) => 
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -59,10 +32,10 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
           <div>
             <div className="flex items-center text-3xl font-bold text-primary">
                 <FileText className="h-8 w-8 mr-2"/>
-                <h1>{companyInfo.companyName || 'InvoiceFlow'}</h1>
+                <h1>{invoice.companyName || 'Your Company'}</h1>
             </div>
-            <p className="text-muted-foreground">{companyInfo.companyAddress || '123 Business St, Suite 100'}</p>
-            <p className="text-muted-foreground">{companyInfo.companyCity || 'City, State, 12345'}</p>
+            <p className="text-muted-foreground">{invoice.companyAddress}</p>
+            <p className="text-muted-foreground">{invoice.companyCity}</p>
           </div>
           <div className="text-right">
             <h2 className="text-4xl font-bold uppercase tracking-wider">Invoice</h2>

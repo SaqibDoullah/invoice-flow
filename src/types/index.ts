@@ -23,6 +23,10 @@ export const invoiceSchema = z.object({
   total: z.number(),
   createdAt: z.custom<Timestamp>(),
   ownerId: z.string().optional(),
+  // Company details per invoice
+  companyName: z.string().min(1, 'Company name is required'),
+  companyAddress: z.string().optional(),
+  companyCity: z.string().optional(),
 });
 
 export type LineItem = z.infer<typeof lineItemSchema>;

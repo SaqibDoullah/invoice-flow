@@ -130,18 +130,15 @@ function NewInvoiceContent() {
 
       // Build a clean payload, ensuring no undefined values are sent to Firestore
       const payload = stripUndefined({
+        ...data,
         createdAt: serverTimestamp(),
         invoiceNumber: invoiceNumber || `INV-${Date.now()}`,
         invoiceDate: toTimestamp(data.invoiceDate) || serverTimestamp(),
         dueDate: toTimestamp(data.dueDate),
-        customerName: data.customerName || '',
-        customerEmail: data.customerEmail || '',
         items,
         subtotal,
         discount: discountValue,
-        discountType: data.discountType || 'percentage',
         total,
-        status: data.status || 'draft',
       });
 
       const docRef = await addDoc(collection(db, 'users', user.uid, 'invoices'), payload);

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2, CalendarIcon } from 'lucide-react';
-import { serverTimestamp } from 'firebase/firestore';
+import { serverTimestamp, getDoc, doc } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
+import { db } from '@/lib/firebase';
 
 interface InvoiceFormProps {
   initialData?: Invoice | null;
@@ -43,16 +44,18 @@ interface InvoiceFormProps {
 export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
+  const [isFormReady, setIsFormReady] = useState(false);
 
-  const getFreshData = () => initialData
-      ? { 
-          ...initialData,
-          invoiceDate: initialData.invoiceDate.toDate(),
-          dueDate: initialData.dueDate.toDate(),
-          discount: initialData.discount || 0,
-          discountType: initialData.discountType || 'percentage' 
-        }
-      : {
+  const form = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceSchema),
+  });
+
+  useEffect(() => {
+    const initializeForm = async () => {
+      if (authLoading) return;
+      setIsFormReady(false);
+      
+      let defaultValues: Partial<InvoiceFormData> = {
           customerName: '',
           customerEmail: '',
           status: 'draft',
@@ -61,22 +64,40 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
           discount: 0,
           discountType: 'percentage',
-          subtotal: 0,
-          total: 0,
-          ownerId: '',
           invoiceNumber: '',
-          createdAt: serverTimestamp()
+      };
+
+      if (initialData) {
+        // Editing or duplicating an existing invoice
+        defaultValues = {
+          ...initialData,
+          invoiceDate: initialData.invoiceDate.toDate(),
+          dueDate: initialData.dueDate.toDate(),
+          discount: initialData.discount || 0,
+          discountType: initialData.discountType || 'percentage',
         };
+      } else if (user) {
+        // Creating a new invoice, pre-fill company info from settings
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            defaultValues.companyName = userData.companyName;
+            defaultValues.companyAddress = userData.companyAddress;
+            defaultValues.companyCity = userData.companyCity;
+          }
+        } catch (error) {
+          console.error("Failed to fetch user settings for new invoice", error);
+        }
+      }
+      
+      form.reset(defaultValues as InvoiceFormData);
+      setIsFormReady(true);
+    };
 
-  const form = useForm<InvoiceFormData>({
-    resolver: zodResolver(invoiceSchema),
-    defaultValues: getFreshData()
-  });
-
-  useEffect(() => {
-    form.reset(getFreshData());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData, form.reset]);
+    initializeForm();
+  }, [initialData, user, authLoading, form]);
 
 
   const { fields, append, remove } = useFieldArray({
@@ -92,13 +113,13 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     control: form.control,
     name: 'discount',
   });
-    const watchedDiscountType = useWatch({
+  const watchedDiscountType = useWatch({
     control: form.control,
     name: 'discountType',
   });
 
   useEffect(() => {
-    if (!watchedItems) return;
+    if (!watchedItems || !isFormReady) return;
     const subtotal = watchedItems.reduce((acc, item) => {
       const price = Number(item.price) || 0;
       const quantity = Number(item.quantity) || 0;
@@ -121,7 +142,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     if (form.getValues('total') !== total) {
       form.setValue('total', total);
     }
-  }, [watchedItems, watchedDiscount, watchedDiscountType, form]);
+  }, [watchedItems, watchedDiscount, watchedDiscountType, form, isFormReady]);
 
   const processSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
@@ -129,7 +150,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     setIsSubmitting(false);
   };
   
-  if (authLoading) {
+  if (authLoading || !isFormReady) {
       return (
           <div className="flex items-center justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -147,9 +168,51 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
             {initialData?.id ? 'Save Changes' : 'Create Invoice'}
             </Button>
         </div>
+        
+        <Card>
+          <CardHeader><CardTitle>Your Company Details</CardTitle></CardHeader>
+          <CardContent>
+             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <FormField
+                    control={form.control}
+                    name="companyName"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Company Name</FormLabel>
+                        <FormControl><Input placeholder="Your Company LLC" {...field} /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="companyAddress"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Company Address</FormLabel>
+                        <FormControl><Input placeholder="123 Business St" {...field} /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="companyCity"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>City, State, ZIP</FormLabel>
+                        <FormControl><Input placeholder="Business City, BS 12345" {...field} /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
-          <CardContent className="p-6">
+         <CardHeader><CardTitle>Client & Invoice Details</CardTitle></CardHeader>
+          <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FormField
                 control={form.control}
