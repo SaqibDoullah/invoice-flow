@@ -49,13 +49,18 @@ Follow these instructions to get a copy of the project up and running on your lo
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
-          // Users can read and write to their own user document.
-          match /users/{userId} {
-            allow read, write: if request.auth != null && request.auth.uid == userId;
+          // This function checks if the person making the request is the owner of the data.
+          function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+          }
 
-            // Users can manage their own invoices.
+          match /users/{userId} {
+            // A user can read and write their own user document (for settings)
+            allow read, write: if isOwner(userId);
+
+            // A user can manage their own invoices subcollection
             match /invoices/{invoiceId} {
-              allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+              allow list, read, write, delete: if isOwner(userId);
             }
           }
         }
