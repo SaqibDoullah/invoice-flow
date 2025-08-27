@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -183,7 +184,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!initialData?.id}/>
+                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!initialData?.id && !!initialData?.invoiceNumber} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
