@@ -41,7 +41,7 @@ Follow these instructions to get a copy of the project up and running on your lo
     NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
     ```
 
-5.  **Set up Firestore:**
+5.  **Set up Firestore Security Rules:**
     - In the Firebase Console, go to **Firestore Database** and **create a database**.
     - Start in **production mode**. Select a location closest to you.
     - Go to the **Rules** tab and paste the following rules, then click **Publish**:
@@ -49,19 +49,21 @@ Follow these instructions to get a copy of the project up and running on your lo
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
+          // A user can read and write their own user document (for settings)
           match /users/{userId} {
-            // A user can read and write their own user document (for company settings, etc.)
             allow read, write: if request.auth != null && request.auth.uid == userId;
 
-            // A user can perform all actions on the invoices within their own subcollection.
+            // A user can manage their own invoices subcollection
             match /invoices/{invoiceId} {
-              allow read, write, create, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow read, write, delete: if request.auth != null && request.auth.uid == userId;
             }
+            // Crucially, allow the user to LIST the invoices that belong to them
+            allow list: if request.auth != null && request.auth.uid == userId;
           }
         }
       }
       ```
-      *Note: These rules ensure that a user can only access and manage their own data, which is a more secure and scalable model.*
+      *Note: These rules ensure that a user can only access and manage their own data. They can manage their user settings document, and they can perform all actions (including listing) on the invoices within their own subcollection.*
 
 6.  **Enable Firebase Authentication:**
     - In the Firebase Console, go to **Authentication**.
