@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp, query, where, getDocs } from 'firebase/firestore';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -48,6 +48,23 @@ export default function NewInvoicePage() {
     }
 
     try {
+      const invoiceNumber = data.invoiceNumber?.trim();
+
+      // If an invoice number is provided, check for uniqueness
+      if (invoiceNumber) {
+        const invoicesRef = collection(db, 'users', user.uid, 'invoices');
+        const q = query(invoicesRef, where("invoiceNumber", "==", invoiceNumber));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            toast({
+                variant: 'destructive',
+                title: 'Duplicate Invoice Number',
+                description: `Invoice number "${invoiceNumber}" already exists. Please use a unique number.`,
+            });
+            return;
+        }
+      }
+
       // Coerce items and totals to ensure correct types and prevent undefined values
       const items = (data.items || []).map(it => {
         const price = Number(it.price || 0);
@@ -70,12 +87,10 @@ export default function NewInvoicePage() {
     
       const total = subtotal - discountAmount;
 
-      const invoiceNumber = data.invoiceNumber?.trim() || `INV-${Date.now()}`;
-
       // Build a clean payload, ensuring no undefined values are sent to Firestore
       const payload = stripUndefined({
         createdAt: serverTimestamp(),
-        invoiceNumber,
+        invoiceNumber: invoiceNumber || `INV-${Date.now()}`,
         invoiceDate: toTimestamp(data.invoiceDate) || serverTimestamp(),
         dueDate: toTimestamp(data.dueDate),
         customerName: data.customerName || '',
