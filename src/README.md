@@ -49,21 +49,17 @@ Follow these instructions to get a copy of the project up and running on your lo
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
-          // Function to check if a user is authenticated and is the owner of a document.
           function isOwner(userId) {
             return request.auth != null && request.auth.uid == userId;
           }
 
           match /users/{userId} {
-             // Users can only read and write their own documents.
              allow read, write: if isOwner(userId);
           }
+
           match /invoices/{invoiceId} {
-            // Users can list their own invoices.
             allow list: if isOwner(request.query.resource.data.ownerId);
-            // Users can read, update, or delete their own invoice.
             allow read, update, delete: if isOwner(resource.data.ownerId);
-            // Users can create an invoice for themselves.
             allow create: if isOwner(request.resource.data.ownerId);
           }
         }
