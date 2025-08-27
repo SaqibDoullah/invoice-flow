@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2 } from 'lucide-react';
+import { updateProfile } from 'firebase/auth';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -15,13 +16,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
 const settingsSchema = z.object({
-  fullName: z.string().optional(),
+  fullName: z.string().min(1, 'Full name is required'),
   companyName: z.string().min(1, 'Company name is required'),
   companyAddress: z.string().optional(),
   companyCity: z.string().optional(),
@@ -53,8 +54,16 @@ export default function SettingsPage() {
       try {
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
+        
+        // Start with default values from auth profile
+        const defaultData: Partial<SettingsFormData> = {
+            fullName: user.displayName || '',
+        }
+
         if (docSnap.exists()) {
-          form.reset(docSnap.data() as SettingsFormData);
+          form.reset({ ...defaultData, ...docSnap.data() });
+        } else {
+          form.reset(defaultData);
         }
       } catch (error: any) {
         console.error("Error fetching company info:", { code: error?.code, message: error?.message });
@@ -75,8 +84,15 @@ export default function SettingsPage() {
     if (!user) return;
     setIsSaving(true);
     try {
+      // Update Firebase Auth profile
+      if (user.displayName !== data.fullName) {
+        await updateProfile(auth.currentUser!, { displayName: data.fullName });
+      }
+      
+      // Update Firestore document
       const docRef = doc(db, 'users', user.uid);
       await setDoc(docRef, data, { merge: true });
+      
       toast({ title: 'Success', description: 'Settings updated successfully.' });
     } catch (error: any) {
       console.error("Error saving settings:", { code: error?.code, message: error?.message });

@@ -28,14 +28,26 @@ export function UserNav() {
     router.push('/login');
   };
 
-  const getInitials = (email: string | null | undefined): string => {
-    if (!email) return '';
-    const parts = email.split('@')[0];
-    const nameParts = parts.replace(/[^a-zA-Z\s]/g, ' ').split(' ');
-    if (nameParts.length > 1) {
+  const getInitials = (nameOrEmail: string | null | undefined): string => {
+    if (!nameOrEmail) return '';
+    
+    // If it's a name with spaces
+    if (nameOrEmail.includes(' ')) {
+      const parts = nameOrEmail.split(' ');
+      if (parts.length > 1) {
+        return (parts[0][0] + (parts[1][0] || '')).toUpperCase();
+      }
+    }
+    
+    // If it's an email or single name
+    const emailPrefix = nameOrEmail.split('@')[0];
+    const nameParts = emailPrefix.replace(/[^a-zA-Z\s]/g, ' ').split(' ');
+    
+    if (nameParts.length > 1 && nameParts[0] && nameParts[1]) {
       return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
     }
-    return parts.substring(0, 2).toUpperCase();
+    
+    return emailPrefix.substring(0, 2).toUpperCase();
   };
 
 
@@ -49,7 +61,7 @@ export function UserNav() {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
              <AvatarFallback>
-              {getInitials(user.email)}
+              {getInitials(user.displayName || user.email)}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -57,7 +69,7 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">My Account</p>
+            <p className="text-sm font-medium leading-none">{user.displayName || 'My Account'}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
