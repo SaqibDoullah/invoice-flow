@@ -10,7 +10,6 @@ export const lineItemSchema = z.object({
 });
 
 export const invoiceSchema = z.object({
-  ownerId: z.string(),
   invoiceNumber: z.string().optional(),
   customerName: z.string().min(1, 'Customer name is required'),
   customerEmail: z.string().email('Invalid email address'),
@@ -22,7 +21,8 @@ export const invoiceSchema = z.object({
   discount: z.coerce.number().min(0, 'Discount must be non-negative').default(0),
   discountType: z.enum(['percentage', 'fixed']).default('percentage'),
   total: z.number(),
-  createdAt: z.custom<Timestamp>()
+  createdAt: z.custom<Timestamp>(),
+  ownerId: z.string().optional(),
 });
 
 export type LineItem = z.infer<typeof lineItemSchema>;
@@ -31,7 +31,7 @@ export type LineItem = z.infer<typeof lineItemSchema>;
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 // The type for an invoice fetched from Firestore (dueDate is a Timestamp)
-export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt'> {
+export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt' | 'ownerId'> {
   id: string;
   invoiceNumber: string;
   createdAt: Timestamp;

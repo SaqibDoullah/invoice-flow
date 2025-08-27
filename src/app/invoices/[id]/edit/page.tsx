@@ -32,9 +32,9 @@ export default function EditInvoicePage() {
     const fetchInvoice = async () => {
       setLoading(true);
       try {
-        const docRef = doc(db, 'invoices', id);
+        const docRef = doc(db, 'users', user.uid, 'invoices', id);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().ownerId === user.uid) {
+        if (docSnap.exists()) {
           setInvoice({ id: docSnap.id, ...docSnap.data() } as Invoice);
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found.' });
@@ -51,9 +51,9 @@ export default function EditInvoicePage() {
   }, [id, router, toast, user, authLoading]);
 
   const handleUpdateInvoice = async (data: InvoiceFormData) => {
-    if (typeof id !== 'string') return;
+    if (typeof id !== 'string' || !user) return;
     try {
-      const docRef = doc(db, 'invoices', id);
+      const docRef = doc(db, 'users', user.uid, 'invoices', id);
       const dataToUpdate = {
         ...data,
         invoiceDate: Timestamp.fromDate(data.invoiceDate),

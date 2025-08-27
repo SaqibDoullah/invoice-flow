@@ -41,9 +41,9 @@ export default function InvoiceDetailPage() {
     const fetchInvoice = async () => {
       setLoading(true);
       try {
-        const docRef = doc(db, 'invoices', id);
+        const docRef = doc(db, 'users', user.uid, 'invoices', id);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().ownerId === user.uid) {
+        if (docSnap.exists()) {
           setInvoice({ id: docSnap.id, ...docSnap.data() } as Invoice);
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found or you do not have permission to view it.' });
@@ -60,9 +60,9 @@ export default function InvoiceDetailPage() {
   }, [id, router, toast, user, authLoading]);
 
   const handleStatusChange = async (status: Invoice['status']) => {
-    if (!invoice) return;
+    if (!invoice || !user) return;
     try {
-      const docRef = doc(db, 'invoices', invoice.id);
+      const docRef = doc(db, 'users', user.uid, 'invoices', invoice.id);
       await updateDoc(docRef, { status });
       setInvoice(prev => prev ? { ...prev, status } : null);
       toast({ title: 'Success', description: `Invoice status updated to ${status}.` });
@@ -73,9 +73,9 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!invoice) return;
+    if (!invoice || !user) return;
     try {
-      await deleteDoc(doc(db, 'invoices', invoice.id));
+      await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoice.id));
       toast({ title: 'Success', description: 'Invoice deleted successfully.' });
       router.push('/');
     } catch (error: any) {

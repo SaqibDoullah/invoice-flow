@@ -8,10 +8,11 @@ import Link from 'next/link';
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
-import { db, auth } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData } from '@/types';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/auth-context';
 
 // Helper to safely convert values to Firestore Timestamps
 function toTimestamp(v: unknown): Timestamp | null {
@@ -38,10 +39,10 @@ function stripUndefined<T extends Record<string, any>>(obj: T): T {
 export default function NewInvoicePage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt'>) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+  const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt' | 'ownerId'>) => {
+    if (!user) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
       return;
     }
@@ -73,7 +74,6 @@ export default function NewInvoicePage() {
 
       // Build a clean payload, ensuring no undefined values are sent to Firestore
       const payload = stripUndefined({
-        ownerId: currentUser.uid,
         createdAt: serverTimestamp(),
         invoiceNumber,
         invoiceDate: toTimestamp(data.invoiceDate) || serverTimestamp(),
@@ -88,7 +88,7 @@ export default function NewInvoicePage() {
         status: data.status || 'draft',
       });
 
-      const docRef = await addDoc(collection(db, 'invoices'), payload);
+      const docRef = await addDoc(collection(db, 'users', user.uid, 'invoices'), payload);
 
       toast({ title: 'Success', description: 'Invoice created successfully.' });
       router.push(`/invoices/${docRef.id}`);

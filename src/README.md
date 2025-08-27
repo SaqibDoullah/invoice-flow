@@ -49,37 +49,19 @@ Follow these instructions to get a copy of the project up and running on your lo
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
-          // This function checks if the person making the request is the owner of the data.
-          function isOwner(userId) {
-            return request.auth != null && request.auth.uid == userId;
-          }
-
-          // Rule for the 'users' collection.
-          // Allows a user to read and write their own user document.
+          // Users can read and write to their own user document.
           match /users/{userId} {
-             allow read, write: if isOwner(userId);
-          }
+            allow read, write: if request.auth != null && request.auth.uid == userId;
 
-          // Rules for the 'invoices' collection.
-          match /invoices/{invoiceId} {
-            // Allows a user to LIST the invoices that belong to them.
-            allow list: if isOwner(request.query.resource.data.ownerId);
-            // Allows a user to READ, UPDATE, or DELETE an invoice if they are the owner.
-            allow read, update, delete: if isOwner(resource.data.ownerId);
-            // Allows a user to CREATE an invoice if they set themselves as the owner.
-            allow create: if isOwner(request.resource.data.ownerId);
+            // Users can manage their own invoices.
+            match /invoices/{invoiceId} {
+              allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
       }
       ```
-    - **CRITICAL: CREATE COMPOSITE INDEX.** The application's query to list invoices requires a composite index. Go to the **Indexes** tab in the Firestore console and click **"Create composite"**. Configure it with the following settings, then click **"Create"**:
-        - **Collection ID:** `invoices`
-        - **Fields to index:** 
-            1. `ownerId` (Ascending)
-            2. `invoiceDate` (Descending)
-        - **Query scope:** Collection
-      
-      *The index will take a few minutes to build. The application will not work correctly until the index status is "Enabled."*
+      *Note: These rules ensure that a user can only access and manage their own data, which is a more secure and scalable model.*
 
 6.  **Enable Firebase Authentication:**
     - In the Firebase Console, go to **Authentication**.

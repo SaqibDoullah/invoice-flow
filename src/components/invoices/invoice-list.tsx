@@ -3,7 +3,6 @@
 import {
   collection,
   query,
-  where,
   orderBy,
   limit,
   getDocs,
@@ -75,8 +74,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
 
     try {
       let q = query(
-        collection(db, 'invoices'),
-        where('ownerId', '==', user.uid),
+        collection(db, 'users', user.uid, 'invoices'),
         orderBy('invoiceDate', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -93,13 +91,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       setHasMore(newInvoices.length === PAGE_SIZE);
     } catch (error: any) {
        console.error("Firestore read failed:", error.message, error);
-       if (error.code === 'failed-precondition') {
-          toast({
-            variant: "destructive",
-            title: "Error: Missing Database Index",
-            description: "The required database index is missing or building. Please check the browser console for a link to create it, or wait a few minutes if you've just created it.",
-          });
-       } else if (error.code !== 'unavailable') {
+       if (error.code !== 'unavailable') {
           toast({
             variant: "destructive",
             title: "Error Fetching Invoices",
@@ -124,8 +116,9 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
 
 
   const handleDelete = async (invoiceId: string) => {
+    if (!user) return;
     try {
-      await deleteDoc(doc(db, 'invoices', invoiceId));
+      await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoiceId));
       setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
       toast({
         title: "Success",

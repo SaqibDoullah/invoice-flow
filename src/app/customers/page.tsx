@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
@@ -51,7 +51,7 @@ export default function CustomersPage() {
       }
       setLoading(true);
       try {
-        const q = query(collection(db, 'invoices'), where('ownerId', '==', user.uid));
+        const q = query(collection(db, 'users', user.uid, 'invoices'));
         const querySnapshot = await getDocs(q);
         const invoices = querySnapshot.docs.map(doc => doc.data() as Invoice);
 
