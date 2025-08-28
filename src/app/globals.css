@@ -94,21 +94,8 @@ body {
     margin: 16mm;
   }
 
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
-  }
-  
-  body * { visibility: hidden !important; }
-  #invoice-print, #invoice-print * { visibility: visible !important; }
-  #invoice-print { position: absolute; inset: 0 auto auto 0; width: 100% !important; }
-
-  #invoice-print {
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
+  .print\:hidden {
+    display: none !important;
   }
   
   .avoid-break { break-inside: avoid; page-break-inside: avoid; }
