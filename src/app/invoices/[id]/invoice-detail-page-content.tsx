@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { useReactToPrint } from 'react-to-print';
 
@@ -28,6 +29,18 @@ import {
 } from '@/components/ui/alert-dialog';
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
 
+function PrintButton({ componentRef }: { componentRef: React.RefObject<HTMLDivElement> }) {
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
+  return (
+    <Button variant="outline" onClick={handlePrint} className="w-full">
+      <Printer className="mr-2 h-4 w-4" /> Export as PDF
+    </Button>
+  );
+}
+
 
 export default function InvoiceDetailPageContent() {
   const router = useRouter();
@@ -41,10 +54,6 @@ export default function InvoiceDetailPageContent() {
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
 
   const componentRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -146,17 +155,18 @@ export default function InvoiceDetailPageContent() {
           </div>
 
           <div className="md:grid md:grid-cols-4 md:gap-8">
-            <div className="md:col-span-3 bg-background p-8 rounded-lg shadow-sm">
+            <div className="md:col-span-3">
               <InvoicePDF invoice={invoice} ref={componentRef} />
             </div>
             <div className="md:col-span-1 mt-6 md:mt-0">
                <InvoiceActions
                 invoice={invoice}
-                onPrint={handlePrint}
                 onStatusChange={handleStatusChange}
                 onDelete={() => setIsDeleteDialogOpen(true)}
                 onGenerateReminder={() => setIsReminderDialogOpen(true)}
-               />
+               >
+                 <PrintButton componentRef={componentRef} />
+               </InvoiceActions>
             </div>
           </div>
         </div>

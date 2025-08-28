@@ -1,6 +1,7 @@
+
 'use client';
 
-import { Edit, Printer, Trash2, ChevronDown, CheckCircle, Mail } from 'lucide-react';
+import { Edit, Trash2, ChevronDown, CheckCircle, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -17,18 +18,18 @@ import StatusBadge from './status-badge';
 
 interface InvoiceActionsProps {
   invoice: Invoice;
-  onPrint: () => void;
   onStatusChange: (status: Invoice['status']) => void;
   onDelete: () => void;
   onGenerateReminder: () => void;
+  children?: React.ReactNode;
 }
 
 export default function InvoiceActions({
   invoice,
-  onPrint,
   onStatusChange,
   onDelete,
   onGenerateReminder,
+  children,
 }: InvoiceActionsProps) {
   const statuses: Invoice['status'][] = ['draft', 'sent', 'paid', 'void'];
 
@@ -51,9 +52,7 @@ export default function InvoiceActions({
             <Edit className="mr-2 h-4 w-4" /> Edit Invoice
           </Link>
         </Button>
-        <Button variant="outline" onClick={onPrint} className="w-full">
-          <Printer className="mr-2 h-4 w-4" /> Export as PDF
-        </Button>
+        {children}
 
         <Separator />
 
