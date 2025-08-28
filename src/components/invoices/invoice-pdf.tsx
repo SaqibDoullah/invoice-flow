@@ -28,19 +28,19 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
     const discountAmount = getDiscountAmount();
 
   return (
-    <div ref={ref} className="text-foreground bg-card p-4 rounded-lg">
+    <div ref={ref} className="text-foreground bg-card p-8 rounded-xl shadow-sm">
       <header className="mb-12">
         <div className="flex justify-between items-start">
-          <div className="flex items-start gap-4">
-              <FileText className="h-8 w-8 text-primary mt-1" />
+          <div className="flex items-start gap-4 max-w-[60%]">
+              <FileText className="h-6 w-6 text-primary mt-1" />
               <div>
-                <h1 className="text-3xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
-                <p className="text-muted-foreground mt-2">{invoice.companyAddress}</p>
-                <p className="text-muted-foreground">{invoice.companyCity}</p>
+                <h1 className="text-2xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
+                <p className="text-muted-foreground mt-2 text-sm">{invoice.companyAddress}</p>
+                <p className="text-muted-foreground text-sm">{invoice.companyCity}</p>
               </div>
           </div>
           <div className="text-right">
-            <h2 className="text-4xl font-bold uppercase tracking-wider text-gray-800">Invoice</h2>
+            <h2 className="text-4xl font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">Invoice</h2>
             <p className="text-muted-foreground mt-1 text-sm"># {invoice.invoiceNumber}</p>
           </div>
         </div>
@@ -49,9 +49,9 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
       <section className="mb-12">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">BILL TO</h3>
-            <p className="font-bold text-lg">{invoice.customerName}</p>
-            <p className="text-muted-foreground">{invoice.customerEmail}</p>
+            <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">BILL TO</h3>
+            <p className="font-bold text-base">{invoice.customerName}</p>
+            <p className="text-muted-foreground text-sm">{invoice.customerEmail}</p>
           </div>
           <div className="text-right space-y-2">
             <div className="grid grid-cols-2 items-center gap-1">
