@@ -16,6 +16,18 @@ import { Button } from '@/components/ui/button';
 import InvoicePDF from '@/components/invoices/invoice-pdf';
 import InvoiceActions from '@/components/invoices/invoice-actions';
 import { useAuth } from '@/context/auth-context';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
+
 
 export default function InvoiceDetailPageContent() {
   const router = useRouter();
@@ -25,6 +37,8 @@ export default function InvoiceDetailPageContent() {
   const { user, loading: authLoading } = useAuth();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
 
   const componentRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +98,8 @@ export default function InvoiceDetailPageContent() {
     } catch (error: any) {
       console.error('Error deleting invoice:', { code: error?.code, message: error?.message });
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete invoice.' });
+    } finally {
+        setIsDeleteDialogOpen(false);
     }
   };
 
@@ -140,12 +156,39 @@ export default function InvoiceDetailPageContent() {
                 invoice={invoice}
                 onPrint={handlePrint}
                 onStatusChange={handleStatusChange}
-                onDelete={handleDelete}
+                onDelete={() => setIsDeleteDialogOpen(true)}
+                onGenerateReminder={() => setIsReminderDialogOpen(true)}
                />
             </div>
           </div>
         </div>
       </div>
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this invoice and all of its data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <GenerateReminderDialog
+        isOpen={isReminderDialogOpen}
+        setIsOpen={setIsReminderDialogOpen}
+        invoice={invoice}
+      />
     </AuthGuard>
   );
 }
