@@ -54,9 +54,15 @@ export default function InvoiceDetailPageContent() {
     }
     const printContent = componentRef.current.innerHTML;
     
-    // Get all stylesheets from the main document
     const stylesheets = Array.from(document.styleSheets)
-      .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : '')
+      .map(sheet => {
+        try {
+            return sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : ''
+        } catch (e) {
+            console.warn('Could not load stylesheet', e)
+            return '';
+        }
+      })
       .join('');
 
     printWindow.document.write(`
@@ -80,7 +86,6 @@ export default function InvoiceDetailPageContent() {
     `);
     printWindow.document.close();
     
-    // Use a timeout to ensure styles are loaded before printing
     setTimeout(() => {
         printWindow.focus();
         printWindow.print();
@@ -187,9 +192,9 @@ export default function InvoiceDetailPageContent() {
             </Button>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             <div className="md:col-span-2">
-              <div className="bg-card p-8 rounded-xl shadow-sm">
+              <div className="bg-card rounded-xl shadow-sm">
                 <InvoicePDF invoice={invoice} ref={componentRef} />
               </div>
             </div>
