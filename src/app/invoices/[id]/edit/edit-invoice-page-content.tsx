@@ -9,7 +9,7 @@ import Link from 'next/link';
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
-import { db } from '@/lib/firebase-client';
+import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ export default function EditInvoicePageContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const db = getFirestoreDb();
      if (authLoading || !user || typeof id !== 'string' || !db) {
         if (!authLoading) setLoading(false);
         return;
@@ -51,6 +52,7 @@ export default function EditInvoicePageContent() {
   }, [id, router, toast, user, authLoading]);
 
   const handleUpdateInvoice = async (data: InvoiceFormData) => {
+    const db = getFirestoreDb();
     if (typeof id !== 'string' || !user || !db) return;
     try {
       const docRef = doc(db, 'users', user.uid, 'invoices', id);
@@ -82,7 +84,7 @@ export default function EditInvoicePageContent() {
      return (
       <AuthGuard>
          <Header />
-         <main className="container mx-auto p-8 text-center">
+         <div className="container mx-auto p-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Invoice Not Found</h1>
             <p>The invoice you are looking for does not exist or has been deleted.</p>
             <Button asChild className="mt-4">
@@ -91,7 +93,7 @@ export default function EditInvoicePageContent() {
                 Return to Invoices
               </Link>
             </Button>
-         </main>
+         </div>
       </AuthGuard>
     )
   }
@@ -100,7 +102,7 @@ export default function EditInvoicePageContent() {
     <AuthGuard>
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="flex-1 container mx-auto p-4 md:p-8">
            <div className="mb-6">
             <Button variant="outline" asChild>
               <Link href={`/invoices/${id}`}>
@@ -110,7 +112,7 @@ export default function EditInvoicePageContent() {
             </Button>
           </div>
           <InvoiceForm initialData={invoice} onSubmit={handleUpdateInvoice} />
-        </main>
+        </div>
       </div>
     </AuthGuard>
   );

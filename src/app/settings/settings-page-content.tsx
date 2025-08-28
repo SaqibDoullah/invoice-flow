@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { db, auth } from '@/lib/firebase-client';
+import { getFirestoreDb, getFirebaseAuth } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/auth-context';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -46,6 +46,7 @@ export default function SettingsPageContent() {
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
+      const db = getFirestoreDb();
       if (!user || !db) {
         setDataLoading(false);
         return;
@@ -80,12 +81,14 @@ export default function SettingsPageContent() {
   }, [user, authLoading, form, toast]);
 
   const onSubmit = async (data: SettingsFormData) => {
+    const auth = getFirebaseAuth();
+    const db = getFirestoreDb();
     if (!user || !auth || !db) return;
     setIsSaving(true);
     try {
       // Update Firebase Auth profile
-      if (user.displayName !== data.fullName) {
-        await updateProfile(auth.currentUser!, { displayName: data.fullName });
+      if (user.displayName !== data.fullName && auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: data.fullName });
       }
       
       // Update Firestore document
@@ -107,7 +110,7 @@ export default function SettingsPageContent() {
     <AuthGuard>
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="flex-1 container mx-auto p-4 md:p-8">
           <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
           
           <Form {...form}>
@@ -203,7 +206,7 @@ export default function SettingsPageContent() {
                   </div>
               </form>
           </Form>
-        </main>
+        </div>
       </div>
     </AuthGuard>
   );

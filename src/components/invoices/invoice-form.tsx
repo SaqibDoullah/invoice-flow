@@ -33,7 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
-import { db } from '@/lib/firebase-client';
+import { getFirestoreDb } from '@/lib/firebase-client';
 
 interface InvoiceFormProps {
   initialData?: Invoice | null;
@@ -75,19 +75,22 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           discount: initialData.discount || 0,
           discountType: initialData.discountType || 'percentage',
         };
-      } else if (user && db) {
+      } else if (user) {
         // Creating a new invoice, pre-fill company info from settings
-        const userDocRef = doc(db, 'users', user.uid);
-        try {
-          const docSnap = await getDoc(userDocRef);
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            defaultValues.companyName = userData.companyName;
-            defaultValues.companyAddress = userData.companyAddress;
-            defaultValues.companyCity = userData.companyCity;
+        const db = getFirestoreDb();
+        if (db) {
+          const userDocRef = doc(db, 'users', user.uid);
+          try {
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+              const userData = docSnap.data();
+              defaultValues.companyName = userData.companyName;
+              defaultValues.companyAddress = userData.companyAddress;
+              defaultValues.companyCity = userData.companyCity;
+            }
+          } catch (error) {
+            console.error("Failed to fetch user settings for new invoice", error);
           }
-        } catch (error) {
-          console.error("Failed to fetch user settings for new invoice", error);
         }
       }
       

@@ -3,7 +3,7 @@
 
 import { usePathname } from 'next/navigation';
 import DashboardSidebar from './dashboard-sidebar';
-import { SidebarProvider } from './ui/sidebar';
+import { SidebarProvider, SidebarInset } from './ui/sidebar';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -16,7 +16,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <SidebarProvider>
             <DashboardSidebar />
-            {children}
+            <SidebarInset>
+                {children}
+            </SidebarInset>
         </SidebarProvider>
     );
 }

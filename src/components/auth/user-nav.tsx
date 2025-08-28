@@ -5,7 +5,7 @@ import { LogOut, User as UserIcon, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import { auth } from '@/lib/firebase-client';
+import { getFirebaseAuth } from '@/lib/firebase-client';
 import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,8 @@ export function UserNav() {
   const router = useRouter();
 
   const handleLogout = async () => {
+    const auth = getFirebaseAuth();
+    if (!auth) return;
     await signOut(auth);
     router.push('/login');
   };
@@ -41,7 +43,7 @@ export function UserNav() {
     
     // If it's an email or single name
     const emailPrefix = nameOrEmail.split('@')[0];
-    const nameParts = emailPrefix.replace(/[^a-zA-Z\s]/g, ' ').split(' ');
+    const nameParts = emailPrefix.replace(/[^a-zA-Z\\s]/g, ' ').split(' ');
     
     if (nameParts.length > 1 && nameParts[0] && nameParts[1]) {
       return (nameParts[0][0] + nameParts[1][0]).toUpperCase();

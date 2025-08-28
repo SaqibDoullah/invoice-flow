@@ -19,7 +19,7 @@ export default function DashboardPageContent() {
     <AuthGuard>
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
             <Button asChild>
@@ -52,7 +52,7 @@ export default function DashboardPageContent() {
           </div>
 
           <InvoiceList searchTerm={searchTerm} statusFilter={statusFilter} />
-        </main>
+        </div>
       </div>
     </AuthGuard>
   );

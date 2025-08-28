@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { auth, db } from '@/lib/firebase-client';
+import { getFirebaseAuth, getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
@@ -61,6 +61,8 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const onSubmit = async (values: z.infer<typeof loginSchema> | z.infer<typeof registerSchema>) => {
     setIsLoading(true);
+    const auth = getFirebaseAuth();
+    const db = getFirestoreDb();
     if (!auth || !db) {
         toast({
             variant: "destructive",
@@ -108,83 +110,85 @@ export function AuthForm({ mode }: AuthFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{mode === 'login' ? 'Log In' : 'Create an Account'}</CardTitle>
-        <CardDescription>
-          {mode === 'login'
-            ? 'Enter your credentials to access your account.'
-            : 'Fill in the details below to create a new account.'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {mode === 'register' && (
-               <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    <main className="min-h-screen grid place-items-center bg-muted/40 p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>{mode === 'login' ? 'Log In' : 'Create an Account'}</CardTitle>
+          <CardDescription>
+            {mode === 'login'
+              ? 'Enter your credentials to access your account.'
+              : 'Fill in the details below to create a new account.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {mode === 'register' && (
+                <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+              )}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="name@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {mode === 'login' ? 'Log In' : 'Register'}
+              </Button>
+            </form>
+          </Form>
+          <div className="mt-4 text-center text-sm">
+            {mode === 'login' ? (
+              <>
+                Don&apos;t have an account?{' '}
+                <Link href="/register" className="underline">
+                  Register
+                </Link>
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <Link href="/login" className="underline">
+                  Log In
+                </Link>
+              </>
             )}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === 'login' ? 'Log In' : 'Register'}
-            </Button>
-          </form>
-        </Form>
-        <div className="mt-4 text-center text-sm">
-          {mode === 'login' ? (
-            <>
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="underline">
-                Register
-              </Link>
-            </>
-          ) : (
-            <>
-              Already have an account?{' '}
-              <Link href="/login" className="underline">
-                Log In
-              </Link>
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
 }

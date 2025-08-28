@@ -22,7 +22,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { db } from '@/lib/firebase-client';
+import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
@@ -44,6 +44,7 @@ export default function CustomersPageContent() {
 
   useEffect(() => {
     const fetchCustomerData = async () => {
+      const db = getFirestoreDb();
       if (!user || !db) {
         setLoading(false);
         return;
@@ -93,7 +94,7 @@ export default function CustomersPageContent() {
     <AuthGuard>
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
               <Button>
@@ -147,7 +148,7 @@ export default function CustomersPageContent() {
             </CardContent>
           </Card>
 
-        </main>
+        </div>
       </div>
     </AuthGuard>
   );

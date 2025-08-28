@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
 
-import { db, auth } from '@/lib/firebase-client';
+import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import {
   Table,
@@ -49,6 +49,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '../../components/ui/skeleton';
+import { useAuth } from '@/context/auth-context';
 
 interface InvoiceListProps {
   searchTerm: string;
@@ -63,15 +64,16 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
-    if (!auth.currentUser) return;
+    const db = getFirestoreDb();
+    if (!user || !db) return;
     setIsLoading(true);
 
     try {
       let q = query(
-        collection(db, 'invoices'),
-        where('ownerId', '==', auth.currentUser.uid),
+        collection(db, 'users', user.uid, 'invoices'),
         orderBy('invoiceDate', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -96,16 +98,20 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     } finally {
       setIsLoading(false);
     }
-  }, [lastDoc, toast]);
+  }, [lastDoc, toast, user]);
 
   useEffect(() => {
-    fetchInvoices();
+    if (user) {
+      fetchInvoices();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const handleDelete = async (invoiceId: string) => {
+    const db = getFirestoreDb();
+    if (!db || !user) return;
     try {
-      await deleteDoc(doc(db, 'invoices', invoiceId));
+      await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoiceId));
       setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
       toast({
         title: "Success",

@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
-import { db } from '@/lib/firebase-client';
+import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,7 @@ function NewInvoiceContent() {
   const duplicateId = searchParams.get('duplicateId');
 
   useEffect(() => {
+    const db = getFirestoreDb();
     if (!duplicateId || !user || !db) {
       setLoadingInitialData(false);
       return;
@@ -83,6 +84,7 @@ function NewInvoiceContent() {
 
 
   const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt' | 'ownerId'>) => {
+    const db = getFirestoreDb();
     if (!user || !db) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
       return;
@@ -166,7 +168,7 @@ function NewInvoiceContent() {
   return (
       <div className="flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="flex-1 container mx-auto p-4 md:p-8">
            <div className="mb-6">
             <Button variant="outline" asChild>
               <Link href="/">
@@ -179,7 +181,7 @@ function NewInvoiceContent() {
             initialData={initialData || undefined}
             onSubmit={handleCreateInvoice}
           />
-        </main>
+        </div>
       </div>
   );
 }

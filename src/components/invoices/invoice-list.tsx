@@ -16,7 +16,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react';
 
-import { db } from '@/lib/firebase-client';
+import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import {
   Table,
@@ -66,6 +66,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const { toast } = useToast();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
+    const db = getFirestoreDb();
     if (!user || !db) {
         setDataLoading(false);
         return;
@@ -116,6 +117,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
 
 
   const handleDelete = async (invoiceId: string) => {
+    const db = getFirestoreDb();
     if (!user || !db) return;
     try {
       await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoiceId));
