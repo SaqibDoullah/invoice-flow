@@ -9,7 +9,7 @@ import { useReactToPrint } from 'react-to-print';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';

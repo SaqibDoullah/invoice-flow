@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -34,7 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Calendar } from '../ui/calendar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-client';
 
 interface InvoiceFormProps {
   initialData?: Invoice | null;

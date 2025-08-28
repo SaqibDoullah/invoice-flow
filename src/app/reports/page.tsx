@@ -9,7 +9,7 @@ import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';

@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type InvoiceFormData, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';

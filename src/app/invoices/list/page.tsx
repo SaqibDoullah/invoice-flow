@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
 
-import { db, auth } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import {
   Table,

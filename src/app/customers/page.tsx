@@ -23,7 +23,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
