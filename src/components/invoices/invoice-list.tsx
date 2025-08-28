@@ -45,7 +45,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '../ui/skeleton';
 import { useAuth } from '@/context/auth-context';
@@ -64,6 +63,8 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
     const db = getFirestoreDb();
@@ -116,12 +117,13 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   }, [authLoading, user]);
 
 
-  const handleDelete = async (invoiceId: string) => {
+  const handleDelete = async () => {
+    if (!selectedInvoiceId) return;
     const db = getFirestoreDb();
     if (!user || !db) return;
     try {
-      await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoiceId));
-      setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+      await deleteDoc(doc(db, 'users', user.uid, 'invoices', selectedInvoiceId));
+      setInvoices(prev => prev.filter(inv => inv.id !== selectedInvoiceId));
       toast({
         title: "Success",
         description: "Invoice deleted successfully.",
@@ -133,6 +135,9 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
         title: "Error",
         description: "Failed to delete invoice.",
       });
+    } finally {
+        setDialogOpen(false);
+        setSelectedInvoiceId(null);
     }
   };
 
@@ -185,7 +190,6 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                       {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}
                     </TableCell>
                     <TableCell>
-                      <AlertDialog>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -209,31 +213,16 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                                 <Copy className="mr-2 h-4 w-4" /> Duplicate
                                </Link>
                             </DropdownMenuItem>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+                            <DropdownMenuItem 
+                                onSelect={() => {
+                                    setSelectedInvoiceId(invoice.id);
+                                    setDialogOpen(true);
+                                }}
+                                className="text-destructive focus:text-destructive cursor-pointer">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete this invoice.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(invoice.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 )
@@ -248,6 +237,27 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           </TableBody>
         </Table>
       </div>
+
+       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete this invoice.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                    Delete
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
       {hasMore && filteredInvoices.length > 0 && (
         <div className="text-center mt-6">
           <Button onClick={() => fetchInvoices(true)} disabled={dataLoading}>
