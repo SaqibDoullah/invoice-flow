@@ -27,7 +27,7 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
     const discountAmount = getDiscountAmount();
 
   return (
-    <div ref={ref} className="text-foreground bg-card p-8 rounded-xl shadow-sm">
+    <div ref={ref} className="text-foreground bg-card p-6 rounded-xl shadow-sm">
       <header className="mb-12">
         <div className="grid grid-cols-2 items-center">
             <div className="flex items-center gap-4">
