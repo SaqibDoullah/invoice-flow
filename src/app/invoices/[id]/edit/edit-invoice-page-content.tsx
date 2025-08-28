@@ -25,7 +25,7 @@ export default function EditInvoicePageContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-     if (authLoading || !user || typeof id !== 'string') {
+     if (authLoading || !user || typeof id !== 'string' || !db) {
         if (!authLoading) setLoading(false);
         return;
     };
@@ -51,7 +51,7 @@ export default function EditInvoicePageContent() {
   }, [id, router, toast, user, authLoading]);
 
   const handleUpdateInvoice = async (data: InvoiceFormData) => {
-    if (typeof id !== 'string' || !user) return;
+    if (typeof id !== 'string' || !user || !db) return;
     try {
       const docRef = doc(db, 'users', user.uid, 'invoices', id);
       const dataToUpdate = {

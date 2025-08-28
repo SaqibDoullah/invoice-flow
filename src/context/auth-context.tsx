@@ -10,8 +10,8 @@ import {
 } from 'react';
 import type { User } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirebaseApp } from '@/lib/firebase-client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
 
 interface AuthContextType {
   user: User | null;
@@ -28,14 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const app = getFirebaseApp();
-    if (!app) {
+    if (!auth) {
       console.warn('Firebase not initialized (missing envs). App will not have authentication.');
       setLoading(false);
       return;
     }
 
-    const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);

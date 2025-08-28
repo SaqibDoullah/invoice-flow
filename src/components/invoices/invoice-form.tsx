@@ -75,7 +75,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           discount: initialData.discount || 0,
           discountType: initialData.discountType || 'percentage',
         };
-      } else if (user) {
+      } else if (user && db) {
         // Creating a new invoice, pre-fill company info from settings
         const userDocRef = doc(db, 'users', user.uid);
         try {

@@ -61,6 +61,15 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const onSubmit = async (values: z.infer<typeof loginSchema> | z.infer<typeof registerSchema>) => {
     setIsLoading(true);
+    if (!auth || !db) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Firebase is not configured correctly. Please check your environment variables.",
+        });
+        setIsLoading(false);
+        return;
+    }
     try {
       if (mode === 'register') {
         const { email, password, fullName } = values as z.infer<typeof registerSchema>;

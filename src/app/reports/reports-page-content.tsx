@@ -56,7 +56,7 @@ export default function ReportsPageContent() {
 
   useEffect(() => {
     const fetchReportData = async () => {
-      if (!user) {
+      if (!user || !db) {
         setLoading(false);
         return;
       }

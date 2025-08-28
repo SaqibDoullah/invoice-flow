@@ -50,7 +50,7 @@ function NewInvoiceContent() {
   const duplicateId = searchParams.get('duplicateId');
 
   useEffect(() => {
-    if (!duplicateId || !user) {
+    if (!duplicateId || !user || !db) {
       setLoadingInitialData(false);
       return;
     }
@@ -83,7 +83,7 @@ function NewInvoiceContent() {
 
 
   const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt' | 'ownerId'>) => {
-    if (!user) {
+    if (!user || !db) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
       return;
     }

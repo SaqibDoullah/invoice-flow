@@ -33,7 +33,7 @@ export default function InvoiceDetailPageContent() {
   });
 
   useEffect(() => {
-    if (authLoading || !user || typeof id !== 'string') {
+    if (authLoading || !user || typeof id !== 'string' || !db) {
         if (!authLoading) setLoading(false);
         return;
     };
@@ -60,7 +60,7 @@ export default function InvoiceDetailPageContent() {
   }, [id, router, toast, user, authLoading]);
 
   const handleStatusChange = async (status: Invoice['status']) => {
-    if (!invoice || !user) return;
+    if (!invoice || !user || !db) return;
     try {
       const docRef = doc(db, 'users', user.uid, 'invoices', invoice.id);
       await updateDoc(docRef, { status });
@@ -73,7 +73,7 @@ export default function InvoiceDetailPageContent() {
   };
 
   const handleDelete = async () => {
-    if (!invoice || !user) return;
+    if (!invoice || !user || !db) return;
     try {
       await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoice.id));
       toast({ title: 'Success', description: 'Invoice deleted successfully.' });

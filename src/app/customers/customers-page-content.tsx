@@ -45,7 +45,7 @@ export default function CustomersPageContent() {
 
   useEffect(() => {
     const fetchCustomerData = async () => {
-      if (!user) {
+      if (!user || !db) {
         setLoading(false);
         return;
       }

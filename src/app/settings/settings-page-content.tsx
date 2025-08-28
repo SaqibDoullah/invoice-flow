@@ -47,7 +47,7 @@ export default function SettingsPageContent() {
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
-      if (!user) {
+      if (!user || !db) {
         setDataLoading(false);
         return;
       }
@@ -81,7 +81,7 @@ export default function SettingsPageContent() {
   }, [user, authLoading, form, toast]);
 
   const onSubmit = async (data: SettingsFormData) => {
-    if (!user) return;
+    if (!user || !auth || !db) return;
     setIsSaving(true);
     try {
       // Update Firebase Auth profile

@@ -16,10 +16,9 @@ let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 
-function getFirebaseApp() {
-    // This function should only be called on the client side.
+function initializeFirebase() {
     if (typeof window === 'undefined') {
-        return null;
+        return;
     }
 
     if (getApps().length === 0) {
@@ -28,23 +27,22 @@ function getFirebaseApp() {
             !firebaseConfig.authDomain ||
             !firebaseConfig.projectId
         ) {
-            console.warn(
-            'Firebase config is not set. Make sure you have a .env.local file with all the required NEXT_PUBLIC_FIREBASE_ variables.'
+             console.error(
+                'Firebase config is not set. Make sure you have a .env.local file with all the required NEXT_PUBLIC_FIREBASE_ variables.'
             );
-            return null;
+            return;
         }
         app = initializeApp(firebaseConfig);
     } else {
         app = getApp();
     }
-
-    if (app) {
-        auth = getAuth(app);
-        db = getFirestore(app);
-    }
-
-    return app;
+    
+    auth = getAuth(app);
+    db = getFirestore(app);
 }
 
+// Call initialization
+initializeFirebase();
 
-export { getFirebaseApp, app, auth, db };
+// Export instances directly
+export { app, auth, db };

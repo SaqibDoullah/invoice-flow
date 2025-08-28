@@ -66,7 +66,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const { toast } = useToast();
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
-    if (!user) {
+    if (!user || !db) {
         setDataLoading(false);
         return;
     };
@@ -116,7 +116,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
 
 
   const handleDelete = async (invoiceId: string) => {
-    if (!user) return;
+    if (!user || !db) return;
     try {
       await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoiceId));
       setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
