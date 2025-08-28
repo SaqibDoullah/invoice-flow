@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { type Invoice } from '@/types';
 import StatusBadge from './status-badge';
 import { Separator } from '../ui/separator';
-import { FileText } from 'lucide-react';
 
 interface InvoicePDFProps {
   invoice: Invoice;
@@ -30,14 +29,14 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
   return (
     <div ref={ref} className="text-foreground bg-card p-8 rounded-xl shadow-sm">
       <header className="mb-12">
-        <div className="relative grid grid-cols-2 items-center">
-            <div>
-              <div className="flex items-center gap-4">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <h1 className="text-2xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
-              </div>
-                <p className="text-muted-foreground mt-2 text-sm ml-9">{invoice.companyAddress}</p>
-                <p className="text-muted-foreground text-sm ml-9">{invoice.companyCity}</p>
+        <div className="grid grid-cols-2 items-center">
+            <div className="flex items-center gap-4">
+                <div className="text-primary">•</div>
+                <div>
+                    <h1 className="text-2xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
+                    <p className="text-muted-foreground mt-1 text-sm">{invoice.companyAddress}</p>
+                    <p className="text-muted-foreground text-sm">{invoice.companyCity}</p>
+                </div>
             </div>
             <div className="text-right">
                 <h2 className="text-4xl font-bold uppercase tracking-wider text-foreground">Invoice</h2>
