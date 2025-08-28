@@ -8,9 +8,11 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { auth } from '@/lib/firebase-client';
+import type { User } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getApp, getApps, initializeApp } from 'firebase/app';
+import { firebaseConfig } from '@/lib/firebase-client';
 
 interface AuthContextType {
   user: User | null;
@@ -27,13 +29,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // onAuthStateChanged returns an unsubscriber
+    if (
+        !firebaseConfig.apiKey ||
+        !firebaseConfig.authDomain ||
+        !firebaseConfig.projectId
+      ) {
+        console.error("Firebase config is not set, AuthProvider will not initialize.");
+        setLoading(false);
+        return;
+    }
+
+    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    const auth = getAuth(app);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
-    // Unsubscribe to the listener when unmounting
     return () => unsubscribe();
   }, []);
 
