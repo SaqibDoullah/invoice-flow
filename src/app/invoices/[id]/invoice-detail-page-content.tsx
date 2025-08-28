@@ -53,17 +53,23 @@ export default function InvoiceDetailPageContent() {
       return;
     }
     const printContent = componentRef.current.innerHTML;
+    
+    // Get all stylesheets from the main document
+    const stylesheets = Array.from(document.styleSheets)
+      .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : '')
+      .join('');
+
     printWindow.document.write(`
       <html>
         <head>
           <title>Print Invoice</title>
+          ${stylesheets}
           <style>
             @media print {
-              @page { size: auto;  margin: 0mm; }
-              body { -webkit-print-color-adjust: exact; }
+              @page { size: auto; margin: 0; }
+              body { -webkit-print-color-adjust: exact; padding: 2rem; }
             }
           </style>
-          <script src="https://cdn.tailwindcss.com"></script>
         </head>
         <body>
           ${printContent}
@@ -71,9 +77,13 @@ export default function InvoiceDetailPageContent() {
       </html>
     `);
     printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    
+    // Use a timeout to ensure styles are loaded before printing
+    setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }, 250);
   };
 
   useEffect(() => {
