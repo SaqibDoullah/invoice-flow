@@ -12,17 +12,17 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
 
 function initializeFirebase() {
     if (typeof window === 'undefined') {
         return;
     }
 
-    if (getApps().length === 0) {
-        if (
+    if (!getApps().length) {
+         if (
             !firebaseConfig.apiKey ||
             !firebaseConfig.authDomain ||
             !firebaseConfig.projectId
@@ -41,7 +41,7 @@ function initializeFirebase() {
     db = getFirestore(app);
 }
 
-// Call initialization
+// Call initialization right away, but it's guarded by the window check.
 initializeFirebase();
 
 // Export instances directly
