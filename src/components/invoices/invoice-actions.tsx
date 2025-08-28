@@ -34,11 +34,11 @@ export default function InvoiceActions({
   const statuses: Invoice['status'][] = ['draft', 'sent', 'paid', 'void'];
 
   return (
-    <Card>
+    <Card className="shadow-sm">
       <CardHeader>
         <CardTitle>Actions</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {invoice.status !== 'paid' && (
           <Button onClick={() => onStatusChange('paid')} className="w-full">
             <CheckCircle className="mr-2 h-4 w-4" /> Mark as Paid
@@ -68,7 +68,7 @@ export default function InvoiceActions({
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
+            <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
               {statuses.map(status => (
                 <DropdownMenuItem key={status} onSelect={() => onStatusChange(status)} className="cursor-pointer">
                   <StatusBadge status={status} />

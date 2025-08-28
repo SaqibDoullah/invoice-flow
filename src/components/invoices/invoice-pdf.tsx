@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -27,42 +28,42 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
     const discountAmount = getDiscountAmount();
 
   return (
-    <div ref={ref} className="text-foreground">
-      <header className="mb-8">
+    <div ref={ref} className="text-foreground bg-card p-4 rounded-lg">
+      <header className="mb-12">
         <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center text-3xl font-bold text-primary">
-                <FileText className="h-8 w-8 mr-2"/>
-                <h1>{invoice.companyName || 'Your Company'}</h1>
-            </div>
-            <p className="text-muted-foreground">{invoice.companyAddress}</p>
-            <p className="text-muted-foreground">{invoice.companyCity}</p>
+          <div className="flex items-center gap-3">
+              <FileText className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold text-primary uppercase">{invoice.companyName || 'Your Company'}</h1>
+                <p className="text-sm text-muted-foreground">{invoice.companyAddress}</p>
+                <p className="text-sm text-muted-foreground">{invoice.companyCity}</p>
+              </div>
           </div>
           <div className="text-right">
-            <h2 className="text-4xl font-bold uppercase tracking-wider">Invoice</h2>
-            <p className="text-muted-foreground mt-2">{invoice.invoiceNumber}</p>
+            <h2 className="text-4xl font-bold uppercase tracking-wider text-gray-800">Invoice</h2>
+            <p className="text-muted-foreground mt-1 text-sm"># {invoice.invoiceNumber}</p>
           </div>
         </div>
       </header>
 
-      <section className="mb-8">
+      <section className="mb-12">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <h3 className="font-semibold text-muted-foreground mb-2">BILL TO</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase tracking-wider">BILL TO</h3>
             <p className="font-bold text-lg">{invoice.customerName}</p>
-            <p>{invoice.customerEmail}</p>
+            <p className="text-muted-foreground">{invoice.customerEmail}</p>
           </div>
-          <div className="text-right">
-            <div className="grid grid-cols-2">
-                <span className="font-semibold text-muted-foreground">Invoice Date:</span>
+          <div className="text-right space-y-2">
+            <div className="grid grid-cols-2 items-center gap-1">
+                <span className="font-semibold">Invoice Date:</span>
                 <span>{format(invoice.invoiceDate.toDate(), 'PPP')}</span>
             </div>
-             <div className="grid grid-cols-2 mt-1">
-                <span className="font-semibold text-muted-foreground">Due Date:</span>
+             <div className="grid grid-cols-2 items-center gap-1">
+                <span className="font-semibold">Due Date:</span>
                 <span>{format(invoice.dueDate.toDate(), 'PPP')}</span>
             </div>
-            <div className="grid grid-cols-2 mt-1">
-                <span className="font-semibold text-muted-foreground">Status:</span>
+            <div className="grid grid-cols-2 items-center gap-1">
+                <span className="font-semibold">Status:</span>
                 <div className="flex justify-end"><StatusBadge status={invoice.status} /></div>
             </div>
           </div>
@@ -73,10 +74,10 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
         <table className="w-full text-left">
           <thead className="bg-muted">
             <tr>
-              <th className="p-3 font-semibold">Product</th>
-              <th className="p-3 font-semibold text-center w-20">Qty</th>
-              <th className="p-3 font-semibold text-right w-32">Price</th>
-              <th className="p-3 font-semibold text-right w-32">Total</th>
+              <th className="p-3 text-sm font-semibold uppercase tracking-wider">Product</th>
+              <th className="p-3 text-sm font-semibold uppercase tracking-wider text-center w-20">Qty</th>
+              <th className="p-3 text-sm font-semibold uppercase tracking-wider text-right w-32">Price</th>
+              <th className="p-3 text-sm font-semibold uppercase tracking-wider text-right w-32">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -97,8 +98,8 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
         </table>
       </section>
 
-      <section className="flex justify-end">
-        <div className="w-full max-w-xs space-y-2">
+      <section className="flex justify-end mt-12">
+        <div className="w-full max-w-sm space-y-3">
             <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatCurrency(invoice.subtotal)}</span>
@@ -115,7 +116,7 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
         </div>
       </section>
 
-      <footer className="mt-12 pt-4 border-t text-center text-sm text-muted-foreground">
+      <footer className="mt-20 pt-6 border-t text-center text-sm text-muted-foreground">
         <p>Thank you for your business!</p>
       </footer>
     </div>

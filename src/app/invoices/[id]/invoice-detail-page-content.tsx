@@ -4,11 +4,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ArrowLeft, Loader2, Printer } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +26,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
+import Header from '@/components/header';
 
 export default function InvoiceDetailPageContent() {
   const router = useRouter();
@@ -67,12 +67,14 @@ export default function InvoiceDetailPageContent() {
           <style>
             @media print {
               @page { size: auto; margin: 0; }
-              body { -webkit-print-color-adjust: exact; padding: 2rem; }
+              body { -webkit-print-color-adjust: exact; }
             }
           </style>
         </head>
-        <body>
-          ${printContent}
+        <body class="bg-white">
+          <div class="p-8">
+            ${printContent}
+          </div>
         </body>
       </html>
     `);
@@ -173,11 +175,11 @@ export default function InvoiceDetailPageContent() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen bg-muted/40">
+      <div className="flex flex-col min-h-screen">
         <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
+        <main className="flex-1 container mx-auto p-4 md:p-8">
            <div className="mb-6">
-            <Button variant="outline" asChild>
+            <Button variant="outline" className="bg-card" asChild>
               <Link href="/">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Invoices
@@ -185,11 +187,13 @@ export default function InvoiceDetailPageContent() {
             </Button>
           </div>
 
-          <div className="md:grid md:grid-cols-4 md:gap-8">
-            <div className="md:col-span-3">
-              <InvoicePDF invoice={invoice} ref={componentRef} />
+          <div className="grid md:grid-cols-3 gap-8 items-start">
+            <div className="md:col-span-2">
+              <div className="bg-card p-8 rounded-xl shadow-sm">
+                <InvoicePDF invoice={invoice} ref={componentRef} />
+              </div>
             </div>
-            <div className="md:col-span-1 mt-6 md:mt-0">
+            <div className="md:col-span-1">
                <InvoiceActions
                 invoice={invoice}
                 onStatusChange={handleStatusChange}
@@ -199,7 +203,7 @@ export default function InvoiceDetailPageContent() {
                />
             </div>
           </div>
-        </div>
+        </main>
       </div>
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
