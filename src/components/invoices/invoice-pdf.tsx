@@ -27,15 +27,15 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
     const discountAmount = getDiscountAmount();
 
   return (
-    <div ref={ref}>
+    <div ref={ref} className="p-6">
       <header className="mb-12 avoid-break">
-        <div className="grid lg:grid-cols-2 items-center gap-8">
+        <div className="grid grid-cols-2 items-start gap-8">
           <div>
-            <h1 className="text-3xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
-            <div className="text-muted-foreground mt-2 text-sm space-y-1">
-                <p>{invoice.companyAddress}</p>
-                <p>{invoice.companyCity}</p>
-            </div>
+            <h1 className="text-2xl font-bold text-primary uppercase leading-tight tracking-wider">
+              {invoice.companyName || 'Your Company'}
+            </h1>
+            <p className="text-muted-foreground mt-2 text-sm">{invoice.companyAddress}</p>
+            <p className="text-muted-foreground text-sm">{invoice.companyCity}</p>
           </div>
           <div className="text-right">
             <h2 className="text-4xl font-bold uppercase tracking-wider text-foreground">Invoice</h2>
@@ -45,24 +45,24 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
       </header>
 
       <section className="mb-12 avoid-break">
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-2 gap-8">
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">BILL TO</h3>
             <p className="font-bold text-base">{invoice.customerName}</p>
             <p className="text-muted-foreground text-sm">{invoice.customerEmail}</p>
           </div>
-          <div className="space-y-2 lg:text-right">
-            <div className="grid lg:grid-cols-2 items-center gap-1">
+          <div className="space-y-2 text-right">
+            <div className="grid grid-cols-2 items-center gap-1">
                 <span className="font-semibold">Invoice Date:</span>
-                <span className="lg:text-right">{format(invoice.invoiceDate.toDate(), 'PPP')}</span>
+                <span>{format(invoice.invoiceDate.toDate(), 'PPP')}</span>
             </div>
-             <div className="grid lg:grid-cols-2 items-center gap-1">
+             <div className="grid grid-cols-2 items-center gap-1">
                 <span className="font-semibold">Due Date:</span>
-                <span className="lg:text-right">{format(invoice.dueDate.toDate(), 'PPP')}</span>
+                <span>{format(invoice.dueDate.toDate(), 'PPP')}</span>
             </div>
-            <div className="grid lg:grid-cols-2 items-center gap-1">
+            <div className="grid grid-cols-2 items-center gap-1">
                 <span className="font-semibold">Status:</span>
-                <div className="flex justify-start lg:justify-end"><StatusBadge status={invoice.status} /></div>
+                <div className="flex justify-end"><StatusBadge status={invoice.status} /></div>
             </div>
           </div>
         </div>
