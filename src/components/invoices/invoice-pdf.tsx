@@ -30,9 +30,9 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
   return (
     <div ref={ref} className="text-foreground bg-card p-8 rounded-xl shadow-sm">
       <header className="mb-12">
-        <div className="flex justify-between items-start">
-          <div className="flex items-start gap-4 max-w-[60%]">
-              <FileText className="h-6 w-6 text-primary mt-1" />
+        <div className="grid grid-cols-2 items-center">
+          <div className="flex items-center gap-4">
+              <FileText className="h-6 w-6 text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
                 <p className="text-muted-foreground mt-2 text-sm">{invoice.companyAddress}</p>
@@ -40,7 +40,7 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
               </div>
           </div>
           <div className="text-right">
-            <h2 className="text-4xl font-bold uppercase tracking-wider text-gray-800 dark:text-gray-200">Invoice</h2>
+            <h2 className="text-4xl font-bold uppercase tracking-wider text-foreground">Invoice</h2>
             <p className="text-muted-foreground mt-1 text-sm"># {invoice.invoiceNumber}</p>
           </div>
         </div>
