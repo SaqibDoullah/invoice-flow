@@ -25,9 +25,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-muted/40">
-      <div className="w-full max-w-md p-8 space-y-8">
-        <div className="grid gap-2 text-center">
+    <div className="flex items-center justify-center min-h-screen bg-muted/40 p-4">
+      <div className="w-full max-w-md">
+        <div className="grid gap-2 text-center mb-8">
           <div className="flex justify-center items-center mb-2">
             <FileText className="h-8 w-8 mr-2 text-primary" />
             <h1 className="text-3xl font-bold">InvoiceFlow</h1>
