@@ -34,7 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import StatusBadge from '../../components/invoices/status-badge';
+import StatusBadge from '@/components/invoices/status-badge';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -48,7 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Skeleton } from '../../components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 
 interface InvoiceListProps {
