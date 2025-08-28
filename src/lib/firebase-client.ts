@@ -4,7 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { initializeFirestore, persistentLocalCache, memoryLocalCache } from 'firebase/firestore';
 import { firebaseConfig } from './firebase';
 
-// Ensure all config values are present
+// Ensure all config values are present before initializing
 if (
   !firebaseConfig.apiKey ||
   !firebaseConfig.authDomain ||
@@ -16,6 +16,7 @@ if (
 }
 
 let app: FirebaseApp;
+
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
 } else {
