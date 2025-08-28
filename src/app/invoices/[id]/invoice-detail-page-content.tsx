@@ -146,10 +146,8 @@ export default function InvoiceDetailPageContent() {
           </div>
 
           <div className="md:grid md:grid-cols-4 md:gap-8">
-            <div className="md:col-span-3">
-              <div ref={componentRef} className="bg-background p-8 rounded-lg shadow-sm">
-                <InvoicePDF invoice={invoice} />
-              </div>
+            <div className="md:col-span-3 bg-background p-8 rounded-lg shadow-sm">
+              <InvoicePDF invoice={invoice} ref={componentRef} />
             </div>
             <div className="md:col-span-1 mt-6 md:mt-0">
                <InvoiceActions

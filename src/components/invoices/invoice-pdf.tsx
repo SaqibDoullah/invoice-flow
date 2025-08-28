@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { format } from 'date-fns';
 
 import { type Invoice } from '@/types';
@@ -11,7 +12,7 @@ interface InvoicePDFProps {
   invoice: Invoice;
 }
 
-export default function InvoicePDF({ invoice }: InvoicePDFProps) {
+const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice }, ref) => {
     const formatCurrency = (amount: number) => 
         new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -26,7 +27,7 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
     const discountAmount = getDiscountAmount();
 
   return (
-    <div className="text-foreground">
+    <div ref={ref} className="text-foreground">
       <header className="mb-8">
         <div className="flex justify-between items-start">
           <div>
@@ -119,4 +120,8 @@ export default function InvoicePDF({ invoice }: InvoicePDFProps) {
       </footer>
     </div>
   );
-}
+});
+
+InvoicePDF.displayName = 'InvoicePDF';
+
+export default InvoicePDF;
