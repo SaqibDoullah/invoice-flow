@@ -13,7 +13,7 @@ import Header from '@/components/header';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import InvoicePDF from '@/components/invoices/invoice-pdf';
 import InvoiceActions from '@/components/invoices/invoice-actions';
 import { useAuth } from '@/context/auth-context';
@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
+import { cn } from '@/lib/utils';
 
 function PrintButton({ componentRef }: { componentRef: React.RefObject<HTMLDivElement> }) {
   const handlePrint = useReactToPrint({
@@ -35,9 +36,15 @@ function PrintButton({ componentRef }: { componentRef: React.RefObject<HTMLDivEl
   });
 
   return (
-    <Button variant="outline" onClick={handlePrint} className="w-full">
+    <button
+      onClick={handlePrint}
+      className={cn(
+        buttonVariants({ variant: 'outline' }),
+        'w-full'
+      )}
+    >
       <Printer className="mr-2 h-4 w-4" /> Export as PDF
-    </Button>
+    </button>
   );
 }
 
