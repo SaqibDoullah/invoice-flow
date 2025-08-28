@@ -6,14 +6,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ArrowLeft, Loader2, Printer } from 'lucide-react';
 import Link from 'next/link';
-import { useReactToPrint } from 'react-to-print';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import InvoicePDF from '@/components/invoices/invoice-pdf';
 import InvoiceActions from '@/components/invoices/invoice-actions';
 import { useAuth } from '@/context/auth-context';
@@ -28,26 +27,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
-import { cn } from '@/lib/utils';
-
-function PrintButton({ componentRef }: { componentRef: React.RefObject<HTMLDivElement> }) {
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
-
-  return (
-    <button
-      onClick={handlePrint}
-      className={cn(
-        buttonVariants({ variant: 'outline' }),
-        'w-full'
-      )}
-    >
-      <Printer className="mr-2 h-4 w-4" /> Export as PDF
-    </button>
-  );
-}
-
 
 export default function InvoiceDetailPageContent() {
   const router = useRouter();
@@ -61,6 +40,41 @@ export default function InvoiceDetailPageContent() {
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
 
   const componentRef = useRef<HTMLDivElement>(null);
+  
+  const handlePrint = () => {
+    if (!componentRef.current) return;
+    const printWindow = window.open('', '', 'height=800,width=800');
+    if (!printWindow) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not open print window. Please disable your pop-up blocker.',
+      });
+      return;
+    }
+    const printContent = componentRef.current.innerHTML;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Invoice</title>
+          <style>
+            @media print {
+              @page { size: auto;  margin: 0mm; }
+              body { -webkit-print-color-adjust: exact; }
+            }
+          </style>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body>
+          ${printContent}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -171,9 +185,8 @@ export default function InvoiceDetailPageContent() {
                 onStatusChange={handleStatusChange}
                 onDelete={() => setIsDeleteDialogOpen(true)}
                 onGenerateReminder={() => setIsReminderDialogOpen(true)}
-               >
-                 <PrintButton componentRef={componentRef} />
-               </InvoiceActions>
+                onPrint={handlePrint}
+               />
             </div>
           </div>
         </div>
