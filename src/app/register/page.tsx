@@ -1,3 +1,4 @@
+
 'use client';
 
 import { AuthForm } from '@/components/auth/auth-form';
@@ -25,8 +26,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-muted/40 p-4">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen grid place-items-center bg-muted/40 p-4">
+       <div className="w-full max-w-md">
         <div className="grid gap-2 text-center mb-8">
           <div className="flex justify-center items-center mb-2">
             <FileText className="h-8 w-8 mr-2 text-primary" />
@@ -38,6 +39,6 @@ export default function RegisterPage() {
         </div>
         <AuthForm mode="register" />
       </div>
-    </div>
+    </main>
   );
 }
