@@ -1,17 +1,15 @@
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import InvoicePDF from '@/components/invoices/invoice-pdf';
 import InvoiceActions from '@/components/invoices/invoice-actions';
 import { useAuth } from '@/context/auth-context';
@@ -38,60 +36,6 @@ export default function InvoiceDetailPageContent() {
   const [loading, setLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
-
-  const componentRef = useRef<HTMLDivElement>(null);
-  
-  const handlePrint = () => {
-    if (!componentRef.current) return;
-    const printWindow = window.open('', '', 'height=800,width=800');
-    if (!printWindow) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not open print window. Please disable your pop-up blocker.',
-      });
-      return;
-    }
-    const printContent = componentRef.current.innerHTML;
-    
-    const stylesheets = Array.from(document.styleSheets)
-      .map(sheet => {
-        try {
-            return sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : ''
-        } catch (e) {
-            console.warn('Could not load stylesheet', e)
-            return '';
-        }
-      })
-      .join('');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print Invoice</title>
-          ${stylesheets}
-          <style>
-            @media print {
-              @page { size: auto; margin: 0; }
-              body { -webkit-print-color-adjust: exact; }
-            }
-          </style>
-        </head>
-        <body class="bg-white">
-          <div class="p-8">
-            ${printContent}
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    
-    setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
-    }, 250);
-  };
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -152,63 +96,37 @@ export default function InvoiceDetailPageContent() {
 
   if (loading || authLoading) {
     return (
-      <AuthGuard>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        </div>
-      </AuthGuard>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (!invoice) {
-    return (
-      <AuthGuard>
-         <Header />
-         <div className="container mx-auto p-8 text-center">
-            <h1 className="text-2xl font-bold mb-4">Invoice Not Found</h1>
-            <p>The invoice you are looking for does not exist or has been deleted.</p>
-            <Button asChild className="mt-4">
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Return to Invoices
-              </Link>
-            </Button>
-         </div>
-      </AuthGuard>
-    )
+    return null;
   }
 
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1 container mx-auto p-4 md:p-8">
-           <div className="mb-6">
-            <Button variant="outline" className="bg-card" asChild>
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Invoices
-              </Link>
-            </Button>
-          </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <section id="invoice-print" className="bg-card rounded-xl shadow overflow-hidden max-w-full">
+             <div className="mx-auto w-full max-w-[1100px]">
+                <InvoicePDF invoice={invoice} />
+            </div>
+          </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            <div className="lg:col-span-2">
-              <InvoicePDF invoice={invoice} ref={componentRef} />
-            </div>
-            <div className="lg:col-span-1">
-               <InvoiceActions
-                invoice={invoice}
-                onStatusChange={handleStatusChange}
-                onDelete={() => setIsDeleteDialogOpen(true)}
-                onGenerateReminder={() => setIsReminderDialogOpen(true)}
-                onPrint={handlePrint}
-               />
-            </div>
-          </div>
-        </main>
+          <aside className="print:hidden">
+              <div className="sticky top-6 space-y-3">
+                   <InvoiceActions
+                    invoice={invoice}
+                    onStatusChange={handleStatusChange}
+                    onDelete={() => setIsDeleteDialogOpen(true)}
+                    onGenerateReminder={() => setIsReminderDialogOpen(true)}
+                   />
+              </div>
+          </aside>
       </div>
-      
+
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

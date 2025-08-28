@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    --background: 255 100% 97%;
+    --background: 275 100% 97%;
     --foreground: 275 100% 10%;
     --card: 0 0% 100%;
     --card-foreground: 275 100% 10%;
@@ -20,8 +20,8 @@ body {
     --secondary-foreground: 275 100% 15%;
     --muted: 240 15% 92%;
     --muted-foreground: 275 20% 45%;
-    --accent: 240 15% 92%;
-    --accent-foreground: 275 100% 15%;
+    --accent: 271 76% 53%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 10% 88%;
@@ -40,6 +40,8 @@ body {
     --sidebar-accent: 240 15% 92%;
     --sidebar-accent-foreground: 275 100% 15%;
     --sidebar-ring: 271 76% 53%;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .dark {
     --background: 275 20% 5%;
@@ -83,4 +85,32 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@media print {
+  @page {
+    size: 210mm 297mm; /* A4. For US Letter use: size: 8.5in 11in; */
+    margin: 16mm;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  
+  body * { visibility: hidden !important; }
+  #invoice-print, #invoice-print * { visibility: visible !important; }
+  #invoice-print { position: absolute; inset: 0 auto auto 0; width: 100% !important; }
+
+  #invoice-print {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  
+  .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  table { width: 100% !important; page-break-inside: auto; }
+  tr, th, td { break-inside: avoid; }
 }

@@ -21,7 +21,6 @@ interface InvoiceActionsProps {
   onStatusChange: (status: Invoice['status']) => void;
   onDelete: () => void;
   onGenerateReminder: () => void;
-  onPrint: () => void;
 }
 
 export default function InvoiceActions({
@@ -29,12 +28,11 @@ export default function InvoiceActions({
   onStatusChange,
   onDelete,
   onGenerateReminder,
-  onPrint,
 }: InvoiceActionsProps) {
   const statuses: Invoice['status'][] = ['draft', 'sent', 'paid', 'void'];
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm print:hidden">
       <CardHeader>
         <CardTitle>Actions</CardTitle>
       </CardHeader>
@@ -53,7 +51,7 @@ export default function InvoiceActions({
           </Link>
         </Button>
         
-        <Button onClick={onPrint} variant="outline" className="w-full">
+        <Button onClick={() => window.print()} variant="outline" className="w-full">
           <Printer className="mr-2 h-4 w-4" /> Export as PDF
         </Button>
 
