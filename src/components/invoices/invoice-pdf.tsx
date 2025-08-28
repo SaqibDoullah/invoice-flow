@@ -31,12 +31,12 @@ const InvoicePDF = React.forwardRef<HTMLDivElement, InvoicePDFProps>(({ invoice 
     <div ref={ref} className="text-foreground bg-card p-4 rounded-lg">
       <header className="mb-12">
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-              <FileText className="h-8 w-8 text-primary" />
+          <div className="flex items-start gap-4">
+              <FileText className="h-8 w-8 text-primary mt-1" />
               <div>
-                <h1 className="text-2xl font-bold text-primary uppercase">{invoice.companyName || 'Your Company'}</h1>
-                <p className="text-sm text-muted-foreground">{invoice.companyAddress}</p>
-                <p className="text-sm text-muted-foreground">{invoice.companyCity}</p>
+                <h1 className="text-3xl font-bold text-primary uppercase leading-tight">{invoice.companyName || 'Your Company'}</h1>
+                <p className="text-muted-foreground mt-2">{invoice.companyAddress}</p>
+                <p className="text-muted-foreground">{invoice.companyCity}</p>
               </div>
           </div>
           <div className="text-right">
