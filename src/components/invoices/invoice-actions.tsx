@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Edit, Trash2, ChevronDown, CheckCircle, Mail, Printer } from 'lucide-react';
@@ -15,6 +14,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { type Invoice } from '@/types';
 import StatusBadge from './status-badge';
+import { ExportButton } from './export-button';
 
 interface InvoiceActionsProps {
   invoice: Invoice;
@@ -51,9 +51,7 @@ export default function InvoiceActions({
           </Link>
         </Button>
         
-        <Button onClick={() => window.print()} variant="outline" className="w-full">
-          <Printer className="mr-2 h-4 w-4" /> Export as PDF
-        </Button>
+        <ExportButton />
 
         <Separator />
 

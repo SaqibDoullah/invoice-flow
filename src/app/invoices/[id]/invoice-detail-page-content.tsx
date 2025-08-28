@@ -24,7 +24,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
-import Header from '@/components/header';
 
 export default function InvoiceDetailPageContent() {
   const router = useRouter();

@@ -89,11 +89,10 @@ body {
 }
 
 @media print {
-  @page {
-    size: 210mm 297mm; /* A4. For US Letter use: size: 8.5in 11in; */
-    margin: 16mm;
+  body {
+    background-color: #fff;
   }
-
+  
   .print\:hidden {
     display: none !important;
   }
