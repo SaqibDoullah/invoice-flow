@@ -192,13 +192,11 @@ export default function InvoiceDetailPageContent() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            <div className="md:col-span-2">
-              <div className="bg-card rounded-xl shadow-sm">
-                <InvoicePDF invoice={invoice} ref={componentRef} />
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2">
+              <InvoicePDF invoice={invoice} ref={componentRef} />
             </div>
-            <div className="md:col-span-1">
+            <div className="lg:col-span-1">
                <InvoiceActions
                 invoice={invoice}
                 onStatusChange={handleStatusChange}
