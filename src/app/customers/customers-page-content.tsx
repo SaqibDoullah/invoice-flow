@@ -6,7 +6,6 @@ import { PlusCircle } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import { SidebarInset } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -92,66 +91,64 @@ export default function CustomersPageContent() {
 
   return (
     <AuthGuard>
-      <SidebarInset>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1 container mx-auto p-4 md:p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-               <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Customer
-                </Button>
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer List</CardTitle>
-                <CardDescription>A list of all your customers derived from your invoices.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {loading || authLoading ? (
-                  <div className="space-y-2">
-                    {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="text-center">Invoices</TableHead>
-                        <TableHead className="text-right">Total Billed</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {customers.length > 0 ? (
-                        customers.map((customer) => (
-                          <TableRow key={customer.id}>
-                            <TableCell className="font-medium">{customer.name}</TableCell>
-                            <TableCell>{customer.email}</TableCell>
-                            <TableCell className="text-center">{customer.invoices}</TableCell>
-                            <TableCell className="text-right">
-                              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(customer.totalBilled)}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={4} className="h-24 text-center">
-                            No customer data found. Create an invoice to get started.
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 container mx-auto p-4 md:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Customer
+              </Button>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer List</CardTitle>
+              <CardDescription>A list of all your customers derived from your invoices.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading || authLoading ? (
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-center">Invoices</TableHead>
+                      <TableHead className="text-right">Total Billed</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.length > 0 ? (
+                      customers.map((customer) => (
+                        <TableRow key={customer.id}>
+                          <TableCell className="font-medium">{customer.name}</TableCell>
+                          <TableCell>{customer.email}</TableCell>
+                          <TableCell className="text-center">{customer.invoices}</TableCell>
+                          <TableCell className="text-right">
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(customer.totalBilled)}
                           </TableCell>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                          No customer data found. Create an invoice to get started.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
-          </main>
-        </div>
-      </SidebarInset>
+        </main>
+      </div>
     </AuthGuard>
   );
 }

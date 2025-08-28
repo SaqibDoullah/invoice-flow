@@ -10,7 +10,6 @@ import { updateProfile } from 'firebase/auth';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import { SidebarInset } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -106,108 +105,106 @@ export default function SettingsPageContent() {
 
   return (
     <AuthGuard>
-      <SidebarInset>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1 container mx-auto p-4 md:p-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
-            
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-3 gap-8">
-                    <div className="md:col-span-1">
-                        <CardTitle>Profile</CardTitle>
-                        <CardDescription className="mt-1">Your personal account details.</CardDescription>
-                    </div>
-                     <div className="md:col-span-2">
-                         <Card>
-                            <CardContent className="p-6">
-                                {isLoading ? <p>Loading...</p> : (
-                                <div className="space-y-4">
-                                     <FormField
-                                        control={form.control}
-                                        name="fullName"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                            <FormLabel>Full Name</FormLabel>
-                                            <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
-                                            <FormMessage />
-                                            </FormItem>
-                                        )}
-                                        />
-                                    <div className="space-y-2">
-                                        <Label htmlFor="email">Email Address</Label>
-                                        <Input id="email" type="email" placeholder="Your email" disabled defaultValue={user?.email || ''} />
-                                    </div>
-                                </div>
-                                )}
-                            </CardContent>
-                         </Card>
-                     </div>
-
-                    <Separator className="md:col-span-3" />
-
-                    <div className="md:col-span-1">
-                        <CardTitle>Company</CardTitle>
-                        <CardDescription className="mt-1">Details for your invoices.</CardDescription>
-                    </div>
-
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 container mx-auto p-4 md:p-8">
+          <h1 className="text-3xl font-bold tracking-tight mb-8">Settings</h1>
+          
+          <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-3 gap-8">
+                  <div className="md:col-span-1">
+                      <CardTitle>Profile</CardTitle>
+                      <CardDescription className="mt-1">Your personal account details.</CardDescription>
+                  </div>
                     <div className="md:col-span-2">
                         <Card>
-                            <CardContent className="p-6">
-                            {isLoading ? <p>Loading...</p> : (
-                                <div className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="companyName"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                        <FormLabel>Company Name</FormLabel>
-                                        <FormControl><Input placeholder="Your Company Name" {...field} /></FormControl>
-                                        <FormMessage />
-                                        </FormItem>
-                                    )}
-                                    />
-                                <FormField
-                                    control={form.control}
-                                    name="companyAddress"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                        <FormLabel>Address</FormLabel>
-                                        <FormControl><Input placeholder="123 Business St, Suite 100" {...field} /></FormControl>
-                                        <FormMessage />
-                                        </FormItem>
-                                    )}
-                                    />
-                                <FormField
-                                    control={form.control}
-                                    name="companyCity"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                        <FormLabel>City, State, ZIP</FormLabel>
-                                        <FormControl><Input placeholder="City, State, 12345" {...field} /></FormControl>
-                                        <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                </div>
-                            )}
-                            </CardContent>
+                          <CardContent className="p-6">
+                              {isLoading ? <p>Loading...</p> : (
+                              <div className="space-y-4">
+                                    <FormField
+                                      control={form.control}
+                                      name="fullName"
+                                      render={({ field }) => (
+                                          <FormItem>
+                                          <FormLabel>Full Name</FormLabel>
+                                          <FormControl><Input placeholder="Your Name" {...field} /></FormControl>
+                                          <FormMessage />
+                                          </FormItem>
+                                      )}
+                                      />
+                                  <div className="space-y-2">
+                                      <Label htmlFor="email">Email Address</Label>
+                                      <Input id="email" type="email" placeholder="Your email" disabled defaultValue={user?.email || ''} />
+                                  </div>
+                              </div>
+                              )}
+                          </CardContent>
                         </Card>
                     </div>
 
-                    <Separator className="md:col-span-3" />
+                  <Separator className="md:col-span-3" />
 
-                     <div className="md:col-span-3 flex justify-end">
-                        <Button type="submit" disabled={isSaving}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
-                        </Button>
-                    </div>
-                </form>
-            </Form>
-          </main>
-        </div>
-      </SidebarInset>
+                  <div className="md:col-span-1">
+                      <CardTitle>Company</CardTitle>
+                      <CardDescription className="mt-1">Details for your invoices.</CardDescription>
+                  </div>
+
+                  <div className="md:col-span-2">
+                      <Card>
+                          <CardContent className="p-6">
+                          {isLoading ? <p>Loading...</p> : (
+                              <div className="space-y-4">
+                              <FormField
+                                  control={form.control}
+                                  name="companyName"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                      <FormLabel>Company Name</FormLabel>
+                                      <FormControl><Input placeholder="Your Company Name" {...field} /></FormControl>
+                                      <FormMessage />
+                                      </FormItem>
+                                  )}
+                                  />
+                              <FormField
+                                  control={form.control}
+                                  name="companyAddress"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                      <FormLabel>Address</FormLabel>
+                                      <FormControl><Input placeholder="123 Business St, Suite 100" {...field} /></FormControl>
+                                      <FormMessage />
+                                      </FormItem>
+                                  )}
+                                  />
+                              <FormField
+                                  control={form.control}
+                                  name="companyCity"
+                                  render={({ field }) => (
+                                      <FormItem>
+                                      <FormLabel>City, State, ZIP</FormLabel>
+                                      <FormControl><Input placeholder="City, State, 12345" {...field} /></FormControl>
+                                      <FormMessage />
+                                      </FormItem>
+                                  )}
+                              />
+                              </div>
+                          )}
+                          </CardContent>
+                      </Card>
+                  </div>
+
+                  <Separator className="md:col-span-3" />
+
+                    <div className="md:col-span-3 flex justify-end">
+                      <Button type="submit" disabled={isSaving}>
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Changes
+                      </Button>
+                  </div>
+              </form>
+          </Form>
+        </main>
+      </div>
     </AuthGuard>
   );
 }

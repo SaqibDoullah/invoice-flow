@@ -7,7 +7,6 @@ import { subMonths, format, isAfter } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import { SidebarInset } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
@@ -142,87 +141,85 @@ export default function ReportsPageContent() {
 
   return (
     <AuthGuard>
-      <SidebarInset>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1 container mx-auto p-4 md:p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-            </div>
-            
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-                {renderSummaryCard('Total Revenue', formatCurrency(reportData.totalRevenue), 'All-time paid invoices', '', loading || authLoading)}
-                {renderSummaryCard('Invoices Paid', reportData.paidInvoices, 'Total invoices marked as paid', '', loading || authLoading)}
-                {renderSummaryCard('Outstanding', formatCurrency(reportData.outstanding), 'Invoices sent but not overdue', '', loading || authLoading)}
-                {renderSummaryCard('Overdue', formatCurrency(reportData.overdue), 'Invoices past their due date', 'text-destructive', loading || authLoading)}
-            </div>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 container mx-auto p-4 md:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+              {renderSummaryCard('Total Revenue', formatCurrency(reportData.totalRevenue), 'All-time paid invoices', '', loading || authLoading)}
+              {renderSummaryCard('Invoices Paid', reportData.paidInvoices, 'Total invoices marked as paid', '', loading || authLoading)}
+              {renderSummaryCard('Outstanding', formatCurrency(reportData.outstanding), 'Invoices sent but not overdue', '', loading || authLoading)}
+              {renderSummaryCard('Overdue', formatCurrency(reportData.overdue), 'Invoices past their due date', 'text-destructive', loading || authLoading)}
+          </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Revenue Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                      <CardTitle>Revenue Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={reportData.monthlyRevenue}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis tickFormatter={(value) => `$${value/1000}k`} />
+                                <Tooltip 
+                                    contentStyle={{
+                                        background: 'hsl(var(--background))',
+                                        border: '1px solid hsl(var(--border))'
+                                    }}
+                                    formatter={(value: number) => formatCurrency(value)}
+                                />
+                                <Legend />
+                                <Bar dataKey="revenue" fill="hsl(var(--primary))" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                      )}
+                  </CardContent>
+              </Card>
+
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Invoice Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                         {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
                           <ResponsiveContainer width="100%" height={300}>
-                              <BarChart data={reportData.monthlyRevenue}>
-                                  <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="name" />
-                                  <YAxis tickFormatter={(value) => `$${value/1000}k`} />
-                                  <Tooltip 
+                            <PieChart>
+                                <Pie
+                                    data={reportData.invoiceStatus}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    outerRadius={100}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                    label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                                >
+                                    {reportData.invoiceStatus.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip 
                                       contentStyle={{
-                                          background: 'hsl(var(--background))',
-                                          border: '1px solid hsl(var(--border))'
-                                      }}
-                                      formatter={(value: number) => formatCurrency(value)}
-                                  />
-                                  <Legend />
-                                  <Bar dataKey="revenue" fill="hsl(var(--primary))" />
-                              </BarChart>
-                          </ResponsiveContainer>
+                                        background: 'hsl(var(--background))',
+                                        border: '1px solid hsl(var(--border))'
+                                    }}
+                                />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
                         )}
-                    </CardContent>
-                </Card>
+                  </CardContent>
+              </Card>
+          </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Invoice Status</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                         {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
-                           <ResponsiveContainer width="100%" height={300}>
-                              <PieChart>
-                                  <Pie
-                                      data={reportData.invoiceStatus}
-                                      cx="50%"
-                                      cy="50%"
-                                      labelLine={false}
-                                      outerRadius={100}
-                                      fill="#8884d8"
-                                      dataKey="value"
-                                      label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
-                                  >
-                                      {reportData.invoiceStatus.map((entry, index) => (
-                                      <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS]} />
-                                      ))}
-                                  </Pie>
-                                  <Tooltip 
-                                       contentStyle={{
-                                          background: 'hsl(var(--background))',
-                                          border: '1px solid hsl(var(--border))'
-                                      }}
-                                  />
-                                  <Legend />
-                              </PieChart>
-                          </ResponsiveContainer>
-                         )}
-                    </CardContent>
-                </Card>
-            </div>
-
-          </main>
-        </div>
-      </SidebarInset>
+        </main>
+      </div>
     </AuthGuard>
   );
 }
