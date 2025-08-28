@@ -1,4 +1,6 @@
 // This file is intended for client-side use only.
+'use client';
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
@@ -16,33 +18,33 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
+// This function is the key to making sure that Firebase is initialized only on the client side.
 function initializeFirebase() {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    if (!getApps().length) {
-         if (
-            !firebaseConfig.apiKey ||
-            !firebaseConfig.authDomain ||
-            !firebaseConfig.projectId
-        ) {
-             console.error(
-                'Firebase config is not set. Make sure you have a .env.local file with all the required NEXT_PUBLIC_FIREBASE_ variables.'
-            );
-            return;
+    if (typeof window !== 'undefined') {
+        if (!getApps().length) {
+            if (
+                !firebaseConfig.apiKey ||
+                !firebaseConfig.authDomain ||
+                !firebaseConfig.projectId
+            ) {
+                 console.error(
+                    'Firebase config is not set. Make sure you have a .env.local file with all the required NEXT_PUBLIC_FIREBASE_ variables.'
+                );
+                return;
+            }
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } else {
+            app = getApp();
+            auth = getAuth(app);
+            db = getFirestore(app);
         }
-        app = initializeApp(firebaseConfig);
-    } else {
-        app = getApp();
     }
-    
-    auth = getAuth(app);
-    db = getFirestore(app);
 }
 
-// Call initialization right away, but it's guarded by the window check.
+// We call the function to ensure Firebase is initialized on the client
 initializeFirebase();
 
-// Export instances directly
+// We export the instances directly for use in other client components.
 export { app, auth, db };
