@@ -1,13 +1,9 @@
+
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import './globals.css';
 import { SidebarProvider } from '@/components/ui/sidebar';
-
-// Dynamically import the client-side providers with SSR turned off.
-// This is the key to preventing the Firebase SDK from being initialized on the server.
-const ClientProviders = dynamic(() => import('@/components/client-providers'), {
-  ssr: false,
-});
+import { AuthProvider } from '@/context/auth-context';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'InvoiceFlow',
@@ -34,9 +30,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <SidebarProvider>
-          <ClientProviders>{children}</ClientProviders>
-        </SidebarProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            {children}
+            <Toaster />
+          </SidebarProvider>
+        </AuthProvider>
       </body>
     </html>
   );

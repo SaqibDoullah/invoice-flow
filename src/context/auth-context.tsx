@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,11 +27,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // onAuthStateChanged returns an unsubscriber
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
+    // Unsubscribe to the listener when unmounting
     return () => unsubscribe();
   }, []);
 
