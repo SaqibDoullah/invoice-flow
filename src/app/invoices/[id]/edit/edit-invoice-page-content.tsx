@@ -15,6 +15,17 @@ import { type InvoiceFormData, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 
+// Helper to remove any `undefined` properties from an object
+function stripUndefined<T extends Record<string, any>>(obj: T): T {
+  const newObj = { ...obj };
+  for (const key in newObj) {
+    if (newObj[key] === undefined) {
+      delete newObj[key];
+    }
+  }
+  return newObj;
+}
+
 export default function EditInvoicePageContent() {
   const router = useRouter();
   const params = useParams();
@@ -56,11 +67,41 @@ export default function EditInvoicePageContent() {
     if (typeof id !== 'string' || !user || !db) return;
     try {
       const docRef = doc(db, 'users', user.uid, 'invoices', id);
-      const dataToUpdate = {
-        ...data,
+      
+      const items = (data.items || []).map(it => {
+        const price = Number(it.price || 0);
+        const quantity = Number(it.quantity || 0);
+        return {
+          name: it.name || '',
+          specification: it.specification || '',
+          price,
+          quantity,
+          lineTotal: price * quantity,
+        };
+      });
+
+      const subtotal = items.reduce((s, it) => s + it.lineTotal, 0);
+
+      const discountValue = Number(data.discount || 0);
+      const discountAmount = data.discountType === 'percentage'
+        ? subtotal * (discountValue / 100)
+        : discountValue;
+    
+      const total = subtotal - discountAmount;
+
+      // Build a clean payload, excluding fields that shouldn't be updated
+      const { createdAt, ownerId, ...restOfData } = data;
+
+      const dataToUpdate = stripUndefined({
+        ...restOfData,
         invoiceDate: Timestamp.fromDate(data.invoiceDate),
         dueDate: Timestamp.fromDate(data.dueDate),
-      };
+        items,
+        subtotal,
+        discount: discountValue,
+        total,
+      });
+
       await updateDoc(docRef, dataToUpdate);
       toast({ title: 'Success', description: 'Invoice updated successfully.' });
       router.push(`/invoices/${id}`);
