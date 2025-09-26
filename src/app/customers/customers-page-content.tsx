@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -97,9 +98,11 @@ export default function CustomersPageContent() {
         <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Customer
+              <Button asChild>
+                <Link href="/invoices/new">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Customer
+                </Link>
               </Button>
           </div>
           
