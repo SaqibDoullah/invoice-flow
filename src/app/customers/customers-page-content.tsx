@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,6 +29,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import AddCustomerDialog from '@/components/customers/add-customer-dialog';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 export default function CustomersPageContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -37,39 +39,50 @@ export default function CustomersPageContent() {
   const { toast } = useToast();
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
 
-  const fetchCustomers = async () => {
+  useEffect(() => {
     const db = getFirestoreDb();
-    if (!user || !db) {
-      setLoading(false);
+    if (!user || authLoading || !db) {
+      if (!authLoading) setLoading(false);
       return;
     }
-    setLoading(true);
-    try {
-      const q = query(collection(db, 'users', user.uid, 'customers'));
-      const querySnapshot = await getDocs(q);
-      const customersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
-      setCustomers(customersList);
-    } catch (error: any) {
-      console.error("Error fetching customers: ", { code: error?.code, message: error?.message });
-      toast({
-          variant: "destructive",
-          title: "Error Fetching Customers",
-          description: `Code: ${error.code}. ${error.message}`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    if (!authLoading) {
-      fetchCustomers();
-    }
-  }, [user, authLoading]);
+    setLoading(true);
+    const customerCollectionRef = collection(db, 'users', user.uid, 'customers');
+    const q = query(customerCollectionRef);
+
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const customersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+        setCustomers(customersList);
+        setLoading(false);
+      },
+      (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: customerCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({
+                variant: "destructive",
+                title: "Error Fetching Customers",
+                description: `Code: ${serverError.code}. ${serverError.message}`,
+            });
+        }
+        setLoading(false);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
 
   const handleCustomerAdded = (newCustomer: Customer) => {
+    // The real-time listener will handle this automatically, but we can optimistically update
     setCustomers(prev => [...prev, newCustomer]);
-    fetchCustomers(); // Re-fetch to ensure data is sorted and consistent
   }
 
   return (
