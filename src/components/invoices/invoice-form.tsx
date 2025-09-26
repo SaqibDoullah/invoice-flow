@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2, CalendarIcon } from 'lucide-react';
-import { serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import { serverTimestamp, getDoc, doc, collection, getDocs, query } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { type InvoiceFormData, invoiceSchema, type Invoice } from '@/types';
+import { type InvoiceFormData, invoiceSchema, type Invoice, type Customer } from '@/types';
 import { Textarea } from '../ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -44,10 +44,27 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const [isFormReady, setIsFormReady] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
   });
+  
+  useEffect(() => {
+    const fetchCustomers = async () => {
+        const db = getFirestoreDb();
+        if (!user || !db) return;
+        
+        const q = query(collection(db, 'users', user.uid, 'customers'));
+        const querySnapshot = await getDocs(q);
+        const customersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+        setCustomers(customersList);
+    };
+
+    if(!authLoading && user) {
+        fetchCustomers();
+    }
+  }, [user, authLoading])
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -55,6 +72,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
       setIsFormReady(false);
       
       let defaultValues: Partial<InvoiceFormData> = {
+          customerId: '',
           customerName: '',
           customerEmail: '',
           status: 'draft',
@@ -218,26 +236,32 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FormField
                 control={form.control}
-                name="customerName"
+                name="customerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="customerEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="john@example.com" {...field} />
-                    </FormControl>
+                    <FormLabel>Customer</FormLabel>
+                     <Select 
+                        onValueChange={(value) => {
+                            field.onChange(value);
+                            const selectedCustomer = customers.find(c => c.id === value);
+                            if(selectedCustomer) {
+                                form.setValue('customerName', selectedCustomer.name);
+                                form.setValue('customerEmail', selectedCustomer.email);
+                            }
+                        }} 
+                        defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a customer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {customers.map(customer => (
+                            <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
