@@ -4,6 +4,8 @@ import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from "@/components/ui/toaster"
 import DashboardLayout from '@/components/dashboard-layout';
+import FirebaseErrorListener from '@/components/FirebaseErrorListener';
+
 
 export const metadata: Metadata = {
   title: 'InvoiceFlow',
@@ -28,6 +30,7 @@ export default function RootLayout({
               {children}
             </DashboardLayout>
           <Toaster />
+          {process.env.NODE_ENV === 'development' && <FirebaseErrorListener />}
         </AuthProvider>
       </body>
     </html>

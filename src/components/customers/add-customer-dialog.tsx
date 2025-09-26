@@ -28,6 +28,8 @@ import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type Customer, customerSchema, type CustomerFormData } from '@/types';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
+import { errorEmitter } from '@/lib/error-emitter';
 
 interface AddCustomerDialogProps {
   isOpen: boolean;
@@ -57,27 +59,40 @@ export default function AddCustomerDialog({
     if (!user || !db) return;
 
     setIsSubmitting(true);
-    try {
-      const docRef = await addDoc(collection(db, 'users', user.uid, 'customers'), {
-        ...data,
+    
+    const customerCollectionRef = collection(db, 'users', user.uid, 'customers');
+    
+    addDoc(customerCollectionRef, data)
+      .then((docRef) => {
+        toast({
+          title: 'Success',
+          description: 'Customer added successfully.',
+        });
+        onCustomerAdded({ id: docRef.id, ...data });
+        setIsOpen(false);
+        form.reset();
+      })
+      .catch((serverError: any) => {
+        const permissionError = new FirestorePermissionError({
+          path: customerCollectionRef.path,
+          operation: 'create',
+          requestResourceData: data,
+        });
+
+        errorEmitter.emit('permission-error', permissionError);
+
+        // Fallback toast for general errors
+        if (serverError?.code !== 'permission-denied') {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to add customer. Please try again.',
+          });
+        }
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-      toast({
-        title: 'Success',
-        description: 'Customer added successfully.',
-      });
-      onCustomerAdded({ id: docRef.id, ...data });
-      setIsOpen(false);
-      form.reset();
-    } catch (error) {
-      console.error('Error adding customer:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to add customer.',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (
