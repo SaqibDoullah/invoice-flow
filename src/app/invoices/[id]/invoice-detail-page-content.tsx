@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
+import SendInvoiceDialog from '@/components/invoices/send-invoice-dialog';
 
 export default function InvoiceDetailPageContent() {
   const router = useRouter();
@@ -35,6 +36,7 @@ export default function InvoiceDetailPageContent() {
   const [loading, setLoading] = useState(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
+  const [isSendInvoiceDialogOpen, setIsSendInvoiceDialogOpen] = useState(false);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -92,6 +94,12 @@ export default function InvoiceDetailPageContent() {
         setIsDeleteDialogOpen(false);
     }
   };
+  
+  const handleEmailSent = () => {
+      if (invoice?.status === 'draft') {
+          handleStatusChange('sent');
+      }
+  }
 
   if (loading || authLoading) {
     return (
@@ -121,6 +129,7 @@ export default function InvoiceDetailPageContent() {
                     onStatusChange={handleStatusChange}
                     onDelete={() => setIsDeleteDialogOpen(true)}
                     onGenerateReminder={() => setIsReminderDialogOpen(true)}
+                    onSendInvoice={() => setIsSendInvoiceDialogOpen(true)}
                    />
               </div>
           </aside>
@@ -150,6 +159,13 @@ export default function InvoiceDetailPageContent() {
         isOpen={isReminderDialogOpen}
         setIsOpen={setIsReminderDialogOpen}
         invoice={invoice}
+      />
+
+      <SendInvoiceDialog
+        isOpen={isSendInvoiceDialogOpen}
+        setIsOpen={setIsSendInvoiceDialogOpen}
+        invoice={invoice}
+        onEmailSent={handleEmailSent}
       />
     </AuthGuard>
   );

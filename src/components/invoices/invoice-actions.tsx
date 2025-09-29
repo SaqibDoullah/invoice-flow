@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, Trash2, ChevronDown, CheckCircle, Mail, Printer } from 'lucide-react';
+import { Edit, Trash2, ChevronDown, CheckCircle, Mail, Printer, Send } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ interface InvoiceActionsProps {
   onStatusChange: (status: Invoice['status']) => void;
   onDelete: () => void;
   onGenerateReminder: () => void;
+  onSendInvoice: () => void;
 }
 
 export default function InvoiceActions({
@@ -28,6 +29,7 @@ export default function InvoiceActions({
   onStatusChange,
   onDelete,
   onGenerateReminder,
+  onSendInvoice,
 }: InvoiceActionsProps) {
   const statuses: Invoice['status'][] = ['draft', 'sent', 'paid', 'void'];
 
@@ -37,15 +39,18 @@ export default function InvoiceActions({
         <CardTitle>Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        <Button onClick={onSendInvoice} className="w-full">
+            <Send className="mr-2 h-4 w-4" /> Send Invoice
+        </Button>
         {invoice.status !== 'paid' && (
-          <Button onClick={() => onStatusChange('paid')} className="w-full">
+          <Button onClick={() => onStatusChange('paid')} className="w-full" variant="secondary">
             <CheckCircle className="mr-2 h-4 w-4" /> Mark as Paid
           </Button>
         )}
         <Button onClick={onGenerateReminder} variant="secondary" className="w-full">
           <Mail className="mr-2 h-4 w-4" /> Generate Reminder
         </Button>
-        <Button asChild className="w-full">
+        <Button asChild className="w-full" variant="secondary">
           <Link href={`/invoices/${invoice.id}/edit`}>
             <Edit className="mr-2 h-4 w-4" /> Edit Invoice
           </Link>
