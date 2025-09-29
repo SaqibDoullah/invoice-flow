@@ -3,7 +3,6 @@
 import {
   collection,
   query,
-  where,
   orderBy,
   limit,
   getDocs,
@@ -15,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Eye, Copy } from 'lucide-react';
 
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
@@ -46,7 +45,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
@@ -60,16 +58,21 @@ const PAGE_SIZE = 20;
 
 export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const [dataLoading, setDataLoading] = useState(true);
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
     const db = getFirestoreDb();
-    if (!user || !db) return;
-    setIsLoading(true);
+    if (!user || !db) {
+        setDataLoading(false);
+        return;
+    };
+    setDataLoading(true);
 
     try {
       let q = query(
@@ -86,33 +89,41 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       const newInvoices = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
 
       setInvoices(prev => loadMore ? [...prev, ...newInvoices] : newInvoices);
-      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
       setHasMore(newInvoices.length === PAGE_SIZE);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch invoices.",
-      });
+    } catch (error: any) {
+       console.error("Firestore read failed:", error.message, error);
+       if (error.code !== 'unavailable') {
+          toast({
+            variant: "destructive",
+            title: "Error Fetching Invoices",
+            description: "Could not fetch invoices. Please check your connection and security rules.",
+          });
+       }
     } finally {
-      setIsLoading(false);
+      setDataLoading(false);
     }
   }, [lastDoc, toast, user]);
-
+  
   useEffect(() => {
-    if (user) {
-      fetchInvoices();
+    if (!authLoading && user) {
+      fetchInvoices(false);
+    } else if (!authLoading && !user) {
+        setInvoices([]);
+        setHasMore(false);
+        setDataLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [authLoading, user]);
 
-  const handleDelete = async (invoiceId: string) => {
+
+  const handleDelete = async () => {
+    if (!selectedInvoiceId) return;
     const db = getFirestoreDb();
-    if (!db || !user) return;
+    if (!user || !db) return;
     try {
-      await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoiceId));
-      setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+      await deleteDoc(doc(db, 'users', user.uid, 'invoices', selectedInvoiceId));
+      setInvoices(prev => prev.filter(inv => inv.id !== selectedInvoiceId));
       toast({
         title: "Success",
         description: "Invoice deleted successfully.",
@@ -124,6 +135,9 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
         title: "Error",
         description: "Failed to delete invoice.",
       });
+    } finally {
+        setDialogOpen(false);
+        setSelectedInvoiceId(null);
     }
   };
 
@@ -138,7 +152,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     });
   }, [invoices, searchTerm, statusFilter]);
 
-  if (isLoading && invoices.length === 0) {
+  if (authLoading || (dataLoading && invoices.length === 0)) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
@@ -164,63 +178,55 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           </TableHeader>
           <TableBody>
             {filteredInvoices.length > 0 ? (
-              filteredInvoices.map(invoice => (
-                <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.customerName}</TableCell>
-                  <TableCell>{format(invoice.invoiceDate.toDate(), 'PP')}</TableCell>
-                  <TableCell><StatusBadge status={invoice.status} /></TableCell>
-                  <TableCell className="text-right">
-                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}
-                  </TableCell>
-                  <TableCell>
-                    <AlertDialog>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                             <Link href={`/invoices/${invoice.id}`} className="cursor-pointer">
-                               <Eye className="mr-2 h-4 w-4" /> View
-                             </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/invoices/${invoice.id}/edit`} className="cursor-pointer">
-                              <Edit className="mr-2 h-4 w-4" /> Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
-                               <Trash2 className="mr-2 h-4 w-4" /> Delete
+              filteredInvoices.map(invoice => {
+                const ts = invoice.invoiceDate;
+                return (
+                  <TableRow key={invoice.id}>
+                    <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                    <TableCell>{invoice.customerName}</TableCell>
+                    <TableCell>{ts?.toDate ? format(ts.toDate(), 'PP') : '-'}</TableCell>
+                    <TableCell><StatusBadge status={invoice.status} /></TableCell>
+                    <TableCell className="text-right">
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)}
+                    </TableCell>
+                    <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/invoices/${invoice.id}`} className="cursor-pointer">
+                                <Eye className="mr-2 h-4 w-4" /> View
+                              </Link>
                             </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this invoice.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(invoice.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))
+                            <DropdownMenuItem asChild>
+                              <Link href={`/invoices/${invoice.id}/edit`} className="cursor-pointer">
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                              </Link>
+                            </DropdownMenuItem>
+                             <DropdownMenuItem asChild>
+                               <Link href={`/invoices/new?duplicateId=${invoice.id}`} className="cursor-pointer">
+                                <Copy className="mr-2 h-4 w-4" /> Duplicate
+                               </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onSelect={() => {
+                                    setSelectedInvoiceId(invoice.id);
+                                    setDialogOpen(true);
+                                }}
+                                className="text-destructive focus:text-destructive cursor-pointer">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="text-center h-24">
@@ -231,10 +237,31 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
           </TableBody>
         </Table>
       </div>
-      {hasMore && (
+
+       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete this invoice.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                    Delete
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+      {hasMore && filteredInvoices.length > 0 && (
         <div className="text-center mt-6">
-          <Button onClick={() => fetchInvoices(true)} disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Load More'}
+          <Button onClick={() => fetchInvoices(true)} disabled={dataLoading}>
+            {dataLoading ? 'Loading...' : 'Load More'}
           </Button>
         </div>
       )}
