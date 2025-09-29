@@ -34,7 +34,7 @@ import { errorEmitter } from '@/lib/error-emitter';
 interface AddCustomerDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  onCustomerAdded: (customer: Customer) => void;
+  onCustomerAdded: () => void;
 }
 
 export default function AddCustomerDialog({
@@ -68,7 +68,7 @@ export default function AddCustomerDialog({
           title: 'Success',
           description: 'Customer added successfully.',
         });
-        onCustomerAdded({ id: docRef.id, ...data });
+        onCustomerAdded();
         setIsOpen(false);
         form.reset();
       })

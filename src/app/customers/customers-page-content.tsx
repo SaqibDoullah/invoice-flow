@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { PlusCircle } from 'lucide-react';
-import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -80,9 +79,8 @@ export default function CustomersPageContent() {
   }, [user, authLoading, toast]);
 
 
-  const handleCustomerAdded = (newCustomer: Customer) => {
-    // The real-time listener will handle this automatically, but we can optimistically update
-    setCustomers(prev => [...prev, newCustomer]);
+  const handleCustomerAdded = () => {
+    // The real-time listener will handle UI updates automatically.
   }
 
   return (
