@@ -57,13 +57,16 @@ Follow these instructions to get a copy of the project up and running on your lo
             match /invoices/{invoiceId} {
               allow read, write, delete: if request.auth != null && request.auth.uid == userId;
             }
-            // Crucially, allow the user to LIST the invoices that belong to them
-            allow list: if request.auth != null && request.auth.uid == userId;
+            
+            // A user can manage their own customers subcollection
+            match /customers/{customerId} {
+              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
       }
       ```
-      *Note: These rules ensure that a user can only access and manage their own data. They can manage their user settings document, and they can perform all actions (including listing) on the invoices within their own subcollection.*
+      *Note: These rules ensure that a user can only access and manage their own data. They can manage their user settings document, and they can perform all actions (including listing) on the invoices and customers within their own subcollections.*
 
 6.  **Enable Firebase Authentication:**
     - In the Firebase Console, go to **Authentication**.
