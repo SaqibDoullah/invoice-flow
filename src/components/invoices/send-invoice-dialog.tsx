@@ -103,7 +103,7 @@ export default function SendInvoiceDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Send Invoice #{invoice.invoiceNumber}</DialogTitle>
+          <DialogTitle>Draft Invoice Email for Invoice #{invoice.invoiceNumber}</DialogTitle>
           <DialogDescription>
             An email has been drafted for you. Click "Send with Email Client" to open it in your default mail app.
           </DialogDescription>
