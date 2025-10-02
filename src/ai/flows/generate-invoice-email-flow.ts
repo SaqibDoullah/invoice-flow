@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const GenerateInvoiceEmailInputSchema = z.object({
   customerName: z.string().describe("The name of the customer."),
@@ -33,6 +34,7 @@ const prompt = ai.definePrompt({
   name: 'generateInvoiceEmailPrompt',
   input: {schema: GenerateInvoiceEmailInputSchema},
   output: {schema: GenerateInvoiceEmailOutputSchema},
+  model: googleAI('gemini-1.5-flash'),
   prompt: `You are an expert accountant's assistant. Your task is to write a polite, professional, and clear email to a client attaching a new invoice.
 
 The tone should be friendly and professional.
