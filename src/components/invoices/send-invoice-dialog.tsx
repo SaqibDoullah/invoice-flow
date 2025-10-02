@@ -35,6 +35,7 @@ export default function SendInvoiceDialog({
   onEmailSent,
 }: SendInvoiceDialogProps) {
   const [emailContent, setEmailContent] = useState({ subject: '', body: '' });
+  const [recipientEmail, setRecipientEmail] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -45,6 +46,8 @@ export default function SendInvoiceDialog({
       setIsGenerating(false);
       return;
     }
+
+    setRecipientEmail(invoice.customerEmail || '');
 
     const generateEmailBody = () => {
       setIsGenerating(true);
@@ -83,12 +86,13 @@ export default function SendInvoiceDialog({
     }
     startTransition(async () => {
         const formData = new FormData();
-        // Pass necessary data to the server action
+        
+        // Create a temporary invoice object with the potentially updated email
+        const invoiceToSend = { ...invoice, customerEmail: recipientEmail };
+
         formData.append('invoiceId', invoice.id);
         formData.append('ownerId', user.uid);
-        // We still pass the invoice object to have quick access to data like email, totals, etc.
-        // without needing a second DB read in the action.
-        formData.append('invoiceObject', JSON.stringify(invoice));
+        formData.append('invoiceObject', JSON.stringify(invoiceToSend));
         formData.append('subject', emailContent.subject);
         formData.append('body', emailContent.body);
 
@@ -131,7 +135,7 @@ export default function SendInvoiceDialog({
           <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor='email-recipient'>Recipient</Label>
-                 <Input id="email-recipient" readOnly value={invoice.customerEmail} />
+                 <Input id="email-recipient" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor='email-subject'>Subject</Label>
