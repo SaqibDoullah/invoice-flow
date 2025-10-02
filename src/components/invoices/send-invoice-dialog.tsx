@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { Copy, Loader2, Send } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -18,6 +18,7 @@ import { type Invoice } from '@/types';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { sendInvoiceWithAttachment } from '@/app/actions/send-invoice';
 
 interface SendInvoiceDialogProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export default function SendInvoiceDialog({
 }: SendInvoiceDialogProps) {
   const [emailContent, setEmailContent] = useState(placeholderContent);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,19 +49,18 @@ export default function SendInvoiceDialog({
       return;
     }
 
-    const generateEmail = async () => {
+    const generateEmailBody = () => {
       setIsLoading(true);
       try {
-        const invoiceLink = `${window.location.origin}/invoices/${invoice.id}`;
         const subject = `Invoice ${invoice.invoiceNumber} from ${invoice.companyName || 'Your Company'}`;
-        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached.\n\nYou can view the invoice online at:\n${invoiceLink}\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
+        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
         setEmailContent({ subject, body });
       } catch (error) {
-        console.error('Error generating invoice email:', error);
+        console.error('Error generating invoice email body:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to generate invoice email. Please try again.',
+          description: 'Failed to generate email content.',
         });
         setIsOpen(false);
       } finally {
@@ -68,7 +68,7 @@ export default function SendInvoiceDialog({
       }
     };
 
-    generateEmail();
+    generateEmailBody();
   }, [isOpen, invoice, toast, setIsOpen]);
   
   const copyToClipboard = (text: string, fieldName: string) => {
@@ -80,27 +80,33 @@ export default function SendInvoiceDialog({
   };
 
   const handleSend = async () => {
-    if (!emailContent) return;
+    startTransition(async () => {
+        const formData = new FormData();
+        // FormData can't handle complex objects, so we stringify it
+        formData.append('invoice', JSON.stringify(invoice));
+        formData.append('subject', emailContent.subject);
+        formData.append('body', emailContent.body);
 
-    setIsSending(true);
-    try {
-        toast({
-          title: 'Email Sent (Simulated)',
-          description: 'This is a simulation. No email was actually sent.',
-        });
-        onEmailSent();
-        setIsOpen(false);
-    } catch (error: any) {
-      console.error('Failed to send email:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to Send Email',
-        description: error.message || 'An unexpected error occurred. Check server logs and .env configuration.',
-      });
-    } finally {
-      setIsSending(false);
-    }
+        const result = await sendInvoiceWithAttachment(formData);
+
+        if (result.success) {
+            toast({
+                title: 'Success!',
+                description: result.message,
+            });
+            onEmailSent();
+            setIsOpen(false);
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Failed to Send Email',
+                description: result.message || 'An unexpected error occurred.',
+            });
+        }
+    });
   };
+
+  const isSending = isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -108,7 +114,7 @@ export default function SendInvoiceDialog({
         <DialogHeader>
           <DialogTitle>Send Invoice #{invoice.invoiceNumber}</DialogTitle>
           <DialogDescription>
-            An email has been drafted for you. You can edit it below before sending.
+            An email has been drafted for you. This will be sent with a PDF attachment of the invoice.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -143,9 +149,9 @@ export default function SendInvoiceDialog({
           </div>
         ) : null}
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSending}>Cancel</Button>
           <Button onClick={handleSend} disabled={isLoading || isSending || !emailContent}>
-              {(isLoading || isSending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send Email
           </Button>
         </DialogFooter>
