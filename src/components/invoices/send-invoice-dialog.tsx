@@ -51,7 +51,7 @@ export default function SendInvoiceDialog({
       setIsGenerating(true);
       try {
         const subject = `Invoice ${invoice.invoiceNumber} from ${invoice.companyName || 'Your Company'}`;
-        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} for payment.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
+        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached for payment.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
         setEmailContent({ subject, body });
       } catch (error) {
         console.error('Error generating invoice email body:', error);
@@ -81,10 +81,16 @@ export default function SendInvoiceDialog({
     startTransition(async () => {
         const formData = new FormData();
         
-        // Create a temporary invoice object with the potentially updated email
-        const invoiceToSend = { ...invoice, customerEmail: recipientEmail };
+        // Firestore timestamps are not serializable in FormData. We need to convert them to strings.
+        const serializableInvoice = {
+            ...invoice,
+            customerEmail: recipientEmail, // Use the potentially updated email
+            invoiceDate: invoice.invoiceDate.toDate().toISOString(),
+            dueDate: invoice.dueDate.toDate().toISOString(),
+            createdAt: invoice.createdAt.toDate().toISOString(),
+        };
         
-        formData.append('invoiceObject', JSON.stringify(invoiceToSend));
+        formData.append('invoiceObject', JSON.stringify(serializableInvoice));
         formData.append('subject', emailContent.subject);
         formData.append('body', emailContent.body);
 
@@ -115,7 +121,7 @@ export default function SendInvoiceDialog({
         <DialogHeader>
           <DialogTitle>Send Invoice #{invoice.invoiceNumber}</DialogTitle>
           <DialogDescription>
-            Review the email below. It will be sent to the recipient.
+            Review the email below. A PDF of the invoice will be attached automatically.
           </DialogDescription>
         </DialogHeader>
         {isGenerating ? (
