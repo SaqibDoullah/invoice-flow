@@ -13,7 +13,7 @@ export const invoiceSchema = z.object({
   invoiceNumber: z.string().optional(),
   customerId: z.string().min(1, 'Please select a customer.'),
   customerName: z.string().min(1, 'Customer name is required'),
-  customerEmail: z.string().email('Invalid email address'),
+  customerEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
   invoiceDate: z.date(),
   dueDate: z.date(),
   status: z.enum(['draft', 'sent', 'paid', 'void']),
@@ -48,7 +48,7 @@ export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate'
 
 export const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
