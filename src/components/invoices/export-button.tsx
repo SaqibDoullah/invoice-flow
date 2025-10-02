@@ -17,7 +17,7 @@ export function ExportButton() {
           return '';
         }
       })
-      .join('\\n');
+      .join('\n');
 
     if (!printContent) {
       console.error('Printable content with id="invoice-print" not found.');

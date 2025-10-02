@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { Copy, Loader2, Send } from 'lucide-react';
+import { Copy, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 import {
@@ -18,8 +18,7 @@ import { type Invoice } from '@/types';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { sendInvoiceWithAttachment } from '@/app/actions/send-invoice';
-import { useAuth } from '@/context/auth-context';
+import { sendInvoiceEmail } from '@/app/actions/send-invoice';
 
 interface SendInvoiceDialogProps {
   isOpen: boolean;
@@ -39,7 +38,6 @@ export default function SendInvoiceDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { user } = useAuth();
 
   useEffect(() => {
     if (!isOpen) {
@@ -53,7 +51,7 @@ export default function SendInvoiceDialog({
       setIsGenerating(true);
       try {
         const subject = `Invoice ${invoice.invoiceNumber} from ${invoice.companyName || 'Your Company'}`;
-        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
+        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} for payment.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
         setEmailContent({ subject, body });
       } catch (error) {
         console.error('Error generating invoice email body:', error);
@@ -80,23 +78,17 @@ export default function SendInvoiceDialog({
   };
 
   const handleSend = async () => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to send an invoice.' });
-        return;
-    }
     startTransition(async () => {
         const formData = new FormData();
         
         // Create a temporary invoice object with the potentially updated email
         const invoiceToSend = { ...invoice, customerEmail: recipientEmail };
-
-        formData.append('invoiceId', invoice.id);
-        formData.append('ownerId', user.uid);
+        
         formData.append('invoiceObject', JSON.stringify(invoiceToSend));
         formData.append('subject', emailContent.subject);
         formData.append('body', emailContent.body);
 
-        const result = await sendInvoiceWithAttachment(formData);
+        const result = await sendInvoiceEmail(formData);
 
         if (result.success) {
             toast({
@@ -123,7 +115,7 @@ export default function SendInvoiceDialog({
         <DialogHeader>
           <DialogTitle>Send Invoice #{invoice.invoiceNumber}</DialogTitle>
           <DialogDescription>
-            An email has been drafted for you. This will be sent with a PDF attachment of the invoice.
+            Review the email below. It will be sent to the recipient.
           </DialogDescription>
         </DialogHeader>
         {isGenerating ? (
