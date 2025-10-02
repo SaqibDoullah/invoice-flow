@@ -15,11 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { type Invoice } from '@/types';
-import {
-  generateInvoiceEmail,
-  type GenerateInvoiceEmailOutput,
-} from '@/ai/flows/generate-invoice-email-flow';
-import { sendEmail } from '@/ai/flows/send-email-flow';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -31,20 +26,24 @@ interface SendInvoiceDialogProps {
   onEmailSent: () => void;
 }
 
+const placeholderContent = {
+    subject: "Invoice [Invoice Number] from [Company Name]",
+    body: "Here is your invoice..."
+}
+
 export default function SendInvoiceDialog({
   isOpen,
   setIsOpen,
   invoice,
   onEmailSent,
 }: SendInvoiceDialogProps) {
-  const [emailContent, setEmailContent] = useState<GenerateInvoiceEmailOutput | null>(null);
+  const [emailContent, setEmailContent] = useState(placeholderContent);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!isOpen) {
-      setEmailContent(null);
       setIsLoading(false);
       return;
     }
@@ -53,18 +52,9 @@ export default function SendInvoiceDialog({
       setIsLoading(true);
       try {
         const invoiceLink = `${window.location.origin}/invoices/${invoice.id}`;
-        const input = {
-          customerName: invoice.customerName,
-          invoiceNumber: invoice.invoiceNumber,
-          dueDate: format(invoice.dueDate.toDate(), 'PPP'),
-          totalAmount: new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-          }).format(invoice.total),
-          invoiceLink,
-        };
-        const response = await generateInvoiceEmail(input);
-        setEmailContent(response);
+        const subject = `Invoice ${invoice.invoiceNumber} from ${invoice.companyName || 'Your Company'}`;
+        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached.\n\nYou can view the invoice online at:\n${invoiceLink}\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
+        setEmailContent({ subject, body });
       } catch (error) {
         console.error('Error generating invoice email:', error);
         toast({
@@ -94,22 +84,12 @@ export default function SendInvoiceDialog({
 
     setIsSending(true);
     try {
-      const result = await sendEmail({
-        to: invoice.customerEmail,
-        subject: emailContent.subject,
-        body: emailContent.body,
-      });
-
-      if (result.success) {
         toast({
-          title: 'Email Sent',
-          description: 'The invoice has been sent to the customer.',
+          title: 'Email Sent (Simulated)',
+          description: 'This is a simulation. No email was actually sent.',
         });
         onEmailSent();
         setIsOpen(false);
-      } else {
-        throw new Error(result.message);
-      }
     } catch (error: any) {
       console.error('Failed to send email:', error);
       toast({

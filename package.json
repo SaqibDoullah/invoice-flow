@@ -48,10 +48,7 @@
     "recharts": "^2.15.1",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2",
-    "nodemailer": "^6.9.14",
-    "genkit": "^1.0.0",
-    "@genkit-ai/google-genai": "^1.0.0"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^20",

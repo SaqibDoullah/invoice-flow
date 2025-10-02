@@ -15,10 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { type Invoice } from '@/types';
-import {
-  generateReminderEmail,
-  type GenerateReminderOutput,
-} from '@/ai/flows/generate-reminder-flow';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -29,19 +25,23 @@ interface GenerateReminderDialogProps {
   invoice: Invoice;
 }
 
+const placeholderContent = {
+    subject: "Reminder: Invoice [Invoice Number]",
+    body: "This is a friendly reminder that invoice [Invoice Number] is due on [Due Date]."
+}
+
 export default function GenerateReminderDialog({
   isOpen,
   setIsOpen,
   invoice,
 }: GenerateReminderDialogProps) {
-  const [emailContent, setEmailContent] = useState<GenerateReminderOutput | null>(null);
+  const [emailContent, setEmailContent] = useState(placeholderContent);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!isOpen) {
       // Reset state when dialog is closed
-      setEmailContent(null);
       setIsLoading(false);
       return;
     }
@@ -49,17 +49,9 @@ export default function GenerateReminderDialog({
     const generateEmail = async () => {
       setIsLoading(true);
       try {
-        const input = {
-          customerName: invoice.customerName,
-          invoiceNumber: invoice.invoiceNumber,
-          dueDate: format(invoice.dueDate.toDate(), 'PPP'),
-          totalAmount: new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-          }).format(invoice.total),
-        };
-        const response = await generateReminderEmail(input);
-        setEmailContent(response);
+        const subject = `Reminder: Invoice ${invoice.invoiceNumber}`;
+        const body = `Hi ${invoice.customerName},\n\nThis is a friendly reminder that invoice #${invoice.invoiceNumber} for ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you,\n${invoice.companyName || 'Your Company'}`;
+        setEmailContent({ subject, body });
       } catch (error) {
         console.error('Error generating reminder:', error);
         toast({
