@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
   name: 'generateReminderPrompt',
   input: {schema: GenerateReminderInputSchema},
   output: {schema: GenerateReminderOutputSchema},
-  model: googleAI('gemini-1.5-flash'),
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert accountant's assistant. Your task is to write a polite, professional, and clear reminder email to a client about an upcoming or overdue invoice.
 
 The tone should be friendly but firm, especially if the invoice is past due.

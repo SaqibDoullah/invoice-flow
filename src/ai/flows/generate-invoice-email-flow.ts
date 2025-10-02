@@ -34,7 +34,7 @@ const prompt = ai.definePrompt({
   name: 'generateInvoiceEmailPrompt',
   input: {schema: GenerateInvoiceEmailInputSchema},
   output: {schema: GenerateInvoiceEmailOutputSchema},
-  model: googleAI('gemini-1.5-flash'),
+  model: 'googleai/gemini-1.5-flash',
   prompt: `You are an expert accountant's assistant. Your task is to write a polite, professional, and clear email to a client attaching a new invoice.
 
 The tone should be friendly and professional.
