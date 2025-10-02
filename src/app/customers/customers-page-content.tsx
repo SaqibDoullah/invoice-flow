@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
-import { PlusCircle } from 'lucide-react';
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -22,12 +22,30 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Customer } from '@/types';
+import { type Customer, type CustomerFormData } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import AddCustomerDialog from '@/components/customers/add-customer-dialog';
+import EditCustomerDialog from '@/components/customers/edit-customer-dialog';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 
@@ -36,7 +54,12 @@ export default function CustomersPageContent() {
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
+  const [isEditCustomerOpen, setIsEditCustomerOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -78,9 +101,47 @@ export default function CustomersPageContent() {
     return () => unsubscribe();
   }, [user, authLoading, toast]);
 
+  const handleEditClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsEditCustomerOpen(true);
+  };
+  
+  const handleDeleteClick = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsDeleteDialogOpen(true);
+  }
 
-  const handleCustomerAdded = () => {
-    // The real-time listener will handle UI updates automatically.
+  const handleDeleteConfirm = async () => {
+    const db = getFirestoreDb();
+    if (!selectedCustomer || !user || !db) return;
+
+    const docRef = doc(db, 'users', user.uid, 'customers', selectedCustomer.id);
+    deleteDoc(docRef)
+        .then(() => {
+            toast({
+                title: 'Success',
+                description: 'Customer deleted successfully.',
+            });
+        })
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+
+            if (serverError.code !== 'permission-denied') {
+                toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: 'Failed to delete customer.',
+                });
+            }
+        })
+        .finally(() => {
+            setIsDeleteDialogOpen(false);
+            setSelectedCustomer(null);
+        })
   }
 
   return (
@@ -112,6 +173,7 @@ export default function CustomersPageContent() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -120,11 +182,29 @@ export default function CustomersPageContent() {
                         <TableRow key={customer.id}>
                           <TableCell className="font-medium">{customer.name}</TableCell>
                           <TableCell>{customer.email}</TableCell>
+                           <TableCell>
+                                <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditClick(customer)} className="cursor-pointer">
+                                        <Edit className="mr-2 h-4 w-4" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDeleteClick(customer)} className="text-destructive focus:text-destructive cursor-pointer">
+                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                                </DropdownMenu>
+                           </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={2} className="h-24 text-center">
+                        <TableCell colSpan={3} className="h-24 text-center">
                           No customers found. Add a customer to get started.
                         </TableCell>
                       </TableRow>
@@ -138,8 +218,35 @@ export default function CustomersPageContent() {
         <AddCustomerDialog
           isOpen={isAddCustomerOpen}
           setIsOpen={setIsAddCustomerOpen}
-          onCustomerAdded={handleCustomerAdded}
+          onCustomerAdded={() => { /* Real-time listener handles updates */ }}
         />
+        {selectedCustomer && (
+            <EditCustomerDialog
+                isOpen={isEditCustomerOpen}
+                setIsOpen={setIsEditCustomerOpen}
+                customer={selectedCustomer}
+                onCustomerUpdated={() => { /* Real-time listener handles updates */ }}
+            />
+        )}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete this customer.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                Continue
+                </AlertDialogAction>
+            </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AuthGuard>
   );
