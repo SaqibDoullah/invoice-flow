@@ -29,16 +29,20 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<Buffer> {
         }
     `;
 
-    const html = ReactDOMServer.renderToString(
+    const invoiceHtml = ReactDOMServer.renderToString(
+        <InvoicePDF invoice={invoice} />
+    );
+
+    const html = `
         <html>
             <head>
-                <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${pdfSpecificCss}` }}></style>
+                <style>${globalCss}\n${pdfSpecificCss}</style>
             </head>
             <body>
-                <InvoicePDF invoice={invoice} />
+                ${invoiceHtml}
             </body>
         </html>
-    );
+    `;
 
     let browser;
     try {
