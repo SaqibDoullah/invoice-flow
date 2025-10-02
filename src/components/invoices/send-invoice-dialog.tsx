@@ -19,6 +19,7 @@ import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { sendInvoiceWithAttachment } from '@/app/actions/send-invoice';
+import { useAuth } from '@/context/auth-context';
 
 interface SendInvoiceDialogProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export default function SendInvoiceDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!isOpen) {
@@ -75,10 +77,18 @@ export default function SendInvoiceDialog({
   };
 
   const handleSend = async () => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to send an invoice.' });
+        return;
+    }
     startTransition(async () => {
         const formData = new FormData();
-        // FormData can't handle complex objects, so we stringify it
-        formData.append('invoice', JSON.stringify(invoice));
+        // Pass necessary data to the server action
+        formData.append('invoiceId', invoice.id);
+        formData.append('ownerId', user.uid);
+        // We still pass the invoice object to have quick access to data like email, totals, etc.
+        // without needing a second DB read in the action.
+        formData.append('invoiceObject', JSON.stringify(invoice));
         formData.append('subject', emailContent.subject);
         formData.append('body', emailContent.body);
 

@@ -4,30 +4,37 @@ import { z } from 'zod';
 import { sendEmail } from '@/lib/email';
 import { generateInvoicePdf } from '@/lib/generate-pdf';
 import { type Invoice } from '@/types';
+import { getFirebaseAuth } from '@/lib/firebase-client';
+import { auth } from 'firebase-admin';
+import { headers } from 'next/headers';
 
 const sendInvoiceSchema = z.object({
-  invoice: z.any(), // Not ideal, but hard to validate complex nested object with server actions
+  invoiceId: z.string(),
+  invoiceObject: z.any(), // Still needed for customer email, totals etc. on the action
   subject: z.string(),
   body: z.string(),
+  ownerId: z.string(),
 });
 
 export async function sendInvoiceWithAttachment(formData: FormData) {
   let rawData;
   try {
       // Re-hydrate the invoice object. FormData can't handle complex objects.
-      const invoiceObject = JSON.parse(formData.get('invoice') as string);
+      const invoiceObject = JSON.parse(formData.get('invoiceObject') as string);
       
       rawData = {
-        invoice: invoiceObject,
+        invoiceId: formData.get('invoiceId'),
+        invoiceObject: invoiceObject,
         subject: formData.get('subject'),
         body: formData.get('body'),
+        ownerId: formData.get('ownerId'),
       };
     
     const validatedData = sendInvoiceSchema.parse(rawData);
-    const invoice = validatedData.invoice as Invoice;
+    const invoice = validatedData.invoiceObject as Invoice;
 
-    // 1. Generate PDF
-    const pdfBuffer = await generateInvoicePdf(invoice);
+    // 1. Generate PDF by calling our internal API
+    const pdfBuffer = await generateInvoicePdf(validatedData.invoiceId, validatedData.ownerId);
 
     // 2. Send Email with PDF attachment
     await sendEmail({

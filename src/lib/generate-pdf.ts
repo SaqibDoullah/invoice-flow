@@ -1,14 +1,9 @@
-
 'use server';
 
 import puppeteer from 'puppeteer';
-import ReactDOMServer from 'react-dom/server';
-import InvoicePDF from '@/components/invoices/invoice-pdf';
-import { type Invoice } from '@/types';
 import fs from 'fs';
 import path from 'path';
 
-// Helper to read global CSS for PDF styling
 const getGlobalCss = () => {
     try {
         const cssPath = path.resolve(process.cwd(), 'src', 'app', 'globals.css');
@@ -19,7 +14,32 @@ const getGlobalCss = () => {
     }
 }
 
-export async function generateInvoicePdf(invoice: Invoice): Promise<Buffer> {
+async function getInvoiceHtml(invoiceId: string, ownerId: string): Promise<string> {
+    const baseUrl = process.env.NODE_ENV === 'production'
+        ? 'https://your-production-url.com' // Replace with your actual production URL
+        : 'http://localhost:9003';
+
+    const response = await fetch(`${baseUrl}/api/invoice-html`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            // Simple secret to protect this internal endpoint
+            'X-Internal-Secret': process.env.INTERNAL_API_SECRET || 'your-secret-key',
+        },
+        body: JSON.stringify({ invoiceId, ownerId }),
+        // Disable cache to ensure fresh data
+        cache: 'no-store'
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch invoice HTML: ${response.statusText}`);
+    }
+
+    return response.text();
+}
+
+
+export async function generateInvoicePdf(invoiceId: string, ownerId: string): Promise<Buffer> {
     const globalCss = getGlobalCss();
     const pdfSpecificCss = `
         body { 
@@ -29,10 +49,8 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<Buffer> {
         }
     `;
 
-    const invoiceHtml = ReactDOMServer.renderToString(
-        <InvoicePDF invoice={invoice} />
-    );
-
+    const invoiceHtml = await getInvoiceHtml(invoiceId, ownerId);
+    
     const html = `
         <html>
             <head>
@@ -52,7 +70,6 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<Buffer> {
         });
         const page = await browser.newPage();
         
-        // Set a high-resolution viewport for better quality
         await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
         
         await page.setContent(html, { waitUntil: 'networkidle0' });
