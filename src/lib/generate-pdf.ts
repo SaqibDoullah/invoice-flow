@@ -1,3 +1,4 @@
+
 'use server';
 
 import puppeteer from 'puppeteer';
@@ -19,14 +20,19 @@ const getGlobalCss = () => {
 }
 
 export async function generateInvoicePdf(invoice: Invoice): Promise<Buffer> {
+    const globalCss = getGlobalCss();
+    const pdfSpecificCss = `
+        body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact; 
+            background-color: #fff; 
+        }
+    `;
+
     const html = ReactDOMServer.renderToString(
         <html>
             <head>
-                <style>{getGlobalCss()}</style>
-                <style>
-                    {/* Additional PDF-specific styles */}
-                    `body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #fff; }`
-                </style>
+                <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${pdfSpecificCss}` }}></style>
             </head>
             <body>
                 <InvoicePDF invoice={invoice} />
