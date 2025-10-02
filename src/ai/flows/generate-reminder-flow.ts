@@ -8,7 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import { format } from 'date-fns';
 
 const GenerateReminderInputSchema = z.object({

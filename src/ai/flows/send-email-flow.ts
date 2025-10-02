@@ -8,7 +8,7 @@
 
 import { ai } from '@/ai/genkit';
 import { sendEmail as sendEmailService } from '@/lib/email';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 export const SendEmailInputSchema = z.object({
   to: z.string().email().describe('The recipient of the email.'),
