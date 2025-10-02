@@ -19,6 +19,7 @@ import {
   generateInvoiceEmail,
   type GenerateInvoiceEmailOutput,
 } from '@/ai/flows/generate-invoice-email-flow';
+import { sendEmail } from '@/ai/flows/send-email-flow';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -38,6 +39,7 @@ export default function SendInvoiceDialog({
 }: SendInvoiceDialogProps) {
   const [emailContent, setEmailContent] = useState<GenerateInvoiceEmailOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -87,25 +89,46 @@ export default function SendInvoiceDialog({
     });
   };
 
-  const handleSend = () => {
-      if (!emailContent) return;
+  const handleSend = async () => {
+    if (!emailContent) return;
 
-      const subject = encodeURIComponent(emailContent.subject);
-      const body = encodeURIComponent(emailContent.body);
-      const mailtoLink = `mailto:${invoice.customerEmail}?subject=${subject}&body=${body}`;
-      
-      window.open(mailtoLink, '_blank');
-      onEmailSent();
-      setIsOpen(false);
-  }
+    setIsSending(true);
+    try {
+      const result = await sendEmail({
+        to: invoice.customerEmail,
+        subject: emailContent.subject,
+        body: emailContent.body,
+      });
+
+      if (result.success) {
+        toast({
+          title: 'Email Sent',
+          description: 'The invoice has been sent to the customer.',
+        });
+        onEmailSent();
+        setIsOpen(false);
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error: any) {
+      console.error('Failed to send email:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to Send Email',
+        description: error.message || 'An unexpected error occurred. Check server logs and .env configuration.',
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Draft Invoice Email for Invoice #{invoice.invoiceNumber}</DialogTitle>
+          <DialogTitle>Send Invoice #{invoice.invoiceNumber}</DialogTitle>
           <DialogDescription>
-            An email has been drafted for you. Click "Send with Email Client" to open it in your default mail app.
+            An email has been drafted for you. You can edit it below before sending.
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
@@ -122,7 +145,7 @@ export default function SendInvoiceDialog({
             <div className="space-y-2">
                 <Label htmlFor='email-subject'>Subject</Label>
                 <div className="flex items-center gap-2">
-                    <Input id="email-subject" readOnly value={emailContent.subject} />
+                    <Input id="email-subject" value={emailContent.subject} onChange={(e) => setEmailContent({...emailContent, subject: e.target.value })} />
                     <Button variant="outline" size="icon" onClick={() => copyToClipboard(emailContent.subject, 'Subject')}>
                         <Copy className="h-4 w-4" />
                     </Button>
@@ -131,7 +154,7 @@ export default function SendInvoiceDialog({
              <div className="space-y-2">
                 <Label htmlFor='email-body'>Body</Label>
                 <div className="flex items-center gap-2">
-                    <Textarea id="email-body" readOnly value={emailContent.body} className="h-64" />
+                    <Textarea id="email-body" value={emailContent.body} onChange={(e) => setEmailContent({...emailContent, body: e.target.value })} className="h-64" />
                      <Button variant="outline" size="icon" onClick={() => copyToClipboard(emailContent.body, 'Email body')}>
                         <Copy className="h-4 w-4" />
                     </Button>
@@ -141,9 +164,9 @@ export default function SendInvoiceDialog({
         ) : null}
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button onClick={handleSend} disabled={isLoading || !emailContent}>
-              <Send className="mr-2 h-4 w-4" />
-              Send with Email Client
+          <Button onClick={handleSend} disabled={isLoading || isSending || !emailContent}>
+              {(isLoading || isSending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Send Email
           </Button>
         </DialogFooter>
       </DialogContent>
