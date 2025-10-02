@@ -27,30 +27,25 @@ interface SendInvoiceDialogProps {
   onEmailSent: () => void;
 }
 
-const placeholderContent = {
-    subject: "Invoice [Invoice Number] from [Company Name]",
-    body: "Here is your invoice..."
-}
-
 export default function SendInvoiceDialog({
   isOpen,
   setIsOpen,
   invoice,
   onEmailSent,
 }: SendInvoiceDialogProps) {
-  const [emailContent, setEmailContent] = useState(placeholderContent);
-  const [isLoading, setIsLoading] = useState(false);
+  const [emailContent, setEmailContent] = useState({ subject: '', body: '' });
+  const [isGenerating, setIsGenerating] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   useEffect(() => {
     if (!isOpen) {
-      setIsLoading(false);
+      setIsGenerating(false);
       return;
     }
 
     const generateEmailBody = () => {
-      setIsLoading(true);
+      setIsGenerating(true);
       try {
         const subject = `Invoice ${invoice.invoiceNumber} from ${invoice.companyName || 'Your Company'}`;
         const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
@@ -64,7 +59,7 @@ export default function SendInvoiceDialog({
         });
         setIsOpen(false);
       } finally {
-        setIsLoading(false);
+        setIsGenerating(false);
       }
     };
 
@@ -117,12 +112,12 @@ export default function SendInvoiceDialog({
             An email has been drafted for you. This will be sent with a PDF attachment of the invoice.
           </DialogDescription>
         </DialogHeader>
-        {isLoading ? (
+        {isGenerating ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="ml-2">Generating email...</p>
           </div>
-        ) : emailContent ? (
+        ) : (
           <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor='email-recipient'>Recipient</Label>
@@ -147,10 +142,10 @@ export default function SendInvoiceDialog({
                 </div>
             </div>
           </div>
-        ) : null}
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSending}>Cancel</Button>
-          <Button onClick={handleSend} disabled={isLoading || isSending || !emailContent}>
+          <Button onClick={handleSend} disabled={isGenerating || isSending}>
               {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send Email
           </Button>

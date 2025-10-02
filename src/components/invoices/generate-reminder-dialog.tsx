@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Copy, Loader2 } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { format } from 'date-fns';
 
 import {
@@ -25,48 +25,21 @@ interface GenerateReminderDialogProps {
   invoice: Invoice;
 }
 
-const placeholderContent = {
-    subject: "Reminder: Invoice [Invoice Number]",
-    body: "This is a friendly reminder that invoice [Invoice Number] is due on [Due Date]."
-}
-
 export default function GenerateReminderDialog({
   isOpen,
   setIsOpen,
   invoice,
 }: GenerateReminderDialogProps) {
-  const [emailContent, setEmailContent] = useState(placeholderContent);
-  const [isLoading, setIsLoading] = useState(false);
+  const [emailContent, setEmailContent] = useState({ subject: '', body: ''});
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isOpen) {
-      // Reset state when dialog is closed
-      setIsLoading(false);
-      return;
-    }
-
-    const generateEmail = async () => {
-      setIsLoading(true);
-      try {
+    if (isOpen) {
         const subject = `Reminder: Invoice ${invoice.invoiceNumber}`;
         const body = `Hi ${invoice.customerName},\n\nThis is a friendly reminder that invoice #${invoice.invoiceNumber} for ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you,\n${invoice.companyName || 'Your Company'}`;
         setEmailContent({ subject, body });
-      } catch (error) {
-        console.error('Error generating reminder:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to generate reminder email. Please try again.',
-        });
-        setIsOpen(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    generateEmail();
-  }, [isOpen, invoice, toast, setIsOpen]);
+    }
+  }, [isOpen, invoice]);
   
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
@@ -80,18 +53,12 @@ export default function GenerateReminderDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>AI-Generated Reminder</DialogTitle>
+          <DialogTitle>Invoice Reminder</DialogTitle>
           <DialogDescription>
             A polite reminder email has been generated for invoice {invoice.invoiceNumber}. You can copy and send it to your client.
           </DialogDescription>
         </DialogHeader>
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="ml-2">Generating email...</p>
-          </div>
-        ) : emailContent ? (
-          <div className="space-y-4">
+        <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor='email-subject'>Subject</Label>
                 <div className="flex items-center gap-2">
@@ -110,8 +77,7 @@ export default function GenerateReminderDialog({
                     </Button>
                 </div>
             </div>
-          </div>
-        ) : null}
+        </div>
         <DialogFooter>
           <Button onClick={() => setIsOpen(false)}>Close</Button>
         </DialogFooter>
