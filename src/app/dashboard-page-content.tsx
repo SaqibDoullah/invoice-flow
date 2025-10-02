@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
-import InvoiceList from '@/components/invoices/invoice-list';
+import InvoiceListPage from '@/app/invoices/list/page';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -51,7 +51,7 @@ export default function DashboardPageContent() {
             </Select>
           </div>
 
-          <InvoiceList searchTerm={searchTerm} statusFilter={statusFilter} />
+          <InvoiceListPage searchTerm={searchTerm} statusFilter={statusFilter} />
         </div>
       </div>
     </AuthGuard>
