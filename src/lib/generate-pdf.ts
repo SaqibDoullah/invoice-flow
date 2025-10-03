@@ -2,24 +2,44 @@
 import 'server-only';
 
 export async function generateInvoicePdf(html: string): Promise<Buffer> {
-  // serverless-friendly Chromium + puppeteer-core
-  const chromium = await import('@sparticuz/chromium');
-  const puppeteer = (await import('puppeteer-core')).default;
+  // Correct dynamic imports
+  const { default: chromium } = await import('@sparticuz/chromium');
 
-  const browser = await puppeteer.launch({
-    executablePath: await (chromium as any).executablePath(),
-    args: [...(chromium as any).args, '--no-sandbox', '--disable-setuid-sandbox'],
-    headless: (chromium as any).headless,
-    defaultViewport: { width: 1200, height: 1600 },
-  });
+  // Prefer serverless Chromium when available; fall back to full Puppeteer locally
+  const exe = await chromium.executablePath();
 
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load' });
-    await page.emulateMediaType('screen');
-    const pdf = await page.pdf({ format: 'A4', printBackground: true });
-    return pdf;
-  } finally {
-    await browser.close();
+  if (exe) {
+    const { default: puppeteerCore } = await import('puppeteer-core');
+    const browser = await puppeteerCore.launch({
+      executablePath: exe,
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+      headless: chromium.headless,
+      defaultViewport: { width: 1200, height: 1600 },
+    });
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'load' });
+      await page.emulateMediaType('screen');
+      const pdf = await page.pdf({ format: 'A4', printBackground: true });
+      return pdf;
+    } finally {
+      await browser.close();
+    }
+  } else {
+    // Local/dev fallback (no system Chrome): use full Puppeteer which downloads Chromium
+    const { default: puppeteer } = await import('puppeteer');
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'load' });
+      await page.emulateMediaType('screen');
+      const pdf = await page.pdf({ format: 'A4', printBackground: true });
+      return pdf;
+    } finally {
+      await browser.close();
+    }
   }
 }
