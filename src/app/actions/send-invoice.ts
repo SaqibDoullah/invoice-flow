@@ -27,9 +27,14 @@ export async function sendInvoiceEmail(formData: FormData) {
 
     // Generate the PDF from the invoice data
     const pdfBuffer = await generateInvoicePdf(invoice);
+    
+    const to = invoice.customerEmail;
+    if (!to) {
+        throw new Error('Cannot send invoice: customer email is missing.');
+    }
 
     await sendEmail({
-      to: invoice.customerEmail,
+      to,
       subject: validatedData.subject,
       html: validatedData.body.replace(/\n/g, '<br>'),
       attachments: [
