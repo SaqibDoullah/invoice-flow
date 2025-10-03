@@ -17,6 +17,10 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    config.externals = [...config.externals, 'chrome-aws-lambda'];
+    return config;
+  },
 };
 
 module.exports = nextConfig;
