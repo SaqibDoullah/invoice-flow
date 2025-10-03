@@ -39,6 +39,16 @@ export default function SendInvoiceDialog({
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
+  const toDate = (v: any): Date => {
+    if (v instanceof Date) return v;
+    if (v?.toDate) return v.toDate();
+    if (typeof v === 'string' || typeof v === 'number') {
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date(0);
+  };
+
   useEffect(() => {
     if (!isOpen) {
       setIsGenerating(false);
@@ -50,8 +60,9 @@ export default function SendInvoiceDialog({
     const generateEmailBody = () => {
       setIsGenerating(true);
       try {
+        const dueDate = toDate(invoice.dueDate);
         const subject = `Invoice ${invoice.invoiceNumber} from ${invoice.companyName || 'Your Company'}`;
-        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached for payment.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${format(invoice.dueDate.toDate(), 'PPP')}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
+        const body = `Hi ${invoice.customerName},\n\nPlease find your invoice #${invoice.invoiceNumber} attached for payment.\n\nThe total amount of ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total)} is due on ${dueDate.getTime() !== 0 ? format(dueDate, 'PPP') : 'N/A'}.\n\nThank you for your business!\n${invoice.companyName || 'Your Company'}`;
         setEmailContent({ subject, body });
       } catch (error) {
         console.error('Error generating invoice email body:', error);
@@ -81,13 +92,14 @@ export default function SendInvoiceDialog({
     startTransition(async () => {
         const formData = new FormData();
         
-        // Firestore timestamps are not serializable in FormData. We need to convert them to strings.
+        // Ensure Timestamps are converted to a serializable format (ISO string)
+        // before sending to the server action.
         const serializableInvoice = {
             ...invoice,
             customerEmail: recipientEmail, // Use the potentially updated email
-            invoiceDate: invoice.invoiceDate.toDate().toISOString(),
-            dueDate: invoice.dueDate.toDate().toISOString(),
-            createdAt: invoice.createdAt.toDate().toISOString(),
+            invoiceDate: toDate(invoice.invoiceDate).toISOString(),
+            dueDate: toDate(invoice.dueDate).toISOString(),
+            createdAt: toDate(invoice.createdAt).toISOString(),
         };
         
         formData.append('invoiceObject', JSON.stringify(serializableInvoice));
