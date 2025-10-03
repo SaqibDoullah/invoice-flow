@@ -1,6 +1,5 @@
 import 'server-only';
 import PDFDocument from 'pdfkit';
-import fontkit from 'fontkit';
 import { format } from 'date-fns';
 import { type Invoice } from '@/types';
 
