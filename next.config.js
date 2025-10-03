@@ -1,13 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, { isServer }) => {
-    // This is required to make pdfkit work with Next.js.
-    // It ensures that the font assets are correctly bundled.
+  experimental: {
+    serverComponentsExternalPackages: ["pdfkit"], // Keep pdfkit external
+  },
+  webpack: (config) => {
+    // Ensure .afm files are treated as assets so they get copied
     config.module.rules.push({
-      test: /\.afm$/,
-      type: 'asset/source',
+      test: /\.afm$/i,
+      type: "asset/source",
     });
-
     return config;
   },
 };
