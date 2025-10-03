@@ -19,14 +19,9 @@ function toDate(v: any): Date {
 export async function generateInvoicePdf(invoice: Invoice): Promise<Buffer> {
   const doc = new PDFDocument({ size: 'A4', margin: 40 });
 
-  // Register a fallback font
-  try {
-    doc.registerFont('Inter', require.resolve('pdfkit/js/data/Helvetica.afm'));
-    doc.font('Inter');
-  } catch (error) {
-    console.warn("Could not register fallback font. Using default.", error);
-    // pdfkit will use its default font
-  }
+  // pdfkit will use its built-in Helvetica font by default.
+  // No need to register it manually.
+  doc.font('Helvetica');
 
   const bufs: Buffer[] = [];
   doc.on('data', (d) => bufs.push(d));
