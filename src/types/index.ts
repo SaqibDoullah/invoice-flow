@@ -37,14 +37,19 @@ export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 
 // The type for an invoice fetched from Firestore (dueDate is a Timestamp)
-export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt' | 'ownerId'> {
+export interface Invoice
+  extends Omit<
+    InvoiceFormData,
+    'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt' | 'ownerId'
+  > {
   id: string;
   invoiceNumber: string;
   createdAt: Timestamp;
-  invoiceDate: Timestamp;
-  dueDate: Timestamp;
-  discount?: number;
-  discountType?: 'percentage' | 'fixed';
+  invoiceDate: Timestamp; // Firestore Timestamp on read
+  dueDate: Timestamp;     // Firestore Timestamp on read
+
+  // 👇 add/ensure this is REQUIRED to match the parent type
+  discount: number;
 }
 
 export type InvoiceCreateInput = Omit<InvoiceFormData, 'id' | 'createdAt' | 'ownerId'>;

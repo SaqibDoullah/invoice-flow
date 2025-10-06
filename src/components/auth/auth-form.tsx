@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,8 +7,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
-  FirebaseError,
 } from 'firebase/auth';
+import type { FirebaseError } from 'firebase/app';
 import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -35,14 +34,18 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-    fullName: z.string().min(1, { message: 'Full name is required.' }),
-    email: z.string().email({ message: 'Invalid email address.' }),
-    password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  fullName: z.string().min(1, { message: 'Full name is required.' }),
+  email: z.string().email({ message: 'Invalid email address.' }),
+  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
-
 
 interface AuthFormProps {
   mode: 'login' | 'register';
+}
+
+// Type guard for FirebaseError
+function isFirebaseError(e: unknown): e is FirebaseError {
+  return typeof e === 'object' && e !== null && 'code' in e && 'message' in e;
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
@@ -56,48 +59,59 @@ export function AuthForm({ mode }: AuthFormProps) {
       email: '',
       password: '',
       ...(mode === 'register' && { fullName: '' }),
-    },
+    } as any,
   });
 
   const onSubmit = async (values: z.infer<typeof loginSchema> | z.infer<typeof registerSchema>) => {
     setIsLoading(true);
     const auth = getFirebaseAuth();
     const db = getFirestoreDb();
+
     if (!auth || !db) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Firebase is not configured correctly. Please check your environment variables.",
-        });
-        setIsLoading(false);
-        return;
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          'Firebase is not configured correctly. Please check your environment variables.',
+      });
+      setIsLoading(false);
+      return;
     }
+
     try {
       if (mode === 'register') {
         const { email, password, fullName } = values as z.infer<typeof registerSchema>;
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+
         await updateProfile(user, { displayName: fullName });
 
         // Also save the name to the user's document in Firestore
         const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, { fullName: fullName }, { merge: true });
-
+        await setDoc(userDocRef, { fullName }, { merge: true });
       } else {
         const { email, password } = values as z.infer<typeof loginSchema>;
         await signInWithEmailAndPassword(auth, email, password);
       }
+
       router.push('/');
-    } catch (error) {
-      const firebaseError = error as FirebaseError;
+    } catch (error: unknown) {
       let errorMessage = 'An unexpected error occurred.';
-      if (firebaseError.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already in use.';
-      } else if (firebaseError.code === 'auth/wrong-password' || firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (firebaseError.code === 'auth/configuration-not-found') {
-        errorMessage = 'Authentication configuration is missing. Please contact support.';
+
+      if (isFirebaseError(error)) {
+        if (error.code === 'auth/email-already-in-use') {
+          errorMessage = 'This email is already in use.';
+        } else if (
+          error.code === 'auth/wrong-password' ||
+          error.code === 'auth/user-not-found' ||
+          error.code === 'auth/invalid-credential'
+        ) {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (error.code === 'auth/configuration-not-found') {
+          errorMessage = 'Authentication configuration is missing. Please contact support.';
+        }
       }
+
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
@@ -125,19 +139,20 @@ export function AuthForm({ mode }: AuthFormProps) {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {mode === 'register' && (
                 <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
+
               <FormField
                 control={form.control}
                 name="email"
@@ -151,6 +166,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
@@ -164,12 +180,14 @@ export function AuthForm({ mode }: AuthFormProps) {
                   </FormItem>
                 )}
               />
+
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {mode === 'login' ? 'Log In' : 'Register'}
               </Button>
             </form>
           </Form>
+
           <div className="mt-4 text-center text-sm">
             {mode === 'login' ? (
               <>
