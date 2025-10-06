@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
-import { subMonths, format, isAfter } from 'date-fns';
+import { subMonths, format, isAfter, startOfMonth, endOfMonth } from 'date-fns';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -11,12 +12,24 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface ReportData {
   totalRevenue: number;
   paidInvoices: number;
   outstanding: number;
   overdue: number;
+}
+
+interface MonthlyRevenue {
+    name: string;
+    revenue: number;
+}
+
+interface InvoiceStatusDistribution {
+    name: string;
+    value: number;
+    fill: string;
 }
 
 const initialReportData: ReportData = {
@@ -26,8 +39,18 @@ const initialReportData: ReportData = {
     overdue: 0,
 };
 
+const PIE_CHART_COLORS = {
+    draft: 'hsl(var(--chart-1))',
+    sent: 'hsl(var(--chart-2))',
+    paid: 'hsl(var(--chart-3))',
+    void: 'hsl(var(--chart-4))',
+};
+
 export default function ReportsPageContent() {
   const [reportData, setReportData] = useState<ReportData>(initialReportData);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenue[]>([]);
+  const [statusDistribution, setStatusDistribution] = useState<InvoiceStatusDistribution[]>([]);
+
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
@@ -67,6 +90,35 @@ export default function ReportsPageContent() {
           overdue,
         });
 
+        // Process data for charts
+        const last6MonthsRevenue = Array.from({ length: 6 }).map((_, i) => {
+            const date = subMonths(now, 5 - i);
+            const monthStart = startOfMonth(date);
+            const monthEnd = endOfMonth(date);
+            
+            const revenue = invoices
+                .filter(inv => inv.status === 'paid' && inv.invoiceDate.toDate() >= monthStart && inv.invoiceDate.toDate() <= monthEnd)
+                .reduce((acc, inv) => acc + inv.total, 0);
+
+            return {
+                name: format(date, 'MMM'),
+                revenue: revenue
+            };
+        });
+        setMonthlyRevenue(last6MonthsRevenue);
+
+        const statusCounts = invoices.reduce((acc, inv) => {
+            acc[inv.status] = (acc[inv.status] || 0) + 1;
+            return acc;
+        }, {} as Record<Invoice['status'], number>);
+        
+        const statusData = Object.entries(statusCounts).map(([status, count]) => ({
+            name: status.charAt(0).toUpperCase() + status.slice(1),
+            value: count,
+            fill: PIE_CHART_COLORS[status as keyof typeof PIE_CHART_COLORS],
+        }));
+        setStatusDistribution(statusData);
+
       } catch (error) {
         console.error("Error fetching report data: ", error);
       } finally {
@@ -80,6 +132,13 @@ export default function ReportsPageContent() {
   }, [user, authLoading]);
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  
+  const chartConfig = {
+      revenue: {
+        label: "Revenue",
+        color: "hsl(var(--chart-1))",
+      },
+  };
 
   const renderSummaryCard = (title: string, value: string | number, description: string, valueClass?: string, isLoading?: boolean) => (
       <Card>
@@ -125,9 +184,15 @@ export default function ReportsPageContent() {
                   </CardHeader>
                   <CardContent>
                       {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
-                        <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                            Chart view coming soon.
-                        </div>
+                        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                            <BarChart data={monthlyRevenue} accessibilityLayer>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
+                                <YAxis tickFormatter={(value) => `$${value / 1000}k`} />
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                            </BarChart>
+                        </ChartContainer>
                       )}
                   </CardContent>
               </Card>
@@ -138,9 +203,27 @@ export default function ReportsPageContent() {
                   </CardHeader>
                   <CardContent>
                         {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
-                          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                            Chart view coming soon.
-                        </div>
+                           <ChartContainer config={{}} className="min-h-[300px] w-full">
+                                <PieChart>
+                                    <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                                    <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                        const RADIAN = Math.PI / 180;
+                                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                        return (
+                                            <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+                                            {`${(percent * 100).toFixed(0)}%`}
+                                            </text>
+                                        );
+                                    }}>
+                                        {statusDistribution.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                    <Legend />
+                                </PieChart>
+                            </ChartContainer>
                         )}
                   </CardContent>
               </Card>
