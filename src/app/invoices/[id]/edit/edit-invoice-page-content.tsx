@@ -11,7 +11,7 @@ import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type InvoiceFormData, type Invoice } from '@/types';
+import { type InvoiceUpdateInput, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 
@@ -62,7 +62,7 @@ export default function EditInvoicePageContent() {
     fetchInvoice();
   }, [id, router, toast, user, authLoading]);
 
-  const handleUpdateInvoice = async (data: Omit<InvoiceFormData, 'createdAt'>) => {
+  const handleUpdateInvoice = async (data: InvoiceUpdateInput) => {
     const db = getFirestoreDb();
     if (typeof id !== 'string' || !user || !db) return;
     try {
@@ -152,7 +152,7 @@ export default function EditInvoicePageContent() {
               </Link>
             </Button>
           </div>
-          <InvoiceForm initialData={invoice} onSubmit={handleUpdateInvoice} />
+          <InvoiceForm mode="edit" initialData={invoice} onSubmit={handleUpdateInvoice} />
         </div>
       </div>
     </AuthGuard>

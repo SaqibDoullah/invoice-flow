@@ -35,6 +35,7 @@ export type LineItem = z.infer<typeof lineItemSchema>;
 // The type for an invoice when being created or edited in a form
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
+
 // The type for an invoice fetched from Firestore (dueDate is a Timestamp)
 export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt' | 'ownerId'> {
   id: string;
@@ -45,6 +46,9 @@ export interface Invoice extends Omit<InvoiceFormData, 'invoiceDate' | 'dueDate'
   discount?: number;
   discountType?: 'percentage' | 'fixed';
 }
+
+export type InvoiceCreateInput = Omit<InvoiceFormData, 'id' | 'createdAt' | 'ownerId'>;
+export type InvoiceUpdateInput = Omit<InvoiceFormData, 'createdAt' | 'ownerId'>;
 
 export const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),

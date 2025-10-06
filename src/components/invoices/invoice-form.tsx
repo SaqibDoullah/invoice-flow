@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { type InvoiceFormData, invoiceSchema, type Invoice, type Customer } from '@/types';
+import { type InvoiceFormData, invoiceSchema, type Invoice, type Customer, InvoiceCreateInput, InvoiceUpdateInput } from '@/types';
 import { Textarea } from '../ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -35,12 +35,23 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 
-interface InvoiceFormProps {
-  initialData?: Invoice | Partial<InvoiceFormData> | null;
-  onSubmit: (data: Omit<InvoiceFormData, 'createdAt'>) => Promise<void>;
-}
+type CreateProps = {
+  mode: 'create';
+  initialData?: Partial<InvoiceCreateInput>;
+  onSubmit: (data: InvoiceCreateInput) => Promise<void>;
+};
 
-export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps) {
+type EditProps = {
+  mode: 'edit';
+  initialData: Invoice;
+  onSubmit: (data: InvoiceUpdateInput) => Promise<void>;
+};
+
+type InvoiceFormProps = CreateProps | EditProps;
+
+
+export default function InvoiceForm(props: InvoiceFormProps) {
+  const { initialData, onSubmit, mode } = props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, loading: authLoading } = useAuth();
   const [isFormReady, setIsFormReady] = useState(false);
@@ -101,7 +112,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
           discount: initialData.discount || 0,
           discountType: initialData.discountType || 'percentage',
         };
-      } else if (user) {
+      } else if (user && mode === 'create') {
         // Creating a new invoice, pre-fill company info from settings
         const db = getFirestoreDb();
         if (db) {
@@ -125,7 +136,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     };
 
     initializeForm();
-  }, [initialData, user, authLoading, form]);
+  }, [initialData, user, authLoading, form, mode]);
 
 
   const { fields, append, remove } = useFieldArray({
@@ -174,7 +185,11 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
 
   const processSubmit = async (data: InvoiceFormData) => {
     setIsSubmitting(true);
-    await onSubmit(data);
+    if (mode === 'create') {
+      await (onSubmit as (data: InvoiceCreateInput) => Promise<void>)(data);
+    } else {
+      await (onSubmit as (data: InvoiceUpdateInput) => Promise<void>)(data);
+    }
     setIsSubmitting(false);
   };
   
@@ -190,10 +205,10 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     <Form {...form}>
       <form onSubmit={form.handleSubmit(processSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">{(initialData as Invoice)?.id ? `Edit Invoice ${(initialData as Invoice).invoiceNumber}` : 'New Invoice'}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{mode === 'edit' ? `Edit Invoice ${initialData?.invoiceNumber}` : 'New Invoice'}</h1>
             <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {(initialData as Invoice)?.id ? 'Save Changes' : 'Create Invoice'}
+            {mode === 'edit' ? 'Save Changes' : 'Create Invoice'}
             </Button>
         </div>
         
@@ -281,7 +296,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!(initialData as Invoice)?.id && !!(initialData as Invoice)?.invoiceNumber} />
+                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={mode === 'edit' && !!initialData?.invoiceNumber} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

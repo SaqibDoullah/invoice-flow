@@ -14,7 +14,7 @@ import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type InvoiceFormData, type Invoice } from '@/types';
+import { type InvoiceCreateInput, type Invoice } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/auth-context';
 
@@ -46,7 +46,7 @@ function NewInvoiceContent() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   
-  const [initialData, setInitialData] = useState<Partial<InvoiceFormData> | null>(null);
+  const [initialData, setInitialData] = useState<Partial<InvoiceCreateInput> | null>(null);
 
   const duplicateId = searchParams.get('duplicateId');
 
@@ -116,7 +116,7 @@ function NewInvoiceContent() {
   }, [duplicateId, user, authLoading, toast]);
 
 
-  const handleCreateInvoice = async (data: Omit<InvoiceFormData, 'createdAt' | 'ownerId'>) => {
+  const handleCreateInvoice = async (data: InvoiceCreateInput) => {
     const db = getFirestoreDb();
     if (!user || !db) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
@@ -212,7 +212,8 @@ function NewInvoiceContent() {
             </Button>
           </div>
           <InvoiceForm
-            initialData={initialData as Invoice}
+            mode="create"
+            initialData={initialData}
             onSubmit={handleCreateInvoice}
           />
         </div>
