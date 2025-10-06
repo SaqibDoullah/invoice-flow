@@ -47,80 +47,72 @@ function NewInvoiceContent() {
   const { user, loading: authLoading } = useAuth();
   
   const [initialData, setInitialData] = useState<Partial<InvoiceFormData> | null>(null);
-  const [loadingInitialData, setLoadingInitialData] = useState(true);
 
   const duplicateId = searchParams.get('duplicateId');
 
   useEffect(() => {
     const db = getFirestoreDb();
-    if (!user || !db || authLoading) {
-      if (!duplicateId) {
-        // This is a new invoice, not a duplicate.
-        // Set default values on the client to avoid hydration issues.
-        const fetchUserSettings = async () => {
-           let companyDetails = {};
-            if (user && db) {
-              const userDocRef = doc(db, 'users', user.uid);
-              try {
-                const docSnap = await getDoc(userDocRef);
-                if (docSnap.exists()) {
-                  const userData = docSnap.data();
-                  companyDetails = {
-                    companyName: userData.companyName,
-                    companyAddress: userData.companyAddress,
-                    companyCity: userData.companyCity,
-                  };
-                }
-              } catch (error) {
-                console.error("Failed to fetch user settings for new invoice", error);
-              }
-            }
-
-            setInitialData({
-              ...companyDetails,
-              invoiceDate: new Date(),
-              dueDate: addDays(new Date(), 30),
-              status: 'draft',
-              items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
-              discount: 0,
-              discountType: 'percentage',
-            });
-        }
-        fetchUserSettings();
-      }
-       if(!authLoading) setLoadingInitialData(false);
+    if (authLoading || !user || !db) {
       return;
     }
 
-    const fetchInvoiceToDuplicate = async () => {
-      if (!duplicateId) return;
-      setLoadingInitialData(true);
-      try {
-        const docRef = doc(db, 'users', user.uid, 'invoices', duplicateId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const invoiceData = docSnap.data() as Invoice;
-          // Reset fields for duplication
-          setInitialData({
-            ...invoiceData,
-            invoiceNumber: '', // Clear invoice number for duplication
-            invoiceDate: new Date(),
-            dueDate: addDays(new Date(), 30),
-            status: 'draft',
-          });
-        } else {
-          toast({ variant: 'destructive', title: 'Error', description: 'Invoice to duplicate not found.' });
+    const fetchInitialData = async () => {
+      // If we are duplicating an invoice, fetch that data.
+      if (duplicateId) {
+        try {
+          const docRef = doc(db, 'users', user.uid, 'invoices', duplicateId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const invoiceData = docSnap.data() as Invoice;
+            // Reset fields for duplication
+            setInitialData({
+              ...invoiceData,
+              invoiceNumber: '', // Clear invoice number for duplication
+              invoiceDate: new Date(),
+              dueDate: addDays(new Date(), 30),
+              status: 'draft',
+            });
+          } else {
+            toast({ variant: 'destructive', title: 'Error', description: 'Invoice to duplicate not found.' });
+            setInitialData({}); // Set to empty to stop loading
+          }
+        } catch (error) {
+          console.error("Error fetching invoice to duplicate:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not load invoice data to duplicate.' });
+          setInitialData({}); // Set to empty to stop loading
         }
-      } catch (error) {
-        console.error("Error fetching invoice to duplicate:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not load invoice data to duplicate.' });
-      } finally {
-        setLoadingInitialData(false);
+      } else {
+        // Otherwise, this is a new invoice. Fetch user settings for company details.
+        let companyDetails = {};
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+          const docSnap = await getDoc(userDocRef);
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            companyDetails = {
+              companyName: userData.companyName,
+              companyAddress: userData.companyAddress,
+              companyCity: userData.companyCity,
+            };
+          }
+        } catch (error) {
+          console.error("Failed to fetch user settings for new invoice", error);
+        }
+        
+        setInitialData({
+          ...companyDetails,
+          invoiceDate: new Date(),
+          dueDate: addDays(new Date(), 30),
+          status: 'draft',
+          items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
+          discount: 0,
+          discountType: 'percentage',
+        });
       }
     };
-
-    fetchInvoiceToDuplicate();
     
+    fetchInitialData();
+
   }, [duplicateId, user, authLoading, toast]);
 
 
@@ -198,7 +190,8 @@ function NewInvoiceContent() {
     }
   };
 
-  if (authLoading || loadingInitialData || !initialData) {
+  // Render loading indicator until auth is resolved and initial data is fetched.
+  if (authLoading || !initialData) {
      return (
       <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-16 w-16 animate-spin text-primary" />
