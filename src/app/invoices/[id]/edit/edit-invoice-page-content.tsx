@@ -62,7 +62,7 @@ export default function EditInvoicePageContent() {
     fetchInvoice();
   }, [id, router, toast, user, authLoading]);
 
-  const handleUpdateInvoice = async (data: InvoiceFormData) => {
+  const handleUpdateInvoice = async (data: Omit<InvoiceFormData, 'createdAt'>) => {
     const db = getFirestoreDb();
     if (typeof id !== 'string' || !user || !db) return;
     try {
@@ -90,7 +90,7 @@ export default function EditInvoicePageContent() {
       const total = subtotal - discountAmount;
 
       // Build a clean payload, excluding fields that shouldn't be updated
-      const { createdAt, ownerId, ...restOfData } = data;
+      const { ownerId, ...restOfData } = data;
 
       const dataToUpdate = stripUndefined({
         ...restOfData,
