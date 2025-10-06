@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense } from 'react';
@@ -6,6 +7,7 @@ import { addDoc, collection, serverTimestamp, Timestamp, query, where, getDocs, 
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { addDays } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -44,28 +46,68 @@ function NewInvoiceContent() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   
-  const [initialData, setInitialData] = useState<Invoice | null>(null);
+  const [initialData, setInitialData] = useState<Partial<InvoiceFormData> | null>(null);
   const [loadingInitialData, setLoadingInitialData] = useState(true);
 
   const duplicateId = searchParams.get('duplicateId');
 
   useEffect(() => {
     const db = getFirestoreDb();
-    if (!duplicateId || !user || !db) {
-      setLoadingInitialData(false);
+    if (!user || !db || authLoading) {
+      if (!duplicateId) {
+        // This is a new invoice, not a duplicate.
+        // Set default values on the client to avoid hydration issues.
+        const fetchUserSettings = async () => {
+           let companyDetails = {};
+            if (user && db) {
+              const userDocRef = doc(db, 'users', user.uid);
+              try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                  const userData = docSnap.data();
+                  companyDetails = {
+                    companyName: userData.companyName,
+                    companyAddress: userData.companyAddress,
+                    companyCity: userData.companyCity,
+                  };
+                }
+              } catch (error) {
+                console.error("Failed to fetch user settings for new invoice", error);
+              }
+            }
+
+            setInitialData({
+              ...companyDetails,
+              invoiceDate: new Date(),
+              dueDate: addDays(new Date(), 30),
+              status: 'draft',
+              items: [{ name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 }],
+              discount: 0,
+              discountType: 'percentage',
+            });
+        }
+        fetchUserSettings();
+      }
+       if(!authLoading) setLoadingInitialData(false);
       return;
     }
 
     const fetchInvoiceToDuplicate = async () => {
+      if (!duplicateId) return;
       setLoadingInitialData(true);
       try {
         const docRef = doc(db, 'users', user.uid, 'invoices', duplicateId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          const invoiceData = { id: docSnap.id, ...docSnap.data() } as Invoice;
-          // Clear the invoice number for duplication
-          invoiceData.invoiceNumber = '';
-          setInitialData(invoiceData);
+          const invoiceData = docSnap.data() as Invoice;
+          // Reset fields for duplication
+          setInitialData({
+            ...invoiceData,
+            invoiceNumber: '', // Clear invoice number for duplication
+            invoiceDate: new Date(),
+            dueDate: addDays(new Date(), 30),
+            status: 'draft',
+          });
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice to duplicate not found.' });
         }
@@ -77,9 +119,8 @@ function NewInvoiceContent() {
       }
     };
 
-    if (!authLoading) {
-        fetchInvoiceToDuplicate();
-    }
+    fetchInvoiceToDuplicate();
+    
   }, [duplicateId, user, authLoading, toast]);
 
 
@@ -157,7 +198,7 @@ function NewInvoiceContent() {
     }
   };
 
-  if (authLoading || loadingInitialData) {
+  if (authLoading || loadingInitialData || !initialData) {
      return (
       <div className="flex items-center justify-center min-h-screen">
           <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -178,7 +219,7 @@ function NewInvoiceContent() {
             </Button>
           </div>
           <InvoiceForm
-            initialData={initialData || undefined}
+            initialData={initialData as Invoice}
             onSubmit={handleCreateInvoice}
           />
         </div>
