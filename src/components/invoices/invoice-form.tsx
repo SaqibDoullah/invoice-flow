@@ -36,7 +36,7 @@ import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 
 interface InvoiceFormProps {
-  initialData?: Invoice | null;
+  initialData?: Invoice | Partial<InvoiceFormData> | null;
   onSubmit: (data: Omit<InvoiceFormData, 'createdAt'>) => Promise<void>;
 }
 
@@ -85,11 +85,19 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
       };
 
       if (initialData) {
-        // Editing or duplicating an existing invoice
+        // Handle both Firestore Timestamps (from editing) and JS Dates (from creating/duplicating)
+        const invoiceDate = (initialData.invoiceDate as any)?.toDate 
+          ? (initialData.invoiceDate as any).toDate() 
+          : initialData.invoiceDate || new Date();
+        
+        const dueDate = (initialData.dueDate as any)?.toDate 
+          ? (initialData.dueDate as any).toDate() 
+          : initialData.dueDate || addDays(new Date(), 30);
+
         defaultValues = {
           ...initialData,
-          invoiceDate: initialData.invoiceDate.toDate(),
-          dueDate: initialData.dueDate.toDate(),
+          invoiceDate,
+          dueDate,
           discount: initialData.discount || 0,
           discountType: initialData.discountType || 'percentage',
         };
@@ -182,10 +190,10 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
     <Form {...form}>
       <form onSubmit={form.handleSubmit(processSubmit)} className="space-y-8">
         <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight">{initialData?.id ? `Edit Invoice ${initialData.invoiceNumber}` : 'New Invoice'}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{(initialData as Invoice)?.id ? `Edit Invoice ${(initialData as Invoice).invoiceNumber}` : 'New Invoice'}</h1>
             <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData?.id ? 'Save Changes' : 'Create Invoice'}
+            {(initialData as Invoice)?.id ? 'Save Changes' : 'Create Invoice'}
             </Button>
         </div>
         
@@ -273,7 +281,7 @@ export default function InvoiceForm({ initialData, onSubmit }: InvoiceFormProps)
                   <FormItem>
                     <FormLabel>Invoice Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!initialData?.id && !!initialData?.invoiceNumber} />
+                      <Input placeholder="Leave blank for auto-generation" {...field} disabled={!!(initialData as Invoice)?.id && !!(initialData as Invoice)?.invoiceNumber} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
