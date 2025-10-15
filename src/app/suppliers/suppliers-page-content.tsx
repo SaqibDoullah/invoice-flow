@@ -2,8 +2,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { collection, query, onSnapshot, doc, deleteDoc, where } from 'firebase/firestore';
+import { Plus, MoreHorizontal, Edit, Trash2, Home, ChevronRight, Upload, Download, Settings2, ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -19,9 +20,6 @@ import {
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import {
     DropdownMenu,
@@ -49,6 +47,9 @@ import AddSupplierDialog from '@/components/suppliers/add-supplier-dialog';
 import EditSupplierDialog from '@/components/suppliers/edit-supplier-dialog';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 export default function SuppliersPageContent() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -62,6 +63,10 @@ export default function SuppliersPageContent() {
   
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
+
+
   useEffect(() => {
     const db = getFirestoreDb();
     if (!user || authLoading || !db) {
@@ -71,12 +76,23 @@ export default function SuppliersPageContent() {
 
     setLoading(true);
     const supplierCollectionRef = collection(db, 'users', user.uid, 'suppliers');
-    const q = query(supplierCollectionRef);
+    
+    const conditions = [];
+    if (statusFilter !== 'all') {
+        conditions.push(where('status', '==', statusFilter));
+    }
+    
+    const q = query(supplierCollectionRef, ...conditions);
 
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
-        const suppliersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
+        let suppliersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
+        
+        if (searchTerm) {
+            suppliersList = suppliersList.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+
         setSuppliers(suppliersList);
         setLoading(false);
       },
@@ -99,7 +115,7 @@ export default function SuppliersPageContent() {
     );
 
     return () => unsubscribe();
-  }, [user, authLoading, toast]);
+  }, [user, authLoading, toast, searchTerm, statusFilter]);
 
   const handleEditClick = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
@@ -149,30 +165,73 @@ export default function SuppliersPageContent() {
       <div className="flex flex-col min-h-screen">
         <Header />
         <div className="flex-1 container mx-auto p-4 md:p-8">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                <Link href="/" className="flex items-center gap-1 hover:text-foreground">
+                    <Home className="w-4 h-4" />
+                    Home
+                </Link>
+                <ChevronRight className="w-4 h-4" />
+                <span>Suppliers</span>
+            </div>
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Suppliers</h1>
-              <Button onClick={() => setIsAddSupplierOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Supplier
-              </Button>
+            <h1 className="text-3xl font-bold tracking-tight">Suppliers: Default</h1>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setIsAddSupplierOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Supplier
+                </Button>
+                 <Button variant="outline" disabled><Upload className="mr-2 h-4 w-4" /> Import</Button>
+                 <Button variant="outline" disabled><Download className="mr-2 h-4 w-4" /> Export</Button>
+                 <Button variant="outline" disabled><Settings2 className="mr-2 h-4 w-4" /> Actions</Button>
+              </div>
           </div>
           
+          <div className="mb-4 space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                </Select>
+                 <Select disabled>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Created date" />
+                    </SelectTrigger>
+                 </Select>
+                 <Select disabled>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Last updated date" />
+                    </SelectTrigger>
+                 </Select>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">
+                <ShieldAlert className="w-4 h-4 text-orange-500" />
+                <span>Filtered: You do not have authorization to view this summary.</span>
+            </div>
+          </div>
+
           <Card>
-            <CardHeader>
-              <CardTitle>Supplier List</CardTitle>
-              <CardDescription>A list of all your suppliers.</CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {loading || authLoading ? (
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                <div className="p-6 space-y-2">
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Status</TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
+                      <TableHead>Contact Name</TableHead>
+                      <TableHead>Primary Phone Number</TableHead>
+                      <TableHead>Primary Email Addresses</TableHead>
+                      <TableHead>Primary Address</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -180,8 +239,16 @@ export default function SuppliersPageContent() {
                     {suppliers.length > 0 ? (
                       suppliers.map((supplier) => (
                         <TableRow key={supplier.id}>
+                          <TableCell>
+                            <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'} className={supplier.status === 'active' ? 'bg-green-100 text-green-800' : ''}>
+                                {supplier.status}
+                            </Badge>
+                          </TableCell>
                           <TableCell className="font-medium">{supplier.name}</TableCell>
+                          <TableCell>{supplier.contactName}</TableCell>
+                          <TableCell>{supplier.phoneNumber}</TableCell>
                           <TableCell>{supplier.email}</TableCell>
+                          <TableCell>{supplier.address}</TableCell>
                            <TableCell>
                                 <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -204,8 +271,8 @@ export default function SuppliersPageContent() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="h-24 text-center">
-                          No suppliers found. Add a supplier to get started.
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          No suppliers found.
                         </TableCell>
                       </TableRow>
                     )}

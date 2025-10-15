@@ -58,7 +58,8 @@ export type InvoiceUpdateInput = Omit<InvoiceFormData, 'createdAt' | 'ownerId'>;
 
 export const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  email: z.string().email('Invalid email address').optional().or(z
+.literal('')),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
@@ -70,6 +71,10 @@ export interface Customer extends CustomerFormData {
 export const supplierSchema = z.object({
   name: z.string().min(1, 'Supplier name is required'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  contactName: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+  status: z.enum(['active', 'inactive']).default('active'),
 });
 
 export type SupplierFormData = z.infer<typeof supplierSchema>;
