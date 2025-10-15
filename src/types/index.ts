@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -63,5 +64,16 @@ export const customerSchema = z.object({
 export type CustomerFormData = z.infer<typeof customerSchema>;
 
 export interface Customer extends CustomerFormData {
+  id: string;
+}
+
+export const supplierSchema = z.object({
+  name: z.string().min(1, 'Supplier name is required'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+});
+
+export type SupplierFormData = z.infer<typeof supplierSchema>;
+
+export interface Supplier extends SupplierFormData {
   id: string;
 }

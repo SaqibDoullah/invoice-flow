@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -8,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
-import { FileText, Users, BarChart2, Settings } from 'lucide-react'
+import { FileText, Users, BarChart2, Settings, Truck } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -46,6 +47,18 @@ export default function DashboardSidebar() {
                 <Link href="/customers">
                     <Users />
                     <span>Customers</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith('/suppliers')}
+              tooltip="Suppliers"
+            >
+                <Link href="/suppliers">
+                    <Truck />
+                    <span>Suppliers</span>
                 </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
