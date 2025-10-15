@@ -1,5 +1,16 @@
-
 'use client'
+
+import {
+  FileText,
+  Users,
+  BarChart2,
+  Settings,
+  Truck,
+  Boxes,
+  Home,
+} from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import {
   Sidebar,
@@ -9,9 +20,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
-import { FileText, Users, BarChart2, Settings, Truck, Boxes } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 
 export default function DashboardSidebar() {
   const pathname = usePathname()
@@ -30,9 +38,21 @@ export default function DashboardSidebar() {
             <SidebarMenuButton
               asChild
               isActive={pathname === '/'}
-              tooltip="Invoices"
+              tooltip="Dashboard"
             >
                 <Link href="/">
+                    <Home />
+                    <span>Dashboard</span>
+                </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith('/invoices')}
+              tooltip="Invoices"
+            >
+                <Link href="/invoices">
                     <FileText />
                     <span>Invoices</span>
                 </Link>
@@ -56,7 +76,7 @@ export default function DashboardSidebar() {
               isActive={pathname.startsWith('/inventory')}
               tooltip="Inventory"
             >
-                <Link href="/inventory">
+                <Link href="/inventory/products">
                     <Boxes />
                     <span>Inventory</span>
                 </Link>
