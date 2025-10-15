@@ -77,3 +77,18 @@ export type SupplierFormData = z.infer<typeof supplierSchema>;
 export interface Supplier extends SupplierFormData {
   id: string;
 }
+
+export const inventoryItemSchema = z.object({
+    name: z.string().min(1, 'Item name is required'),
+    sku: z.string().optional(),
+    quantity: z.coerce.number().min(0, 'Quantity must be non-negative'),
+    price: z.coerce.number().min(0, 'Price must be non-negative'),
+    supplierId: z.string().optional(),
+});
+
+export type InventoryItemFormData = z.infer<typeof inventoryItemSchema>;
+
+export interface InventoryItem extends InventoryItemFormData {
+    id: string;
+    supplier?: Supplier;
+}

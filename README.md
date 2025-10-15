@@ -63,6 +63,16 @@ Follow these instructions to get a copy of the project up and running on your lo
             match /customers/{customerId} {
               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
             }
+
+            // A user can manage their own suppliers subcollection
+            match /suppliers/{supplierId} {
+              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
+
+            // A user can manage their own inventory subcollection
+            match /inventory/{itemId} {
+              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
       }
@@ -113,4 +123,5 @@ To deploy the application to Firebase Hosting:
     ```
 
 After deployment, Firebase CLI will provide you with the URL to your live application.
+
 
