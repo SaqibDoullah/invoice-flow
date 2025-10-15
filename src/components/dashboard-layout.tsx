@@ -2,8 +2,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import DashboardSidebar from './dashboard-sidebar';
-import { SidebarProvider, SidebarInset } from './ui/sidebar';
+import Header from './header';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -14,11 +13,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     return (
-        <SidebarProvider>
-            <DashboardSidebar />
-            <SidebarInset>
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1">
                 {children}
-            </SidebarInset>
-        </SidebarProvider>
+            </main>
+        </div>
     );
 }

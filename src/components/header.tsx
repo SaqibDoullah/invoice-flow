@@ -1,18 +1,24 @@
 import { UserNav } from "./auth/user-nav";
-import { SidebarTrigger } from "./ui/sidebar";
+import Link from 'next/link';
+import { FileText } from 'lucide-react';
+import TopNav from './top-nav';
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
-          {/* We can add a logo or breadcrumbs here if needed */}
+        <div className="mr-8 hidden md:flex items-center gap-2">
+           <Link href="/" className="flex items-center gap-2">
+            <FileText className="h-6 w-6 text-primary" />
+            <span className="font-bold text-lg hidden lg:inline-block">InvoiceFlow</span>
+           </Link>
         </div>
-        <div className="md:hidden">
-          <SidebarTrigger />
-        </div>
-        <div className="flex flex-1 items-center justify-end">
-          <UserNav />
+
+        <div className="flex flex-1 items-center justify-between">
+            <TopNav />
+            <div className="flex items-center gap-4">
+                <UserNav />
+            </div>
         </div>
       </div>
     </header>
