@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -15,6 +14,13 @@ import {
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
 import { FileText, Users, Boxes, Truck, BarChart2 } from 'lucide-react';
+
+const analyticsFeatures = [
+  { title: 'Overview', href: '#', description: 'A high-level overview of business performance.' },
+  { title: 'Sales orders', href: '#', description: 'Analyze sales order trends and history.' },
+  { title: 'Product sales', href: '#', description: 'Breakdown of sales by individual product.' },
+  { title: 'Product stock', href: '#', description: 'Monitor current and historical stock levels.' },
+];
 
 const purchasingFeatures = [
   { title: 'Suppliers', href: '/suppliers', description: 'Manage your suppliers.' },
@@ -68,10 +74,17 @@ export default function TopNav() {
         <NavigationMenuItem>
           <NavigationMenuTrigger>Analytics</NavigationMenuTrigger>
           <NavigationMenuContent>
-             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] lg:w-[600px] ">
-                <ListItem href="#" title="Analytics coming soon">
-                    Gain insights into your business performance.
-                </ListItem>
+             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] grid-cols-1 lg:w-[600px] ">
+                {analyticsFeatures.map((component) => (
+                    <ListItem
+                    key={component.title}
+                    title={component.title}
+                    href={component.href}
+                    className={pathname.startsWith(component.href) && component.href !== '#' ? 'bg-accent' : ''}
+                    >
+                    {component.description}
+                    </ListItem>
+                ))}
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
