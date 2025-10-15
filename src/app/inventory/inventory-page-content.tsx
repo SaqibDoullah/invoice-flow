@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { collection, query, onSnapshot, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import Header from '@/components/header';
@@ -165,16 +166,23 @@ export default function InventoryPageContent() {
         <Header />
         <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Inventory</h1>
-              <Button onClick={() => setIsAddItemOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Item
-              </Button>
+            <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+            <div className="flex items-center gap-2">
+                <Button variant="outline" asChild>
+                    <Link href="/inventory">
+                        Back to Inventory
+                    </Link>
+                </Button>
+                <Button onClick={() => setIsAddItemOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Item
+                </Button>
+            </div>
           </div>
           
           <Card>
             <CardHeader>
-              <CardTitle>Inventory List</CardTitle>
+              <CardTitle>Product List</CardTitle>
               <CardDescription>A list of all items in your inventory.</CardDescription>
             </CardHeader>
             <CardContent>

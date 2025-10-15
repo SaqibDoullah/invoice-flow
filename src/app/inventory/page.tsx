@@ -1,11 +1,11 @@
 
 import DashboardLayout from '@/components/dashboard-layout';
-import InventoryPageContent from './inventory-page-content';
+import InventoryDashboard from './inventory-dashboard';
 
 export default function InventoryPage() {
     return (
         <DashboardLayout>
-            <InventoryPageContent />
+            <InventoryDashboard />
         </DashboardLayout>
     )
 }
