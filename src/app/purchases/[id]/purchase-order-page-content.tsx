@@ -360,6 +360,81 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                 </CardContent>
                             </Card>
                         </TabsContent>
+                         <TabsContent value="shipments" className="mt-4">
+                            <Card>
+                                <CardContent className="p-4 space-y-4">
+                                    <div className="bg-muted p-4 rounded-lg">
+                                        <h3 className="font-semibold text-lg">Shipment #</h3>
+                                        <p className="text-sm text-muted-foreground">Status: Canceled</p>
+                                        <p className="text-sm text-muted-foreground">Actual receive date: Unspecified</p>
+                                    </div>
+                                     <div className="flex flex-wrap items-center gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <label htmlFor="shipment-search" className="text-sm font-semibold">Search:</label>
+                                            <Input id="shipment-search" placeholder="" className="w-40" />
+                                        </div>
+                                        <span className="text-sm font-semibold">Filters:</span>
+                                        <div className="relative">
+                                             <Input placeholder="All locations" className="w-40" />
+                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All categories" />
+                                            </SelectTrigger>
+                                        </Select>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All manufacturers" />
+                                            </SelectTrigger>
+                                        </Select>
+                                         <Select>
+                                            <SelectTrigger className="w-[200px]">
+                                                <SelectValue placeholder="Order or Shipment > 0" />
+                                            </SelectTrigger>
+                                        </Select>
+                                        <Input placeholder="All lot ids" className="w-32" />
+                                     </div>
+                                      <div className="border rounded-md overflow-x-auto">
+                                        <table className="w-full text-sm whitespace-nowrap">
+                                            <thead className="bg-muted/50">
+                                                <tr className="border-b">
+                                                    <th className="p-2 font-medium text-left flex items-center gap-1"><Checkbox className="mr-2" /> <ArrowDown className="w-4 h-4"/> Product ID</th>
+                                                    <th className="p-2 font-medium text-left">Description</th>
+                                                    <th className="p-2 font-medium text-left">Std packing</th>
+                                                    <th colSpan={4} className="p-2 font-medium text-center border-l">Open Stock</th>
+                                                    <th colSpan={4} className="p-2 font-medium text-center border-l">Case Stock</th>
+                                                    <th className="p-2 font-medium text-left border-l">Packing</th>
+                                                    <th className="p-2 font-medium text-left border-l">Sublocation</th>
+                                                    <th className="p-2 font-medium text-left border-l">Lot ID</th>
+                                                </tr>
+                                                <tr className="border-b">
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
+                                                    <th className="p-2 font-medium text-right">Avail</th>
+                                                    <th className="p-2 font-medium text-right">Order</th>
+                                                    <th className="p-2 font-medium text-right">Shpmnt</th>
+                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
+                                                    <th className="p-2 font-medium text-right">Avail</th>
+                                                    <th className="p-2 font-medium text-right">Order</th>
+                                                    <th className="p-2 font-medium text-right">Shpmnt</th>
+                                                    <th className="p-2 border-l"></th>
+                                                    <th className="p-2 border-l"></th>
+                                                    <th className="p-2 border-l"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                 <tr>
+                                                    <td colSpan={14} className="p-8 text-center text-muted-foreground">No items to display.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                     </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
                     </Tabs>
                 </div>
             </div>
