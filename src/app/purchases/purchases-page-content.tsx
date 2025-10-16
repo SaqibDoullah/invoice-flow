@@ -66,9 +66,11 @@ export default function PurchasesPageContent() {
                  </DropdownMenu>
             </div>
               <div className="flex items-center gap-2">
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create purchase order
+                <Button asChild>
+                    <Link href="/purchases/new">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create purchase order
+                    </Link>
                 </Button>
                  <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> Import purchase orders</Button>
                  <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export</Button>
