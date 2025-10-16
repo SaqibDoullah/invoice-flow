@@ -40,8 +40,14 @@ const sellingFeatures = [
 ];
 
 const inventoryFeatures = [
-    { title: 'Products', href: '/inventory/products', description: 'Manage your product catalog.' },
-    { title: 'Inventory Dashboard', href: '/inventory', description: 'Get an overview of your stock.' },
+    { title: 'View stock', href: '/inventory', description: 'View product stock levels.' },
+    { title: 'Products', href: '/inventory/products', description: 'View all products.' },
+    { title: 'Product lookups', href: '#', description: 'View all product lookups & alias SKUs.' },
+    { title: 'Stock history', href: '#', description: 'View stock and transaction history.' },
+    { title: 'Stock takes', href: '#', description: 'Enter physical count of stock.' },
+    { title: 'Stock changes', href: '#', description: 'Adjust the stock levels.' },
+    { title: 'Stock transfers', href: '#', description: 'Move stock between locations.' },
+    { title: 'Replenishment', href: '#', description: 'Create a transfer order from calculations.' },
 ];
 
 const ListItem = React.forwardRef<
