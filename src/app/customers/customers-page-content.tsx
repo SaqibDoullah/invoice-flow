@@ -5,7 +5,6 @@ import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'fireba
 import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -146,9 +145,8 @@ export default function CustomersPageContent() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
+      <div className="flex flex-col">
+        <main className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
               <Button onClick={() => setIsAddCustomerOpen(true)}>
@@ -214,7 +212,7 @@ export default function CustomersPageContent() {
               )}
             </CardContent>
           </Card>
-        </div>
+        </main>
         <AddCustomerDialog
           isOpen={isAddCustomerOpen}
           setIsOpen={setIsAddCustomerOpen}

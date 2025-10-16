@@ -1,4 +1,3 @@
-
 'use client'
 
 import InvoiceDetailPageContent from './invoice-detail-page-content';

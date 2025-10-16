@@ -12,7 +12,6 @@ import {
   Truck,
   ArrowUp,
 } from 'lucide-react';
-import Header from '@/components/header';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import AuthGuard from '@/components/auth/auth-guard';
 
@@ -107,9 +106,8 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
 export default function InventoryDashboard() {
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
+      <div className="flex flex-col">
+        <main className="flex-1 container mx-auto p-4 md:p-8">
           <h1 className="text-3xl font-bold tracking-tight mb-8">Inventory</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -126,7 +124,7 @@ export default function InventoryDashboard() {
                  <FeatureCard {...inventoryFeatures[7]} />
               </div>
           </div>
-        </div>
+        </main>
       </div>
     </AuthGuard>
   );

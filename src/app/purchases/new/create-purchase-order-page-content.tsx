@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +7,6 @@ import { Home, ChevronRight, ShoppingCart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import Header from '@/components/header';
 import AuthGuard from '@/components/auth/auth-guard';
 
 export default function CreatePurchaseOrderPageContent() {
@@ -28,9 +26,8 @@ export default function CreatePurchaseOrderPageContent() {
 
     return (
         <AuthGuard>
-            <div className="flex flex-col min-h-screen">
-                <Header />
-                <div className="flex-1 container mx-auto p-4 md:p-8">
+            <div className="flex flex-col">
+                <main className="flex-1 container mx-auto p-4 md:p-8">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                         <Link href="/" className="flex items-center gap-1 hover:text-foreground">
                             <Home className="w-4 h-4" />
@@ -94,7 +91,7 @@ export default function CreatePurchaseOrderPageContent() {
                             </Card>
                         </div>
                     </div>
-                </div>
+                </main>
             </div>
         </AuthGuard>
     );

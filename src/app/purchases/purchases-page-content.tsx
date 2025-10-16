@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +5,6 @@ import { Plus, Upload, Download, Settings2, Home, ChevronRight, Filter, Search, 
 import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -42,9 +40,8 @@ export default function PurchasesPageContent() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
+      <div className="flex flex-col">
+        <main className="flex-1 container mx-auto p-4 md:p-8">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                 <Link href="/" className="flex items-center gap-1 hover:text-foreground">
                     <Home className="w-4 h-4" />
@@ -168,7 +165,7 @@ export default function PurchasesPageContent() {
               )}
             </CardContent>
           </Card>
-        </div>
+        </main>
       </div>
     </AuthGuard>
   );

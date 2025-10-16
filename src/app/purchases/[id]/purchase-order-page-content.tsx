@@ -21,7 +21,6 @@ import {
 import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -56,9 +55,8 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
 
     return (
         <AuthGuard>
-            <div className="flex flex-col min-h-screen bg-muted/40">
-                <Header />
-                <div className="flex-1 container mx-auto p-4 md:p-8">
+            <div className="flex flex-col bg-muted/40">
+                <main className="flex-1 container mx-auto p-4 md:p-8">
                      <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
                              <div className="p-3 rounded-lg bg-orange-100 dark:bg-orange-900/50">
@@ -436,7 +434,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                             </Card>
                         </TabsContent>
                     </Tabs>
-                </div>
+                </main>
             </div>
         </AuthGuard>
     );

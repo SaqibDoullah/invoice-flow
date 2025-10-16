@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/dashboard-layout";
 import { PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -23,7 +22,6 @@ export default function Page({ searchParams }: PageProps) {
   const statusFilter = (searchParams?.status ?? "all").toString();
 
   return (
-    <DashboardLayout>
        <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
@@ -58,6 +56,5 @@ export default function Page({ searchParams }: PageProps) {
 
           <InvoiceList searchTerm={searchTerm} statusFilter={statusFilter} />
         </div>
-    </DashboardLayout>
   )
 }

@@ -6,7 +6,6 @@ import { subMonths, format, isAfter, startOfMonth, endOfMonth } from 'date-fns';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type Invoice } from '@/types';
@@ -163,9 +162,8 @@ export default function ReportsPageContent() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
+      <div className="flex flex-col">
+        <main className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
           </div>
@@ -229,7 +227,7 @@ export default function ReportsPageContent() {
               </Card>
           </div>
 
-        </div>
+        </main>
       </div>
     </AuthGuard>
   );
