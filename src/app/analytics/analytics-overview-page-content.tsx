@@ -40,7 +40,7 @@ const salesTotalData = [
     { date: 'Sep 27', total: 0 }, { date: 'Sep 28', total: 40000 },
     { date: 'Sep 29', total: 10000 }, { date: 'Sep 30', total: 90000 },
     { date: 'Oct 01', total: 70000 }, { date: 'Oct 02', total: 30000 },
-    { date: 'Oct 03', total: 35000 }, { date 'Oct 04', total: 5000 },
+    { date: 'Oct 03', total: 35000 }, { date: 'Oct 04', total: 5000 },
     { date: 'Oct 05', total: 10000 }, { date: 'Oct 06', total: 15000 },
     { date: 'Oct 07', total: 45000 }, { date: 'Oct 08', total: 30000 },
     { date: 'Oct 09', total: 10000 }, { date: 'Oct 10', total: 40000 },
