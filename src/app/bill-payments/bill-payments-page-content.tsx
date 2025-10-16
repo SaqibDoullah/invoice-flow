@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -67,7 +68,9 @@ export default function BillPaymentsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <Button>Create bill payment from bill</Button>
+              <Button asChild>
+                <Link href="/purchases">Create bill payment from bill</Link>
+              </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">Export <ChevronDown className="w-4 h-4 ml-2" /></Button>
