@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -13,7 +12,10 @@ import {
     Search,
     Trash2,
     Plus,
-    MessageCircle
+    MessageCircle,
+    Receipt,
+    Users,
+    History
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -213,6 +215,56 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             <p className="text-sm text-muted-foreground">Editable</p>
                                         </CardContent>
                                      </Card>
+                                     <Card>
+                                        <CardHeader className="flex-row items-center gap-2 space-y-0">
+                                            <Receipt className="w-5 h-5 text-muted-foreground" />
+                                            <CardTitle>Bills</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground mb-2">No bills</p>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" className="w-full justify-between" disabled>Bill purchase order <ChevronDown /></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    {/* Items would go here */}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </CardContent>
+                                    </Card>
+                                     <Card>
+                                        <CardHeader className="flex-row items-center gap-2 space-y-0">
+                                            <Users className="w-5 h-5 text-muted-foreground" />
+                                            <CardTitle>Supplier credits</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground mb-2">No supplier credits</p>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" className="w-full justify-between" disabled>Add new supplier credit <ChevronDown /></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    {/* Items would go here */}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </CardContent>
+                                    </Card>
+                                     <Card>
+                                        <CardHeader className="flex-row items-center gap-2 space-y-0">
+                                            <History className="w-5 h-5 text-muted-foreground" />
+                                            <CardTitle>History</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="p-1.5 bg-blue-100 rounded-full"><Info className="w-3 h-3 text-blue-600"/></div>
+                                                    <span>Created</span>
+                                                </div>
+                                                <span className="text-muted-foreground">seconds ago</span>
+                                            </div>
+                                            <Button variant="outline" className="w-full mt-4" disabled>View detailed order history</Button>
+                                        </CardContent>
+                                    </Card>
                                      <div className="fixed bottom-8 right-8">
                                         <Button size="icon" className="rounded-full w-14 h-14 shadow-lg">
                                             <MessageCircle className="w-8 h-8" />
