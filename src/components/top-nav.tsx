@@ -71,6 +71,11 @@ const reportsFeatures = [
     { title: 'Amazon FBA', href: '#', description: 'Reports related to Amazon FBA.' },
 ];
 
+const barcodingFeatures = [
+    { title: 'Android scanner app', href: '#', description: 'Use your Android device to scan barcodes.' },
+    { title: 'Print barcode labels', href: '#', description: 'Generate and print barcode labels for your products.' },
+];
+
 
 const ListItem = React.forwardRef<
   React.ElementRef<'a'>,
@@ -216,10 +221,17 @@ export default function TopNav() {
         <NavigationMenuItem>
           <NavigationMenuTrigger>Barcoding</NavigationMenuTrigger>
            <NavigationMenuContent>
-             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] lg:w-[600px] ">
-                <ListItem href="#" title="Barcoding coming soon">
-                    Streamline your inventory management with barcode scanning.
-                </ListItem>
+             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] grid-cols-1 lg:w-[600px] ">
+                {barcodingFeatures.map((component) => (
+                    <ListItem
+                    key={component.title}
+                    title={component.title}
+                    href={component.href}
+                    className={pathname.startsWith(component.href) && component.href !== '#' ? 'bg-accent' : ''}
+                    >
+                    {component.description}
+                    </ListItem>
+                ))}
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
