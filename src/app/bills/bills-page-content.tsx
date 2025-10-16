@@ -73,7 +73,7 @@ export default function BillsPageContent() {
             </div>
             <div className="flex items-center gap-2">
               <Button asChild>
-                <Link href="/purchases/100171?tab=bill">Create bill from order</Link>
+                <Link href="/purchases/new">Create bill from order</Link>
               </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
