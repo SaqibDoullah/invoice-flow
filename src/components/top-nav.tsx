@@ -50,6 +50,14 @@ const inventoryFeatures = [
     { title: 'Replenishment', href: '#', description: 'Create a transfer order from calculations.' },
 ];
 
+const accountingFeatures = [
+    { title: 'Average cost changes', href: '#', description: "Update product's average cost." },
+    { title: 'Journal entries', href: '#', description: 'View all journal entries.' },
+    { title: 'Consolidations', href: '#', description: 'View all consolidations.' },
+    { title: 'General ledger', href: '#', description: 'View all financial transactions.' },
+    { title: 'QuickBooks Online sync status', href: '#', description: "View transactions' sync status." },
+];
+
 const ListItem = React.forwardRef<
   React.ElementRef<'a'>,
   React.ComponentPropsWithoutRef<'a'>
@@ -124,6 +132,24 @@ export default function TopNav() {
            <NavigationMenuContent>
             <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] grid-cols-1 lg:w-[600px] ">
               {inventoryFeatures.map((component) => (
+                <ListItem
+                  key={component.title}
+                  title={component.title}
+                  href={component.href}
+                  className={pathname.startsWith(component.href) && component.href !== '#' ? 'bg-accent' : ''}
+                >
+                  {component.description}
+                </ListItem>
+              ))}
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Accounting</NavigationMenuTrigger>
+           <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] grid-cols-1 lg:w-[600px] ">
+              {accountingFeatures.map((component) => (
                 <ListItem
                   key={component.title}
                   title={component.title}
