@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -636,13 +637,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-```>
-  </change>
-  <change>
-    <file>src/app/bills/page.tsx</file>
-    <content><![CDATA[
-import BillsPageContent from './bills-page-content';
-
-export default function BillsPage() {
-    return <BillsPageContent />;
-}
