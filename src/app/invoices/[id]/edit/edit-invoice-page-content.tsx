@@ -7,7 +7,6 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -131,7 +130,6 @@ export default function EditInvoicePageContent() {
   if (!invoice) {
     return (
       <AuthGuard>
-        <Header />
         <div className="container mx-auto p-8 text-center">
           <h1 className="text-2xl font-bold mb-4">Invoice Not Found</h1>
           <p>The invoice you are looking for does not exist or has been deleted.</p>
@@ -148,19 +146,16 @@ export default function EditInvoicePageContent() {
 
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
-          <div className="mb-6">
-            <Button variant="outline" asChild>
-              <Link href={`/invoices/${id}`}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Invoice
-              </Link>
-            </Button>
-          </div>
-          <InvoiceForm mode="edit" initialData={invoice} onSubmit={handleUpdateInvoice} />
+      <div className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="mb-6">
+          <Button variant="outline" asChild>
+            <Link href={`/invoices/${id}`}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Invoice
+            </Link>
+          </Button>
         </div>
+        <InvoiceForm mode="edit" initialData={invoice} onSubmit={handleUpdateInvoice} />
       </div>
     </AuthGuard>
   );

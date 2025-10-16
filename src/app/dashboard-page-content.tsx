@@ -26,13 +26,12 @@ import {
   RefreshCcw,
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const purchasingFeatures = [
   { title: 'Suppliers', description: 'View all suppliers.', icon: <Users className="w-6 h-6" />, href: '/suppliers', color: 'red' },
-  { title: 'Purchases', description: 'View all purchase orders.', icon: <ShoppingCart className="w-6 h-6" />, href: '#', color: 'red' },
+  { title: 'Purchases', description: 'View all purchase orders.', icon: <ShoppingCart className="w-6 h-6" />, href: '/purchases', color: 'red' },
   { title: 'Bills', description: 'View all bills.', icon: <Receipt className="w-6 h-6" />, href: '#', color: 'red' },
   { title: 'Bill payments', description: 'View all bill payments.', icon: <CreditCard className="w-6 h-6" />, href: '#', color: 'orange' },
   { title: 'Reorder', description: 'Create a purchase order from reorder quantities.', icon: <RefreshCw className="w-6 h-6" />, href: '#', color: 'orange' },
@@ -115,8 +114,6 @@ const FeatureSection = ({ title, features }: { title: string, features: Array<(t
 export default function DashboardPageContent() {
   return (
     <AuthGuard>
-      <div className="flex flex-col min-h-screen">
-        <Header />
         <main className="flex-1 container mx-auto p-4 md:p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 items-start">
               <FeatureSection title="Purchasing" features={purchasingFeatures} />
@@ -125,7 +122,6 @@ export default function DashboardPageContent() {
               <FeatureSection title="Accounting" features={accountingFeatures} />
             </div>
         </main>
-      </div>
     </AuthGuard>
   );
 }

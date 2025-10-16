@@ -10,7 +10,6 @@ import { useEffect, useState } from 'react';
 import { addDays } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
-import Header from '@/components/header';
 import InvoiceForm from '@/components/invoices/invoice-form';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -200,24 +199,21 @@ function NewInvoiceContent() {
   }
 
   return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 md:p-8">
-           <div className="mb-6">
-            <Button variant="outline" asChild>
-              <Link href="/">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Invoices
-              </Link>
-            </Button>
-          </div>
-          <InvoiceForm
-            mode="create"
-            initialData={initialData}
-            onSubmit={handleCreateInvoice}
-          />
+    <div className="flex-1 container mx-auto p-4 md:p-8">
+        <div className="mb-6">
+        <Button variant="outline" asChild>
+            <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Invoices
+            </Link>
+        </Button>
         </div>
-      </div>
+        <InvoiceForm
+        mode="create"
+        initialData={initialData}
+        onSubmit={handleCreateInvoice}
+        />
+    </div>
   );
 }
 
