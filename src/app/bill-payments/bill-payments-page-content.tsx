@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
 import { Home, ChevronRight, ChevronDown, Filter, MoreVertical, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
@@ -27,13 +28,43 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type BillPayment } from '@/types';
-import { mockBillPayments } from '@/lib/mock-data';
 import CreateBillPaymentFromBillDialog from '@/components/bill-payments/create-bill-payment-dialog';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BillPaymentsPageContent() {
-  const [billPayments, setBillPayments] = useState<BillPayment[]>(mockBillPayments);
-  const [loading, setLoading] = useState(false);
+  const [billPayments, setBillPayments] = useState<BillPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    // NOTE: In a real app, this collection would be 'billPayments'.
+    const paymentsCollectionRef = collection(db, 'users', user.uid, 'billPayments');
+    const q = query(paymentsCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const payments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BillPayment));
+        setBillPayments(payments);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching bill payments:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch bill payments.'});
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -70,7 +101,7 @@ export default function BillPaymentsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
+               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 Create bill payment from bill
               </Button>
               <DropdownMenu>
@@ -107,11 +138,9 @@ export default function BillPaymentsPageContent() {
 
           <Card>
             <CardContent className="p-0">
-              {loading ? (
+              {loading || authLoading ? (
                 <div className="p-6 space-y-2">
-                  {[...Array(10)].map((_, i) => (
-                    <div key={i} className="h-12 w-full bg-muted animate-pulse rounded-md" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

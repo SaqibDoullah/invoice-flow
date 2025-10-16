@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Home, ChevronRight, Receipt, ChevronDown, Filter, ShieldAlert, ArrowDown } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -28,11 +29,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type Bill } from '@/types';
-import { mockBills } from '@/lib/mock-data';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BillsPageContent() {
-  const [bills, setBills] = useState<Bill[]>(mockBills);
-  const [loading, setLoading] = useState(false);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+      if (!authLoading) setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    // NOTE: This is a placeholder. In a real app, you would create a 'bills' collection.
+    const billsCollectionRef = collection(db, 'users', user.uid, 'bills');
+    const q = query(billsCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const billsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bill));
+        setBills(billsData);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching bills: ", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch bills.'});
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -137,11 +168,9 @@ export default function BillsPageContent() {
 
           <Card>
             <CardContent className="p-0">
-              {loading ? (
+              {loading || authLoading ? (
                 <div className="p-6 space-y-2">
-                  {[...Array(10)].map((_, i) => (
-                    <div key={i} className="h-12 w-full bg-muted animate-pulse rounded-md" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

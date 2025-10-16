@@ -37,38 +37,6 @@ interface PurchaseOrderPageContentProps {
     orderId: string;
 }
 
-const mockProductsData = [
-    { id: '100000-1', description: 'Voopoo Argus P2 Kit-Crystal Pink', packing: '50/1', openStock: { qoh: 12, avail: 12, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'D1-03-C' },
-    { id: '100000-2', description: 'Voopoo Argus P2 Kit-Emerald Green', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100000-3', description: 'Voopoo Argus P2 Kit-Matte Black', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100000-4', description: 'Voopoo Argus P2 Kit-Neon Blue', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100000-5', description: 'Voopoo Argus P2 Kit-Pearl White', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100000-6', description: 'Voopoo Argus P2 Kit-Ruby Red', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100000-7', description: 'Voopoo Argus P2 Kit-Titanium Gray', packing: '50/1', openStock: { qoh: 10, avail: 10, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'D1-03-C' },
-    { id: '100000-8', description: 'Voopoo Argus P2 Kit-Voilet Purple', packing: '30/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100001-1', description: 'Yocan Ziva Pro Battery-Display of 10-Black', packing: '34/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '100001-2', description: 'Yocan Ziva Pro Battery-Display of 10-Cyan Blue Gradient', packing: '34/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
-    { id: '003924243-1', description: 'SMOK Mag Solo Starter Kit (Single Unit) Color=Matte white', packing: '30/1', openStock: { qoh: 30, avail: 30, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'C7-02-C' },
-    { id: '003924243-2', description: 'SMOK Mag Solo Starter Kit (Single Unit) Color=Matte black', packing: '30/1', openStock: { qoh: 30, avail: 30, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'C5-02-C' },
-];
-
-const mockBillItems = [
-    { product: '150587110-1: Yocan Black Celestial E-Rig Vaporizer (Single Unit) Color=Black', quantity: 39, unitPrice: 60.50, subtotal: 2359.50 },
-    { product: '150587110-2: Yocan Black Celestial E-Rig Vaporizer (Single Unit) Color=Blue', quantity: 57, unitPrice: 60.50, subtotal: 3448.50 },
-    { product: '150587110-3: Yocan Black Celestial E-Rig Vaporizer (Single Unit) Color=Red', quantity: 63, unitPrice: 60.50, subtotal: 3811.50 },
-    { product: '150587110-4: Yocan Black Celestial E-Rig Vaporizer (Single Unit) Color=Silver', quantity: 80, unitPrice: 60.50, subtotal: 4840.00 },
-    { product: '574039610-1: Yocan Black Phaser ACE ePen Vaporizer (Single Unit) Color=Black', quantity: 111, unitPrice: 25.00, subtotal: 2775.00 },
-    { product: '768729300-1: Yocan Black Phaser ARC Nectar Collector (Single Unit) Color=Black', quantity: 92, unitPrice: 37.25, subtotal: 3427.00 },
-    { product: '768729300-2: Yocan Black Phaser ARC Nectar Collector (Single Unit) Color=Blue', quantity: 90, unitPrice: 37.25, subtotal: 3352.50 },
-    { product: '768729300-3: Yocan Black Phaser ARC Nectar Collector (Single Unit) Color=Red', quantity: 93, unitPrice: 37.25, subtotal: 3464.25 },
-    { product: '768729300-4: Yocan Black Phaser ARC Nectar Collector (Single Unit) Color=Silver', quantity: 98, unitPrice: 37.25, subtotal: 3650.50 },
-    { product: '923739971-1: Yocan Black SMART 350mAh Battery (Single Unit) Color=Black', quantity: 334, unitPrice: 11.00, subtotal: 3674.00 },
-    { product: '923739971-2: Yocan Black SMART 350mAh Battery (Single Unit) Color=Blue', quantity: 204, unitPrice: 11.00, subtotal: 2244.00 },
-    { product: '923739971-3: Yocan Black SMART 350mAh Battery (Single Unit) Color=Red', quantity: 203, unitPrice: 11.00, subtotal: 2233.00 },
-    { product: '923739971-4: Yocan Black SMART 350mAh Battery (Single Unit) Color=Silver', quantity: 204, unitPrice: 11.00, subtotal: 2244.00 },
-    { product: '574039610-3: Yocan Black Phaser ACE ePen Vaporizer (Single Unit) Color=Red', quantity: 65, unitPrice: 25.00, subtotal: 1625.00 },
-]
-
 export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageContentProps) {
 
     return (
@@ -368,20 +336,9 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {mockProductsData.map((product) => (
-                                                    <tr key={product.id} className="border-b last:border-0">
-                                                        <td className="p-2">{product.id}</td>
-                                                        <td className="p-2">{product.description}</td>
-                                                        <td className="p-2">{product.packing}</td>
-                                                        <td className="p-2 text-right border-l">{product.openStock.qoh}</td>
-                                                        <td className="p-2 text-right">{product.openStock.avail}</td>
-                                                        <td className="p-2 text-right">{product.openStock.order}</td>
-                                                        <td className="p-2 text-right border-l">{product.caseStock.qoh}</td>
-                                                        <td className="p-2 text-right">{product.caseStock.avail}</td>
-                                                        <td className="p-2 text-right">{product.caseStock.order}</td>
-                                                        <td className="p-2 border-l">{product.sublocations}</td>
-                                                    </tr>
-                                                ))}
+                                                <tr>
+                                                    <td colSpan={10} className="p-8 text-center text-muted-foreground">No items to display.</td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                      </div>
@@ -523,19 +480,9 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {mockBillItems.map((item, index) => (
-                                                        <tr key={index} className="border-b last:border-b-0">
-                                                            <td className="p-2"><Checkbox/></td>
-                                                            <td className="p-2">{item.product}</td>
-                                                            <td className="p-2"></td>
-                                                            <td className="p-2"></td>
-                                                            <td className="p-2 text-right">{item.quantity}</td>
-                                                            <td className="p-2 text-right"></td>
-                                                            <td className="p-2 text-right">{item.unitPrice.toFixed(2)}</td>
-                                                            <td className="p-2 text-right">{item.subtotal.toFixed(2)}</td>
-                                                            <td className="p-2"><Button variant="ghost" size="icon" className="w-6 h-6"><X className="w-4 h-4"/></Button></td>
-                                                        </tr>
-                                                    ))}
+                                                    <tr>
+                                                        <td colSpan={9} className="p-8 text-center text-muted-foreground">No bill items found.</td>
+                                                    </tr>
                                                 </tbody>
                                                 <tfoot>
                                                     <tr>
@@ -547,7 +494,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                 <div className="w-full max-w-xs space-y-2 text-sm">
                                                     <div className="flex justify-between">
                                                         <span>Total:</span>
-                                                        <span>43,148.75</span>
+                                                        <span>0.00</span>
                                                     </div>
                                                     <div className="flex justify-between font-semibold">
                                                         <span>Total paid:</span>
