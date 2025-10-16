@@ -97,3 +97,15 @@ export interface InventoryItem extends InventoryItemFormData {
     id: string;
     supplier?: Supplier;
 }
+
+export interface PurchaseOrder {
+    id: string;
+    status: 'draft' | 'committed';
+    orderDate: Date;
+    orderId: string;
+    supplierName: string;
+    destination: string;
+    shipments: string;
+    estimatedReceiveDate: Date | null;
+    total: number;
+}
