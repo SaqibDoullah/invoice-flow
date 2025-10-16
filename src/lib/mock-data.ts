@@ -1,5 +1,5 @@
 
-import { PurchaseOrder } from '@/types';
+import { PurchaseOrder, Bill } from '@/types';
 
 export const mockPurchaseOrders: PurchaseOrder[] = [
   {
@@ -101,4 +101,20 @@ export const mockPurchaseOrders: PurchaseOrder[] = [
     estimatedReceiveDate: new Date('2025-10-03'),
     total: 39513.90,
   },
+];
+
+
+export const mockBills: Bill[] = [
+    { id: '1', status: 'Posted', billDate: new Date('2024-03-13'), billDueDate: new Date('2024-03-13'), billId: '008-4316-202403...', supplier: 'Shenzhen YouMe Information Technology Co., Ltd', referenceNumber: 'AMD Drop Ship', totalBilled: 22360.00, totalPaid: 0.00, outstandingBalance: 22360.00, paymentStatus: 'Unpaid' },
+    { id: '2', status: 'Posted', billDate: new Date('2024-03-21'), billDueDate: new Date('2024-03-21'), billId: '008-4335-202403...', supplier: 'Shenzhen YouMe Information Technology Co., Ltd', referenceNumber: '008-4327-20240313', totalBilled: 65360.00, totalPaid: 0.00, outstandingBalance: 65360.00, paymentStatus: 'Unpaid' },
+    { id: '3', status: 'Posted', billDate: new Date('2024-04-04'), billDueDate: new Date('2024-04-04'), billId: '008-4353-202404...', supplier: 'Shenzhen YouMe Information Technology Co., Ltd', referenceNumber: '008-4327-20240313', totalBilled: 73100.00, totalPaid: 0.00, outstandingBalance: 73100.00, paymentStatus: 'Unpaid' },
+    { id: '4', status: 'Posted', billDate: new Date('2024-04-04'), billDueDate: new Date('2024-04-04'), billId: '008-4354-202404...', supplier: 'Shenzhen YouMe Information Technology Co., Ltd', referenceNumber: 'INV-4354', totalBilled: 23220.00, totalPaid: 0.00, outstandingBalance: 23220.00, paymentStatus: 'Unpaid' },
+    { id: '5', status: 'Posted', billDate: new Date('2024-04-22'), billDueDate: new Date('2024-04-22'), billId: 'SO-TX-43159-1', supplier: 'DKSS Distribution DBA Happy Distro', referenceNumber: 'AMD - Pulse Drop', totalBilled: 13700.00, totalPaid: 0.00, outstandingBalance: 13700.00, paymentStatus: 'Unpaid' },
+    { id: '6', status: 'Posted', billDate: new Date('2024-04-25'), billDueDate: new Date('2024-04-25'), billId: 'INV-000820-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 3434.00, totalPaid: 0.00, outstandingBalance: 3434.00, paymentStatus: 'Unpaid' },
+    { id: '7', status: 'Posted', billDate: new Date('2024-04-25'), billDueDate: new Date('2024-04-25'), billId: 'INV-000824-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 19986.50, totalPaid: 0.00, outstandingBalance: 19986.50, paymentStatus: 'Unpaid' },
+    { id: '8', status: 'Posted', billDate: new Date('2024-04-25'), billDueDate: new Date('2024-04-25'), billId: 'INV-000842-1', supplier: 'Marhaba Imports LLC', referenceNumber: 'Rising Order 1068...', totalBilled: 3600.00, totalPaid: 0.00, outstandingBalance: 3600.00, paymentStatus: 'Unpaid' },
+    { id: '9', status: 'Posted', billDate: new Date('2024-05-01'), billDueDate: new Date('2024-05-01'), billId: 'INV-000828-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 75277.07, totalPaid: 0.00, outstandingBalance: 75277.07, paymentStatus: 'Unpaid' },
+    { id: '10', status: 'Posted', billDate: new Date('2024-05-07'), billDueDate: new Date('2024-05-07'), billId: 'INV-000812-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 15173.20, totalPaid: 0.00, outstandingBalance: 15173.20, paymentStatus: 'Unpaid' },
+    { id: '11', status: 'Posted', billDate: new Date('2024-05-22'), billDueDate: new Date('2024-05-22'), billId: 'INV-000829-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 45480.30, totalPaid: 0.00, outstandingBalance: 45480.30, paymentStatus: 'Unpaid' },
+    { id: '12', status: 'Posted', billDate: new Date('2024-05-28'), billDueDate: new Date('2024-05-28'), billId: '100007-1', supplier: 'Marhaba Imports LLC', referenceNumber: 'INV-000837', totalBilled: 1050.00, totalPaid: 0.00, outstandingBalance: 1050.00, paymentStatus: 'Unpaid' },
 ];

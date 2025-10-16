@@ -109,3 +109,17 @@ export interface PurchaseOrder {
     estimatedReceiveDate: Date | null;
     total: number;
 }
+
+export interface Bill {
+    id: string;
+    status: 'Posted';
+    billDate: Date;
+    billDueDate: Date;
+    billId: string;
+    supplier: string;
+    referenceNumber: string | null;
+    totalBilled: number;
+    totalPaid: number;
+    outstandingBalance: number;
+    paymentStatus: 'Unpaid' | 'Paid';
+}
