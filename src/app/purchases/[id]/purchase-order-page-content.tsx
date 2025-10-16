@@ -15,7 +15,8 @@ import {
     MessageCircle,
     Receipt,
     Users,
-    History
+    History,
+    ArrowDown
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -29,10 +30,27 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PurchaseOrderPageContentProps {
     orderId: string;
 }
+
+const mockProductsData = [
+    { id: '100000-1', description: 'Voopoo Argus P2 Kit-Crystal Pink', packing: '50/1', openStock: { qoh: 12, avail: 12, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'D1-03-C' },
+    { id: '100000-2', description: 'Voopoo Argus P2 Kit-Emerald Green', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100000-3', description: 'Voopoo Argus P2 Kit-Matte Black', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100000-4', description: 'Voopoo Argus P2 Kit-Neon Blue', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100000-5', description: 'Voopoo Argus P2 Kit-Pearl White', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100000-6', description: 'Voopoo Argus P2 Kit-Ruby Red', packing: '50/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100000-7', description: 'Voopoo Argus P2 Kit-Titanium Gray', packing: '50/1', openStock: { qoh: 10, avail: 10, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'D1-03-C' },
+    { id: '100000-8', description: 'Voopoo Argus P2 Kit-Voilet Purple', packing: '30/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100001-1', description: 'Yocan Ziva Pro Battery-Display of 10-Black', packing: '34/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '100001-2', description: 'Yocan Ziva Pro Battery-Display of 10-Cyan Blue Gradient', packing: '34/1', openStock: { qoh: 0, avail: 0, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: '' },
+    { id: '003924243-1', description: 'SMOK Mag Solo Starter Kit (Single Unit) Color=Matte white', packing: '30/1', openStock: { qoh: 30, avail: 30, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'C7-02-C' },
+    { id: '003924243-2', description: 'SMOK Mag Solo Starter Kit (Single Unit) Color=Matte black', packing: '30/1', openStock: { qoh: 30, avail: 30, order: 0 }, caseStock: { qoh: 0, avail: 0, order: 0 }, sublocations: 'C5-02-C' },
+];
+
 
 export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageContentProps) {
 
@@ -61,18 +79,6 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
-                                        <Printer className="mr-2" />
-                                        Print purchase order
-                                        <ChevronDown className="ml-2" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>Default</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
                                         Actions
                                         <ChevronDown className="ml-2" />
                                     </Button>
@@ -91,8 +97,8 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                             <TabsTrigger value="products">Products view</TabsTrigger>
                             <TabsTrigger value="shipments">Shipments</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="purchase">
-                            <div className="grid lg:grid-cols-3 gap-8 items-start mt-4">
+                        <TabsContent value="purchase" className="mt-4">
+                            <div className="grid lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2 space-y-6">
                                     <Card>
                                         <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Primary Information</CardTitle></CardHeader>
@@ -272,6 +278,87 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                      </div>
                                 </div>
                             </div>
+                        </TabsContent>
+                        <TabsContent value="products" className="mt-4">
+                            <Card>
+                                <CardContent className="p-4 space-y-4">
+                                     <div className="flex items-center justify-between">
+                                        <p className="text-sm text-muted-foreground font-semibold">Summary: TOTAL: 0 units</p>
+                                     </div>
+                                     <div className="flex flex-wrap items-center gap-2">
+                                        <div className="relative">
+                                            <Input placeholder="Search..." className="pl-8" />
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                                        </div>
+                                        <span className="text-sm font-semibold">Filters:</span>
+                                        <div className="relative">
+                                             <Input placeholder="All suppliers" className="w-40" />
+                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                        <div className="relative">
+                                             <Input placeholder="All locations" className="w-40" />
+                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All categories" />
+                                            </SelectTrigger>
+                                        </Select>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All manufacturers" />
+                                            </SelectTrigger>
+                                        </Select>
+                                         <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All quantities" />
+                                            </SelectTrigger>
+                                        </Select>
+                                     </div>
+                                    <div className="border rounded-md overflow-x-auto">
+                                        <table className="w-full text-sm whitespace-nowrap">
+                                            <thead className="bg-muted/50">
+                                                <tr className="border-b">
+                                                    <th className="p-2 font-medium text-left flex items-center gap-1"><ArrowDown className="w-4 h-4"/> Product ID</th>
+                                                    <th className="p-2 font-medium text-left">Description</th>
+                                                    <th className="p-2 font-medium text-left">Std packing</th>
+                                                    <th colSpan={3} className="p-2 font-medium text-center border-l">Open Stock</th>
+                                                    <th colSpan={3} className="p-2 font-medium text-center border-l">Case Stock</th>
+                                                    <th className="p-2 font-medium text-left border-l">Sublocation(s)</th>
+                                                </tr>
+                                                <tr className="border-b">
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
+                                                    <th className="p-2 font-medium text-right">Avail</th>
+                                                    <th className="p-2 font-medium text-right">Order</th>
+                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
+                                                    <th className="p-2 font-medium text-right">Avail</th>
+                                                    <th className="p-2 font-medium text-right">Order</th>
+                                                    <th className="p-2 border-l"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {mockProductsData.map((product) => (
+                                                    <tr key={product.id} className="border-b last:border-0">
+                                                        <td className="p-2">{product.id}</td>
+                                                        <td className="p-2">{product.description}</td>
+                                                        <td className="p-2">{product.packing}</td>
+                                                        <td className="p-2 text-right border-l">{product.openStock.qoh}</td>
+                                                        <td className="p-2 text-right">{product.openStock.avail}</td>
+                                                        <td className="p-2 text-right">{product.openStock.order}</td>
+                                                        <td className="p-2 text-right border-l">{product.caseStock.qoh}</td>
+                                                        <td className="p-2 text-right">{product.caseStock.avail}</td>
+                                                        <td className="p-2 text-right">{product.caseStock.order}</td>
+                                                        <td className="p-2 border-l">{product.sublocations}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                     </div>
+                                </CardContent>
+                            </Card>
                         </TabsContent>
                     </Tabs>
                 </div>
