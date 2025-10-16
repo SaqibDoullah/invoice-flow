@@ -1,5 +1,5 @@
 
-import { PurchaseOrder, Bill } from '@/types';
+import { PurchaseOrder, Bill, BillPayment } from '@/types';
 
 export const mockPurchaseOrders: PurchaseOrder[] = [
   {
@@ -117,4 +117,19 @@ export const mockBills: Bill[] = [
     { id: '10', status: 'Posted', billDate: new Date('2024-05-07'), billDueDate: new Date('2024-05-07'), billId: 'INV-000812-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 15173.20, totalPaid: 0.00, outstandingBalance: 15173.20, paymentStatus: 'Unpaid' },
     { id: '11', status: 'Posted', billDate: new Date('2024-05-22'), billDueDate: new Date('2024-05-22'), billId: 'INV-000829-1', supplier: 'Marhaba Imports LLC', referenceNumber: null, totalBilled: 45480.30, totalPaid: 0.00, outstandingBalance: 45480.30, paymentStatus: 'Unpaid' },
     { id: '12', status: 'Posted', billDate: new Date('2024-05-28'), billDueDate: new Date('2024-05-28'), billId: '100007-1', supplier: 'Marhaba Imports LLC', referenceNumber: 'INV-000837', totalBilled: 1050.00, totalPaid: 0.00, outstandingBalance: 1050.00, paymentStatus: 'Unpaid' },
+];
+
+export const mockBillPayments: BillPayment[] = [
+    { id: '1', status: 'Draft', date: new Date('2024-08-20'), paymentId: 'INV-000843-2-705', supplier: null, amount: 0.00, method: null, recordCreated: new Date('2024-08-22 10:47:43'), recordLastUpdated: new Date('2025-10-16 13:20:41') },
+    { id: '2', status: 'Draft', date: new Date('2024-07-05'), paymentId: 'PI-24032901-1-4...', supplier: null, amount: 31300.00, method: null, recordCreated: new Date('2024-07-05 16:04:05'), recordLastUpdated: new Date('2024-08-28 11:32:07') },
+    { id: '3', status: 'Draft', date: new Date('2024-08-29'), paymentId: 'M20240823-TW...', supplier: null, amount: 43462.85, method: null, recordCreated: new Date('2024-09-03 12:04:39'), recordLastUpdated: new Date('2024-09-24 13:48:29') },
+    { id: '4', status: 'Draft', date: new Date('2024-09-23'), paymentId: 'INV-000874 // IN...', supplier: null, amount: 62669.13, method: null, recordCreated: new Date('2024-09-26 14:34:08'), recordLastUpdated: new Date('2024-10-04 10:38:01') },
+    { id: '5', status: 'Draft', date: new Date('2024-11-22'), paymentId: 'INV-000900-1-1...', supplier: 'Marhaba Imports LLC', amount: 75263.63, method: 'Check', recordCreated: new Date('2024-12-13 16:44:47'), recordLastUpdated: new Date('2024-12-13 16:44:47') },
+    { id: '6', status: 'Draft', date: new Date('2024-12-06'), paymentId: 'INV-000905-1-1...', supplier: null, amount: 15226.34, method: null, recordCreated: new Date('2024-12-13 16:49:47'), recordLastUpdated: new Date('2025-01-08 10:31:49') },
+    { id: '7', status: 'Draft', date: new Date('2024-11-21'), paymentId: 'INV-000896-1-1...', supplier: null, amount: 47302.84, method: null, recordCreated: new Date('2024-12-13 16:11:55'), recordLastUpdated: new Date('2025-01-08 10:31:49') },
+    { id: '8', status: 'Draft', date: new Date('2024-12-26'), paymentId: 'LO#28166-2-1387', supplier: null, amount: 43140.00, method: null, recordCreated: new Date('2024-12-26 11:44:51'), recordLastUpdated: new Date('2025-01-10 12:46:22') },
+    { id: '9', status: 'Draft', date: new Date('2024-11-25'), paymentId: 'INV-000898-1-1...', supplier: null, amount: 65580.35, method: null, recordCreated: new Date('2025-01-07 14:21:08'), recordLastUpdated: new Date('2025-01-15 13:35:39') },
+    { id: '10', status: 'Draft', date: new Date('2024-12-27'), paymentId: 'INV-000008-1-1...', supplier: null, amount: 41652.00, method: null, recordCreated: new Date('2024-12-30 14:07:32'), recordLastUpdated: new Date('2025-01-24 12:19:11') },
+    { id: '11', status: 'Draft', date: new Date('2025-01-16'), paymentId: '307569-1-1616', supplier: null, amount: 81.40, method: null, recordCreated: new Date('2025-01-17 12:07:03'), recordLastUpdated: new Date('2025-01-24 16:38:16') },
+    { id: '12', status: 'Draft', date: new Date('2025-01-15'), paymentId: 'INV-000013-1-1...', supplier: 'Miracle Goods LLC', amount: 0.00, method: 'Check', recordCreated: new Date('2025-01-29 15:48:24'), recordLastUpdated: new Date('2025-01-29 15:48:24') },
 ];

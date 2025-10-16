@@ -123,3 +123,15 @@ export interface Bill {
     outstandingBalance: number;
     paymentStatus: 'Unpaid' | 'Paid';
 }
+
+export interface BillPayment {
+    id: string;
+    status: 'Draft' | 'Posted';
+    date: Date;
+    paymentId: string;
+    supplier: string | null;
+    amount: number;
+    method: string | null;
+    recordCreated: Date;
+    recordLastUpdated: Date;
+}

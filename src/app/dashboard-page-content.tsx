@@ -34,7 +34,7 @@ const purchasingFeatures = [
   { title: 'Suppliers', description: 'View all suppliers.', icon: <Users className="w-6 h-6" />, href: '/suppliers', color: 'red' },
   { title: 'Purchases', description: 'View all purchase orders.', icon: <ShoppingCart className="w-6 h-6" />, href: '/purchases', color: 'red' },
   { title: 'Bills', description: 'View all bills.', icon: <Receipt className="w-6 h-6" />, href: '/bills', color: 'red' },
-  { title: 'Bill payments', description: 'View all bill payments.', icon: <CreditCard className="w-6 h-6" />, href: '#', color: 'orange' },
+  { title: 'Bill payments', description: 'View all bill payments.', icon: <CreditCard className="w-6 h-6" />, href: '/bill-payments', color: 'orange' },
   { title: 'Reorder', description: 'Create a purchase order from reorder quantities.', icon: <RefreshCw className="w-6 h-6" />, href: '#', color: 'orange' },
   { title: 'Reorder (legacy)', description: 'Legacy reordering screen.', icon: <RefreshCw className="w-6 h-6" />, href: '#', color: 'orange' },
 ];

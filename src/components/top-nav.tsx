@@ -27,7 +27,7 @@ const purchasingFeatures = [
   { title: 'Suppliers', href: '/suppliers', description: 'View all suppliers.' },
   { title: 'Purchase orders', href: '/purchases', description: 'View all purchase orders.' },
   { title: 'Bills', href: '/bills', description: 'View all bills.' },
-  { title: 'Bill payments', href: '#', description: 'View all bill payments.' },
+  { title: 'Bill payments', href: '/bill-payments', description: 'View all bill payments.' },
   { title: 'Supplier credits', href: '#', description: 'View all supplier credits.' },
   { title: 'Reordering', href: '#', description: 'Create a purchase order from reorder quantities.' },
   { title: 'Reordering (legacy)', href: '#', description: 'Legacy reordering screen.' },
