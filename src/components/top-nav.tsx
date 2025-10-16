@@ -61,6 +61,17 @@ const accountingFeatures = [
     { title: 'QuickBooks Online sync status', href: '#', description: "View transactions' sync status." },
 ];
 
+const reportsFeatures = [
+    { title: 'Stock', href: '#', description: 'Reports on stock levels and valuation.' },
+    { title: 'Purchase and sales', href: '/reports', description: 'Analyze purchases and sales performance.' },
+    { title: 'Master data', href: '#', description: 'Reports on master data records.' },
+    { title: 'Accounting', href: '#', description: 'Financial statements and accounting reports.' },
+    { title: 'Documents', href: '#', description: 'View and export various documents.' },
+    { title: 'Labels', href: '#', description: 'Generate and print labels.' },
+    { title: 'Amazon FBA', href: '#', description: 'Reports related to Amazon FBA.' },
+];
+
+
 const ListItem = React.forwardRef<
   React.ElementRef<'a'>,
   React.ComponentPropsWithoutRef<'a'>
@@ -185,11 +196,21 @@ export default function TopNav() {
         </NavigationMenuItem>
 
         <NavigationMenuItem>
-          <Link href="/reports" legacyBehavior passHref>
-            <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), pathname.startsWith('/reports') ? 'bg-accent' : '')}>
-                Reports
-            </NavigationMenuLink>
-          </Link>
+          <NavigationMenuTrigger>Reports</NavigationMenuTrigger>
+           <NavigationMenuContent>
+            <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] grid-cols-1 lg:w-[600px] ">
+              {reportsFeatures.map((component) => (
+                <ListItem
+                  key={component.title}
+                  title={component.title}
+                  href={component.href}
+                  className={pathname.startsWith(component.href) && component.href !== '#' ? 'bg-accent' : ''}
+                >
+                  {component.description}
+                </ListItem>
+              ))}
+            </ul>
+          </NavigationMenuContent>
         </NavigationMenuItem>
 
         <NavigationMenuItem>
