@@ -3,8 +3,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, BarChart3, TrendingDown, TrendingUp, Ban, ArrowDown, MessageCircle } from 'lucide-react';
+import { Home, ChevronRight, BarChart3, TrendingDown, TrendingUp, Ban, MessageCircle, Search, MoreVertical, Filter } from 'lucide-react';
 import { Area, AreaChart, Bar, Pie, PieChart, Cell, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart } from 'recharts';
+import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
+import { scaleQuantile } from 'd3-scale';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -13,7 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ChartTooltipContent, ChartTooltip, ChartContainer } from '@/components/ui/chart';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
+const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
 const salesData = [
   { date: 'Sep 19', sales: 1 }, { date: 'Sep 20', sales: 1 },
@@ -74,6 +79,15 @@ const fulfillmentColors = {
     'Other error': '#f59e0b',
 }
 
+const geoSalesData = [
+    { id: "06", state: "California", value: 5 },
+    { id: "48", state: "Texas", value: 20 },
+    { id: "12", state: "Florida", value: 8 },
+    { id: "17", state: "Illinois", value: 7 },
+    { id: "36", state: "New York", value: 3 },
+    { id: "34", state: "New Jersey", value: 4 },
+];
+
 const formatCurrency = (amount: number) =>
 new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -106,7 +120,51 @@ const KpiCard = ({ title, value, change, changeType, subValue, subTitle, showSub
     </Card>
 );
 
+const SalesChartCard = ({ title, value, change, chartData }: { title: string, value: string, change?: string, chartData: any[] }) => (
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{title}</p>
+                <p className="text-2xl font-bold">{value}</p>
+                 {change && <Badge variant="default" className="bg-green-100 text-green-800"><TrendingUp className="mr-1" /> {change}</Badge>}
+            </div>
+            <Button variant="ghost" size="icon" className="text-muted-foreground"><Ban className="w-4 h-4" /></Button>
+        </CardHeader>
+        <CardContent className="h-24 p-0">
+             <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                    <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                    <XAxis dataKey="date" hide />
+                    <YAxis domain={[0, 'dataMax']} hide/>
+                </LineChart>
+            </ResponsiveContainer>
+        </CardContent>
+    </Card>
+);
+
 export default function AnalyticsOverviewPageContent() {
+  const [mapData, setMapData] = useState(geoSalesData);
+  const colorScale = scaleQuantile<string>()
+    .domain(mapData.map(d => d.value))
+    .range([
+      "#c7e9c0",
+      "#a1d99b",
+      "#74c476",
+      "#41ab5d",
+      "#238b45",
+      "#006d2c",
+      "#ef4444" // for highest value
+    ]);
+    
+    // Quick hack to ensure Texas gets the red color from the screenshot
+    const finalColorScale = (val: number) => {
+        if (val >= 20) return '#ef4444';
+        if (val >= 15) return '#006d2c';
+        if (val >= 10) return '#238b45';
+        if (val >= 5) return '#74c476';
+        return '#c7e9c0';
+    }
+
 
   return (
     <AuthGuard>
@@ -118,7 +176,7 @@ export default function AnalyticsOverviewPageContent() {
               Home
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span>Analytics overview</span>
+            <span>Analytics</span>
           </div>
 
           <div className="flex justify-between items-start mb-6">
@@ -127,12 +185,12 @@ export default function AnalyticsOverviewPageContent() {
                         <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
                             <BarChart3 className="w-6 h-6 text-red-500" />
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight">Analytics overview</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Analytics sales</h1>
                     </div>
                 </div>
           </div>
         
-          <Tabs defaultValue="overview">
+          <Tabs defaultValue="sales">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="sales">Sales</TabsTrigger>
@@ -242,14 +300,108 @@ export default function AnalyticsOverviewPageContent() {
                         </CardContent>
                     </Card>
                 </div>
-
-                 <div className="fixed bottom-8 right-8">
-                    <Button size="icon" className="rounded-full w-14 h-14 shadow-lg">
-                        <MessageCircle className="w-8 h-8" />
-                    </Button>
+            </TabsContent>
+            <TabsContent value="sales" className="mt-6">
+                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="w-48">
+                             <Select defaultValue="last-30">
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="last-30">Last 30 days</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground mt-1">compared to 31 to 60 days ago</p>
+                        </div>
+                        <div className="relative">
+                            <Input placeholder="Source" className="w-40 pl-8"/>
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                        </div>
+                        <div className="relative">
+                            <Input placeholder="Origin" className="w-40 pl-8"/>
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                        </div>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">More: 1</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem>Filter 1</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                     <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <Input placeholder="Break down by" className="w-48 pl-8"/>
+                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                        </div>
+                        <div className="w-32">
+                             <Select defaultValue="day">
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="day">Day</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                 </div>
+
+                <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Sales</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                        <SalesChartCard title="Number of sales" value="30" change="+3.2%" chartData={salesData} />
+                        <SalesChartCard title="Total units" value="--" chartData={[]} />
+                        <SalesChartCard title="Avg. units per sale" value="--" chartData={[]} />
+                    </div>
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Number of sales by geography</CardTitle>
+                            <Tabs defaultValue="usa" className="w-auto">
+                                <TabsList>
+                                    <TabsTrigger value="usa">USA</TabsTrigger>
+                                    <TabsTrigger value="europe">Europe</TabsTrigger>
+                                    <TabsTrigger value="world">World</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </CardHeader>
+                        <CardContent className="relative aspect-video">
+                            <ComposableMap projection="geoAlbersUsa">
+                                <Geographies geography={geoUrl}>
+                                    {({ geographies }) =>
+                                    geographies.map(geo => {
+                                        const cur = mapData.find(s => s.id === geo.id);
+                                        return (
+                                            <Geography
+                                            key={geo.rsmKey}
+                                            geography={geo}
+                                            fill={cur ? finalColorScale(cur.value) : "#EEE"}
+                                            />
+                                        );
+                                    })
+                                    }
+                                </Geographies>
+                            </ComposableMap>
+                             <div className="absolute bottom-4 right-4 bg-background/80 p-2 rounded-md border text-xs space-y-1">
+                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#ef4444'}}></div><span>20</span></div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#238b45'}}></div><span>15</span></div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#74c476'}}></div><span>10</span></div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#c7e9c0'}}></div><span>5</span></div>
+                             </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
             </TabsContent>
           </Tabs>
+           <div className="fixed bottom-8 right-8">
+              <Button size="icon" className="rounded-full w-14 h-14 shadow-lg">
+                  <MessageCircle className="w-8 h-8" />
+              </Button>
+          </div>
         </main>
       </div>
     </AuthGuard>

@@ -18,7 +18,7 @@ import { FileText, Users, Boxes, Truck, BarChart2 } from 'lucide-react';
 
 const analyticsFeatures = [
   { title: 'Overview', href: '/analytics', description: 'A high-level overview of business performance.' },
-  { title: 'Sales orders', href: '#', description: 'Analyze sales order trends and history.' },
+  { title: 'Sales orders', href: '/analytics?tab=sales', description: 'Analyze sales order trends and history.' },
   { title: 'Product sales', href: '#', description: 'Breakdown of sales by individual product.' },
   { title: 'Product stock', href: '#', description: 'Monitor current and historical stock levels.' },
 ];
