@@ -28,10 +28,12 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type BillPayment } from '@/types';
 import { mockBillPayments } from '@/lib/mock-data';
+import CreateBillPaymentFromBillDialog from '@/components/bill-payments/create-bill-payment-dialog';
 
 export default function BillPaymentsPageContent() {
   const [billPayments, setBillPayments] = useState<BillPayment[]>(mockBillPayments);
   const [loading, setLoading] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -68,8 +70,8 @@ export default function BillPaymentsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <Button asChild>
-                <Link href="/purchases">Create bill payment from bill</Link>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                Create bill payment from bill
               </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -158,6 +160,10 @@ export default function BillPaymentsPageContent() {
             </CardContent>
           </Card>
         </main>
+        <CreateBillPaymentFromBillDialog 
+            isOpen={isCreateDialogOpen}
+            setIsOpen={setIsCreateDialogOpen}
+        />
       </div>
     </AuthGuard>
   );
