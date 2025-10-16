@@ -1,3 +1,6 @@
+
+'use client';
+import { useSearchParams } from 'next/navigation';
 import PurchaseOrderPageContent from './purchase-order-page-content';
 
 export default function PurchaseOrderPage({ params }: { params: { id: string } }) {

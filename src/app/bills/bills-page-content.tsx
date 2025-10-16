@@ -72,7 +72,9 @@ export default function BillsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <Button disabled>Create bill from order</Button>
+              <Button asChild>
+                <Link href="/purchases/100171?tab=bill">Create bill from order</Link>
+              </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">Export <ChevronDown className="w-4 h-4 ml-2" /></Button>
