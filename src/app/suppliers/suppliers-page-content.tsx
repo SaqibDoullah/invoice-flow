@@ -1,8 +1,9 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, deleteDoc, where } from 'firebase/firestore';
-import { Plus, MoreHorizontal, Edit, Trash2, Home, ChevronRight, Upload, Download, Settings2, ShieldAlert } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { collection, query, onSnapshot, doc, deleteDoc, where, addDoc } from 'firebase/firestore';
+import { Plus, MoreHorizontal, Edit, Trash2, Home, ChevronRight, Upload, Download, Settings2, ShieldAlert, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 
 import AuthGuard from '@/components/auth/auth-guard';
@@ -37,7 +38,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Supplier } from '@/types';
+import { type Supplier, SupplierFormData, supplierSchema } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +64,7 @@ export default function SuppliersPageContent() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('active');
+  const importInputRef = useRef<HTMLInputElement>(null);
 
 
   useEffect(() => {
@@ -158,6 +160,101 @@ export default function SuppliersPageContent() {
         })
   }
 
+    const handleExportCSV = () => {
+        if (!suppliers.length) {
+            toast({
+                variant: 'destructive',
+                title: 'No Suppliers',
+                description: 'There are no suppliers to export.',
+            });
+            return;
+        }
+
+        const headers = ['Status', 'Name', 'Contact Name', 'Primary Phone Number', 'Primary Email Addresses', 'Primary Address'];
+        const csvContent = [
+            headers.join(','),
+            ...suppliers.map(s => [
+                s.status,
+                `"${s.name.replace(/"/g, '""')}"`,
+                `"${(s.contactName || '').replace(/"/g, '""')}"`,
+                `"${(s.phoneNumber || '').replace(/"/g, '""')}"`,
+                `"${(s.email || '').replace(/"/g, '""')}"`,
+                `"${(s.address || '').replace(/"/g, '""')}"`
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'suppliers.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const text = e.target?.result;
+        if (typeof text !== 'string') return;
+        
+        const db = getFirestoreDb();
+        if (!user || !db) return;
+
+        const lines = text.split('\n').filter(line => line.trim() !== '');
+        const headers = lines[0].split(',').map(h => h.trim());
+        const requiredHeaders = ['Status', 'Name', 'Contact Name', 'Primary Phone Number', 'Primary Email Addresses', 'Primary Address'];
+        
+        const supplierCollectionRef = collection(db, 'users', user.uid, 'suppliers');
+        
+        let importedCount = 0;
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',');
+            const supplierData: Partial<SupplierFormData> = {
+                status: 'active'
+            };
+
+            headers.forEach((header, index) => {
+                const value = values[index]?.trim().replace(/^"|"$/g, '');
+                if (header === 'Status') supplierData.status = (value === 'active' || value === 'inactive') ? value : 'active';
+                if (header === 'Name') supplierData.name = value;
+                if (header === 'Contact Name') supplierData.contactName = value;
+                if (header === 'Primary Phone Number') supplierData.phoneNumber = value;
+                if (header === 'Primary Email Addresses') supplierData.email = value;
+                if (header === 'Primary Address') supplierData.address = value;
+            });
+
+            try {
+                // Validate before adding
+                const validatedData = supplierSchema.parse(supplierData);
+                await addDoc(supplierCollectionRef, validatedData);
+                importedCount++;
+            } catch (err) {
+                 console.error(`Skipping row ${i+1} due to validation/import error:`, err);
+            }
+        }
+        
+        toast({
+            title: 'Import Complete',
+            description: `Successfully imported ${importedCount} out of ${lines.length - 1} records.`,
+        });
+    };
+    reader.readAsText(file);
+
+    // Reset file input
+    if(importInputRef.current) {
+        importInputRef.current.value = '';
+    }
+  };
+
+
   return (
     <AuthGuard>
       <div className="flex flex-col">
@@ -177,9 +274,34 @@ export default function SuppliersPageContent() {
                     <Plus className="mr-2 h-4 w-4" />
                     Create Supplier
                 </Button>
-                 <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> Import</Button>
-                 <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export</Button>
-                 <Button variant="outline"><Settings2 className="mr-2 h-4 w-4" /> Actions</Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> Import</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => importInputRef.current?.click()}>
+                           Import CSV
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <input
+                    type="file"
+                    ref={importInputRef}
+                    className="hidden"
+                    accept=".csv"
+                    onChange={handleImportCSV}
+                />
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                         <DropdownMenuItem onSelect={handleExportCSV}>
+                            Export CSV
+                         </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                 <Button variant="outline" disabled><Settings2 className="mr-2 h-4 w-4" /> Actions</Button>
               </div>
           </div>
           
