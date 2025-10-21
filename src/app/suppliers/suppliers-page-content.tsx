@@ -325,11 +325,11 @@ export default function SuppliersPageContent() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline">
-                            <Settings2 className="mr-2 h-4 w-4" /> Actions
+                            Actions <ChevronDown className="w-4 h-4 ml-2" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem>Action 1</DropdownMenuItem>
+                        <DropdownMenuItem>Customize columns</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
               </div>
