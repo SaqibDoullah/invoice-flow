@@ -34,6 +34,7 @@
     "@radix-ui/react-tooltip": "^1.1.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cmdk": "^1.0.0",
     "d3-scale": "^4.0.2",
     "date-fns": "^3.6.0",
     "firebase": "10.12.0",
@@ -63,3 +64,5 @@
     "@types/nodemailer": "^6.4.15"
   }
 }
+
+    

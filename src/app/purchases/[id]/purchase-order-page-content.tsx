@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { 
     ShoppingCart, 
     Home, 
@@ -19,6 +20,7 @@ import {
     History,
     ArrowDown,
     X,
+    ChevronsUpDown,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,12 +34,43 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { type Supplier } from '@/types';
+import AddSupplierDialog from '@/components/suppliers/add-supplier-dialog';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 interface PurchaseOrderPageContentProps {
     orderId: string;
 }
 
 export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageContentProps) {
+    const { user, loading: authLoading } = useAuth();
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
+    const [isSupplierPopoverOpen, setIsSupplierPopoverOpen] = useState(false);
+    const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+    
+    useEffect(() => {
+        const db = getFirestoreDb();
+        if (authLoading || !user || !db) return;
+
+        const suppliersRef = collection(db, 'users', user.uid, 'suppliers');
+        const q = query(suppliersRef);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const suppliersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
+            setSuppliers(suppliersData);
+        }, (error) => {
+            console.error("Error fetching suppliers:", error);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading]);
+
+    const selectedSupplierName = suppliers.find(s => s.id === selectedSupplierId)?.name || 'Unspecified';
 
     return (
         <AuthGuard>
@@ -101,10 +134,56 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                         <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             <div className="space-y-1">
                                                 <LabelWithTooltip label="Supplier" tooltip="The supplier for this purchase." />
-                                                <div className="relative">
-                                                     <Input placeholder="- Unspecified -" />
-                                                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                                </div>
+                                                <Popover open={isSupplierPopoverOpen} onOpenChange={setIsSupplierPopoverOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="outline"
+                                                            role="combobox"
+                                                            aria-expanded={isSupplierPopoverOpen}
+                                                            className="w-full justify-between font-normal"
+                                                        >
+                                                            <span className="truncate">{selectedSupplierName}</span>
+                                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-[300px] p-0">
+                                                        <Command>
+                                                            <CommandInput placeholder="Search supplier..." />
+                                                            <CommandList>
+                                                                <CommandEmpty>No supplier found.</CommandEmpty>
+                                                                <CommandGroup>
+                                                                    {suppliers.map((supplier) => (
+                                                                        <CommandItem
+                                                                            key={supplier.id}
+                                                                            value={supplier.name}
+                                                                            onSelect={() => {
+                                                                                setSelectedSupplierId(supplier.id);
+                                                                                setIsSupplierPopoverOpen(false);
+                                                                            }}
+                                                                        >
+                                                                            <Check
+                                                                                className={cn(
+                                                                                    "mr-2 h-4 w-4",
+                                                                                    selectedSupplierId === supplier.id ? "opacity-100" : "opacity-0"
+                                                                                )}
+                                                                            />
+                                                                            {supplier.name}
+                                                                        </CommandItem>
+                                                                    ))}
+                                                                </CommandGroup>
+                                                            </CommandList>
+                                                            <div className="p-1 border-t">
+                                                                <CommandItem onSelect={() => {
+                                                                    setIsSupplierPopoverOpen(false);
+                                                                    setIsAddSupplierOpen(true);
+                                                                }}>
+                                                                    <Plus className="mr-2 h-4 w-4" />
+                                                                    Create new supplier
+                                                                </CommandItem>
+                                                            </div>
+                                                        </Command>
+                                                    </PopoverContent>
+                                                </Popover>
                                             </div>
                                             <div className="space-y-1">
                                                 <label className="text-sm font-medium">Order date</label>
@@ -564,6 +643,11 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                         </TabsContent>
                     </Tabs>
                 </main>
+                <AddSupplierDialog
+                    isOpen={isAddSupplierOpen}
+                    setIsOpen={setIsAddSupplierOpen}
+                    onSupplierAdded={() => { /* Real-time listener handles updates */ }}
+                />
             </div>
         </AuthGuard>
     );
@@ -584,3 +668,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
