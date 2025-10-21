@@ -177,9 +177,9 @@ export default function SuppliersPageContent() {
                     <Plus className="mr-2 h-4 w-4" />
                     Create Supplier
                 </Button>
-                 <Button variant="outline" disabled><Upload className="mr-2 h-4 w-4" /> Import</Button>
-                 <Button variant="outline" disabled><Download className="mr-2 h-4 w-4" /> Export</Button>
-                 <Button variant="outline" disabled><Settings2 className="mr-2 h-4 w-4" /> Actions</Button>
+                 <Button variant="outline"><Upload className="mr-2 h-4 w-4" /> Import</Button>
+                 <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Export</Button>
+                 <Button variant="outline"><Settings2 className="mr-2 h-4 w-4" /> Actions</Button>
               </div>
           </div>
           
