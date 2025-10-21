@@ -24,6 +24,8 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -268,7 +270,26 @@ export default function SuppliersPageContent() {
                 <span>Suppliers</span>
             </div>
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Suppliers: Default</h1>
+            <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight">Suppliers:</h1>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="text-3xl font-bold p-0 -ml-1">
+                        Default
+                        <ChevronDown className="w-6 h-6 ml-2" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                        <DropdownMenuLabel>SAVED VIEWS</DropdownMenuLabel>
+                        <DropdownMenuItem>Default</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Save filter values to Default</DropdownMenuItem>
+                        <DropdownMenuItem>Customize columns in Default</DropdownMenuItem>
+                        <DropdownMenuItem>Duplicate current view</DropdownMenuItem>
+                        <DropdownMenuItem>Restore deleted view</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
               <div className="flex items-center gap-2">
                 <Button onClick={() => setIsAddSupplierOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -301,7 +322,16 @@ export default function SuppliersPageContent() {
                          </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                 <Button variant="outline" disabled><Settings2 className="mr-2 h-4 w-4" /> Actions</Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline">
+                            <Settings2 className="mr-2 h-4 w-4" /> Actions
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem>Action 1</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
               </div>
           </div>
           
