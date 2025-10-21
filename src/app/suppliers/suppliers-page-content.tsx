@@ -51,6 +51,21 @@ import { FirestorePermissionError } from '@/lib/firebase-errors';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import CustomizeColumnsDialog from '@/components/suppliers/customize-columns-dialog';
+
+type Column = {
+  id: keyof Supplier | 'actions';
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'status', label: 'Status' },
+    { id: 'name', label: 'Name' },
+    { id: 'contactName', label: 'Contact Name' },
+    { id: 'phoneNumber', label: 'Primary Phone Number' },
+    { id: 'email', label: 'Primary Email Addresses' },
+    { id: 'address', label: 'Primary Address' },
+];
 
 export default function SuppliersPageContent() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -61,12 +76,15 @@ export default function SuppliersPageContent() {
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
   const [isEditSupplierOpen, setIsEditSupplierOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isCustomizeColumnsOpen, setIsCustomizeColumnsOpen] = useState(false);
   
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('active');
   const importInputRef = useRef<HTMLInputElement>(null);
+
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
 
 
   useEffect(() => {
@@ -212,30 +230,31 @@ export default function SuppliersPageContent() {
 
         const lines = text.split('\n').filter(line => line.trim() !== '');
         const headers = lines[0].split(',').map(h => h.trim());
-        const requiredHeaders = ['Status', 'Name', 'Contact Name', 'Primary Phone Number', 'Primary Email Addresses', 'Primary Address'];
         
         const supplierCollectionRef = collection(db, 'users', user.uid, 'suppliers');
         
         let importedCount = 0;
         for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',');
-            const supplierData: Partial<SupplierFormData> = {
-                status: 'active'
-            };
-
-            headers.forEach((header, index) => {
-                const value = values[index]?.trim().replace(/^"|"$/g, '');
-                if (header === 'Status') supplierData.status = (value === 'active' || value === 'inactive') ? value : 'active';
-                if (header === 'Name') supplierData.name = value;
-                if (header === 'Contact Name') supplierData.contactName = value;
-                if (header === 'Primary Phone Number') supplierData.phoneNumber = value;
-                if (header === 'Primary Email Addresses') supplierData.email = value;
-                if (header === 'Primary Address') supplierData.address = value;
-            });
+            const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+            const supplierObject = headers.reduce((obj, header, index) => {
+                const keyMap = {
+                    'Status': 'status',
+                    'Name': 'name',
+                    'Contact Name': 'contactName',
+                    'Primary Phone Number': 'phoneNumber',
+                    'Primary Email Addresses': 'email',
+                    'Primary Address': 'address'
+                };
+                const key = keyMap[header as keyof typeof keyMap];
+                if (key) {
+                    (obj as any)[key] = values[index];
+                }
+                return obj;
+            }, {} as Partial<SupplierFormData>);
 
             try {
                 // Validate before adding
-                const validatedData = supplierSchema.parse(supplierData);
+                const validatedData = supplierSchema.parse(supplierObject);
                 await addDoc(supplierCollectionRef, validatedData);
                 importedCount++;
             } catch (err) {
@@ -254,6 +273,17 @@ export default function SuppliersPageContent() {
     if(importInputRef.current) {
         importInputRef.current.value = '';
     }
+  };
+
+  const renderCell = (supplier: Supplier, columnId: keyof Supplier | 'actions') => {
+      switch (columnId) {
+          case 'status':
+              return <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'} className={supplier.status === 'active' ? 'bg-green-100 text-green-800' : ''}>{supplier.status}</Badge>;
+          case 'name':
+              return <span className="font-medium">{supplier.name}</span>;
+          default:
+              return supplier[columnId as keyof Supplier] || null;
+      }
   };
 
 
@@ -329,7 +359,9 @@ export default function SuppliersPageContent() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <DropdownMenuItem>Customize columns</DropdownMenuItem>
+                         <DropdownMenuItem onSelect={() => setIsCustomizeColumnsOpen(true)}>
+                            Customize columns
+                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -375,12 +407,7 @@ export default function SuppliersPageContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact Name</TableHead>
-                      <TableHead>Primary Phone Number</TableHead>
-                      <TableHead>Primary Email Addresses</TableHead>
-                      <TableHead>Primary Address</TableHead>
+                      {columns.map(col => <TableHead key={col.id}>{col.label}</TableHead>)}
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -388,16 +415,11 @@ export default function SuppliersPageContent() {
                     {suppliers.length > 0 ? (
                       suppliers.map((supplier) => (
                         <TableRow key={supplier.id}>
-                          <TableCell>
-                            <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'} className={supplier.status === 'active' ? 'bg-green-100 text-green-800' : ''}>
-                                {supplier.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">{supplier.name}</TableCell>
-                          <TableCell>{supplier.contactName}</TableCell>
-                          <TableCell>{supplier.phoneNumber}</TableCell>
-                          <TableCell>{supplier.email}</TableCell>
-                          <TableCell>{supplier.address}</TableCell>
+                          {columns.map(col => (
+                              <TableCell key={col.id}>
+                                  {renderCell(supplier, col.id)}
+                              </TableCell>
+                          ))}
                            <TableCell>
                                 <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -420,7 +442,7 @@ export default function SuppliersPageContent() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
+                        <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                           No suppliers found.
                         </TableCell>
                       </TableRow>
@@ -463,6 +485,13 @@ export default function SuppliersPageContent() {
             </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <CustomizeColumnsDialog
+            isOpen={isCustomizeColumnsOpen}
+            setIsOpen={setIsCustomizeColumnsOpen}
+            columns={columns}
+            setColumns={setColumns}
+        />
       </div>
     </AuthGuard>
   );
