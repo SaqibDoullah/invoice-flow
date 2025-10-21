@@ -52,6 +52,10 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
     const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
     const [isSupplierPopoverOpen, setIsSupplierPopoverOpen] = useState(false);
     const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [billToAddress, setBillToAddress] = useState('Heartland');
+    const [shipToAddress, setShipToAddress] = useState('Heartland');
+    const [shipFromAddress, setShipFromAddress] = useState('--');
     
     useEffect(() => {
         const db = getFirestoreDb();
@@ -71,6 +75,12 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
     }, [user, authLoading]);
 
     const selectedSupplierName = suppliers.find(s => s.id === selectedSupplierId)?.name || 'Unspecified';
+
+    const handleSaveAddress = () => {
+        // In a real app, you would save this data to your backend/DB.
+        console.log({ billToAddress, shipToAddress, shipFromAddress });
+        setIsEditingAddress(false);
+    };
 
     return (
         <AuthGuard>
@@ -220,12 +230,37 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                      <Card>
                                         <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Address Information</CardTitle></CardHeader>
                                         <CardContent>
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div><p className="text-sm font-semibold">Bill to</p><p>Heartland</p></div>
-                                                <div><p className="text-sm font-semibold">Ship to</p><p>Heartland</p></div>
-                                                <div><p className="text-sm font-semibold">Ship from</p><p>--</p></div>
-                                            </div>
-                                            <Button variant="link" className="p-0 h-auto mt-2">Edit bill to, ship to, or ship from address</Button>
+                                            {isEditingAddress ? (
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    <div>
+                                                        <label className="text-sm font-semibold">Bill to</label>
+                                                        <Input value={billToAddress} onChange={(e) => setBillToAddress(e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm font-semibold">Ship to</label>
+                                                        <Input value={shipToAddress} onChange={(e) => setShipToAddress(e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm font-semibold">Ship from</label>
+                                                        <Input value={shipFromAddress} onChange={(e) => setShipFromAddress(e.target.value)} />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-3 gap-4 text-sm">
+                                                    <div><p className="font-semibold">Bill to</p><p>{billToAddress}</p></div>
+                                                    <div><p className="font-semibold">Ship to</p><p>{shipToAddress}</p></div>
+                                                    <div><p className="font-semibold">Ship from</p><p>{shipFromAddress}</p></div>
+                                                </div>
+                                            )}
+                                            {isEditingAddress ? (
+                                                <div className='flex gap-2'>
+                                                     <Button variant="link" className="p-0 h-auto mt-2" onClick={handleSaveAddress}>Save</Button>
+                                                     <Button variant="link" className="p-0 h-auto mt-2 text-muted-foreground" onClick={() => setIsEditingAddress(false)}>Cancel</Button>
+                                                </div>
+                                               
+                                            ) : (
+                                                <Button variant="link" className="p-0 h-auto mt-2" onClick={() => setIsEditingAddress(true)}>Edit bill to, ship to, or ship from address</Button>
+                                            )}
                                         </CardContent>
                                     </Card>
                                      <Card>
