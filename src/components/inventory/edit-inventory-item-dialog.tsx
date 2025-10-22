@@ -82,7 +82,13 @@ export default function EditInventoryItemDialog({
     
     const docRef = doc(db, 'users', user.uid, 'inventory', item.id);
     
-    updateDoc(docRef, data)
+    // If 'none' was selected, treat it as an empty string for the database
+    const payload = {
+        ...data,
+        supplierId: data.supplierId === 'none' ? '' : data.supplierId,
+    };
+    
+    updateDoc(docRef, payload)
       .then(() => {
         toast({
           title: 'Success',
@@ -95,7 +101,7 @@ export default function EditInventoryItemDialog({
          const permissionError = new FirestorePermissionError({
           path: docRef.path,
           operation: 'update',
-          requestResourceData: data,
+          requestResourceData: payload,
         });
 
         errorEmitter.emit('permission-error', permissionError);
@@ -182,14 +188,14 @@ export default function EditInventoryItemDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Supplier (Optional)</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
+                   <Select onValueChange={field.onChange} value={field.value || 'none'}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a supplier" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                       <SelectItem value="">None</SelectItem>
+                       <SelectItem value="none">None</SelectItem>
                        {suppliers.map(supplier => (
                           <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
                       ))}

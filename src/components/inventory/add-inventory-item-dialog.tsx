@@ -75,7 +75,13 @@ export default function AddInventoryItemDialog({
     
     const itemCollectionRef = collection(db, 'users', user.uid, 'inventory');
     
-    addDoc(itemCollectionRef, data)
+    // If 'none' was selected, treat it as an empty string for the database
+    const payload = {
+        ...data,
+        supplierId: data.supplierId === 'none' ? '' : data.supplierId,
+    };
+    
+    addDoc(itemCollectionRef, payload)
       .then((docRef) => {
         toast({
           title: 'Success',
@@ -89,7 +95,7 @@ export default function AddInventoryItemDialog({
         const permissionError = new FirestorePermissionError({
           path: itemCollectionRef.path,
           operation: 'create',
-          requestResourceData: data,
+          requestResourceData: payload,
         });
 
         errorEmitter.emit('permission-error', permissionError);
@@ -183,7 +189,7 @@ export default function AddInventoryItemDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {suppliers.map(supplier => (
                           <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
                       ))}
