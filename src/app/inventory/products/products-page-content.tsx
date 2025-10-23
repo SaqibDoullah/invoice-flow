@@ -237,7 +237,7 @@ export default function ProductsPageContent() {
                     ))
                   ) : inventoryItems.length > 0 ? (
                     inventoryItems.map((item) => (
-                      <TableRow key={item.id}>
+                      <TableRow key={item.id} className="cursor-pointer" onClick={() => router.push(`/inventory/products/${item.sku || item.id}`)}>
                         <TableCell className="p-2 text-center"><Checkbox /></TableCell>
                         <TableCell className="p-2 text-left">
                            <Badge variant={item.productStatus === 'Active' ? 'default' : 'secondary'} className={item.productStatus === 'Active' ? 'bg-green-100 text-green-800' : ''}>

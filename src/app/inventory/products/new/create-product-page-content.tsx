@@ -16,19 +16,13 @@ export default function CreateProductPageContent() {
 
     const handleCreateWithSystemId = () => {
         // In a real app, you'd fetch this from a backend service.
-        // And then navigate to a creation form, e.g., /inventory/products/edit/100008
         const systemProductId = '100008';
-        // For now, we will just log it. A real implementation would navigate.
-        console.log(`Creating product with system ID: ${systemProductId}`);
-        alert(`Creating product with system ID: ${systemProductId}. Navigation to edit page not implemented yet.`);
+        router.push(`/inventory/products/${systemProductId}`);
     }
 
     const handleCreateWithEnteredId = () => {
         if (!productId.trim()) return;
-        // In a real app, you would navigate to a creation form
-        // e.g., router.push(`/inventory/products/edit/${productId.trim()}`);
-        console.log(`Creating product with entered ID: ${productId.trim()}`);
-        alert(`Creating product with entered ID: ${productId.trim()}. Navigation to edit page not implemented yet.`);
+        router.push(`/inventory/products/${productId.trim()}`);
     }
 
     return (
