@@ -15,6 +15,7 @@ import {
   ImageIcon,
   ShieldAlert,
   MessageCircle,
+  Boxes,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -132,7 +133,9 @@ export default function ProductsPageContent() {
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-2">
-            <Button>Create product</Button>
+            <Button asChild>
+              <Link href="/inventory/products/new">Create product</Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button variant='outline'>Import</Button></DropdownMenuTrigger>
               <DropdownMenuContent><DropdownMenuItem>Import CSV</DropdownMenuItem></DropdownMenuContent>
