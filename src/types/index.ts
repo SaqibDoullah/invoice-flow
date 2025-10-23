@@ -89,16 +89,6 @@ export const inventoryItemSchema = z.object({
     quantity: z.coerce.number().min(0, 'Quantity must be non-negative'),
     price: z.coerce.number().min(0, 'Price must be non-negative'),
     supplierId: z.string().optional(),
-    quantityReserved: z.coerce.number().optional(),
-    quantityOnOrder: z.coerce.number().optional(),
-    quantityAvailable: z.coerce.number().optional(),
-    salesVelocity: z.string().optional(),
-    averageCost: z.coerce.number().optional(),
-    totalValue: z.coerce.number().optional(),
-    casesOnHand: z.coerce.number().optional(),
-    casesOnOrder: z.coerce.number().optional(),
-    casesAvailable: z.coerce.number().optional(),
-    sublocation: z.string().optional(),
 });
 
 export type InventoryItemFormData = z.infer<typeof inventoryItemSchema>;
