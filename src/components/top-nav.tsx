@@ -43,7 +43,7 @@ const sellingFeatures = [
 ];
 
 const inventoryFeatures = [
-    { title: 'View stock', href: '/inventory/stock', description: 'View product stock levels.' },
+    { title: 'Stock', href: '/inventory/stock', description: 'View product stock levels.' },
     { title: 'Products', href: '/inventory/products', description: 'View all products.' },
     { title: 'Product lookups', href: '#', description: 'View all product lookups & alias SKUs.' },
     { title: 'Stock history', href: '/inventory/stock-history', description: 'View stock and transaction history.' },

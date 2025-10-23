@@ -1,8 +1,8 @@
 
-import InventoryPageContent from '@/app/inventory/inventory-page-content';
+import ProductsPageContent from './products-page-content';
 
 export default function InventoryProductsPage() {
     return (
-        <InventoryPageContent />
+        <ProductsPageContent />
     )
 }

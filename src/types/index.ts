@@ -99,6 +99,10 @@ export const inventoryItemSchema = z.object({
     casesOnOrder: z.coerce.number().optional(),
     casesAvailable: z.coerce.number().optional(),
     sublocation: z.string().optional(),
+    productStatus: z.string().optional(),
+    category: z.string().optional(),
+    manufacturer: z.string().optional(),
+    stdBuyPrice: z.coerce.number().optional(),
 });
 
 export type InventoryItemFormData = z.infer<typeof inventoryItemSchema>;
