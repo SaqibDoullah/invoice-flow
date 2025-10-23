@@ -43,10 +43,10 @@ const sellingFeatures = [
 ];
 
 const inventoryFeatures = [
-    { title: 'View stock', href: '/inventory', description: 'View product stock levels.' },
+    { title: 'View stock', href: '/inventory/stock', description: 'View product stock levels.' },
     { title: 'Products', href: '/inventory/products', description: 'View all products.' },
     { title: 'Product lookups', href: '#', description: 'View all product lookups & alias SKUs.' },
-    { title: 'Stock history', href: '#', description: 'View stock and transaction history.' },
+    { title: 'Stock history', href: '/inventory/stock-history', description: 'View stock and transaction history.' },
     { title: 'Stock takes', href: '#', description: 'Enter physical count of stock.' },
     { title: 'Stock changes', href: '#', description: 'Adjust the stock levels.' },
     { title: 'Stock transfers', href: '#', description: 'Move stock between locations.' },
@@ -209,7 +209,7 @@ export default function TopNav() {
                   key={component.title}
                   title={component.title}
                   href={component.href}
-                  className={pathname.startsWith(component.href) && component.href !== '#' ? 'bg-accent' : ''}
+                  className={pathname.startsWith(component.href) && component.href !== '#' ? 'bg_accent' : ''}
                 >
                   {component.description}
                 </ListItem>

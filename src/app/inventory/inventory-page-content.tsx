@@ -157,7 +157,7 @@ export default function InventoryPageContent() {
         })
   }
   
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+  const formatCurrency = (amount: number | undefined) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
 
   return (
     <AuthGuard>
