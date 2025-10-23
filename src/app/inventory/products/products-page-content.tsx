@@ -17,6 +17,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,7 @@ export default function ProductsPageContent() {
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -150,7 +152,7 @@ export default function ProductsPageContent() {
           </div>
         </div>
 
-        <Tabs defaultValue="products">
+        <Tabs defaultValue="products" onValueChange={(value) => router.push(`/inventory/${value}`)}>
           <TabsList>
             <TabsTrigger value="stock">Stock</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
