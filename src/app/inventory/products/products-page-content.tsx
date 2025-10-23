@@ -14,6 +14,7 @@ import {
   Plus,
   ImageIcon,
   ShieldAlert,
+  MessageCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 
