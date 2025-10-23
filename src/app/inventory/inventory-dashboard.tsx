@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -20,14 +21,14 @@ const inventoryFeatures = [
     title: 'Stock',
     description: 'View product stock levels.',
     icon: <Factory className="w-8 h-8 text-blue-500" />,
-    href: '#',
+    href: '/inventory/stock',
     color: 'blue',
   },
   {
     title: 'Stock history',
     description: 'View stock and transaction history.',
     icon: <History className="w-8 h-8 text-blue-500" />,
-    href: '#',
+    href: '/inventory/stock-history',
     color: 'blue',
   },
   {

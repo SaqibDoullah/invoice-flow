@@ -40,8 +40,8 @@ const purchasingFeatures = [
 ];
 
 const inventoryFeatures = [
-  { title: 'Stock', description: 'View product stock levels.', icon: <Factory className="w-6 h-6" />, href: '#', color: 'blue' },
-  { title: 'Stock history', description: 'View stock and transaction history.', icon: <History className="w-6 h-6" />, href: '#', color: 'blue' },
+  { title: 'Stock', description: 'View product stock levels.', icon: <Factory className="w-6 h-6" />, href: '/inventory/stock', color: 'blue' },
+  { title: 'Stock history', description: 'View stock and transaction history.', icon: <History className="w-6 h-6" />, href: '/inventory/stock-history', color: 'blue' },
   { title: 'Products', description: 'View all products.', icon: <Boxes className="w-6 h-6" />, href: '/inventory/products', color: 'blue' },
   { title: 'Product lookups', description: 'View all product lookups & alias SKUs.', icon: <Search className="w-6 h-6" />, href: '#', color: 'blue' },
   { title: 'Stock takes', description: 'Enter physical count of stock.', icon: <ClipboardList className="w-6 h-6" />, href: '#', color: 'purple' },
