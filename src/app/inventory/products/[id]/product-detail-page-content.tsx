@@ -42,6 +42,13 @@ const salesHistoryData = [
   { date: 'Oct 21', sales: 0 }, { date: 'Oct 22', sales: 0 },
 ];
 
+const chartConfig = {
+    sales: {
+      label: "Sales",
+      color: "hsl(var(--primary))",
+    },
+};
+
 export default function ProductDetailPageContent({ productId }: ProductDetailPageContentProps) {
     const [product, setProduct] = useState<InventoryItem | null>(null);
     const [loading, setLoading] = useState(true);
@@ -178,17 +185,17 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <ResponsiveContainer width="100%" height={150}>
-                                        <BarChart data={salesHistoryData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                    <ChartContainer config={chartConfig} className="min-h-[150px] w-full">
+                                        <BarChart data={salesHistoryData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }} accessibilityLayer>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                             <XAxis dataKey="date" tick={{fontSize: 12}} />
                                             <YAxis domain={[0, 2]} ticks={[0,1,2]} tick={{fontSize: 12}}/>
                                             <ChartTooltip
                                                 content={<ChartTooltipContent indicator="line" />}
                                             />
-                                            <Bar dataKey="sales" fill="hsl(var(--primary))" radius={2} />
+                                            <Bar dataKey="sales" fill="var(--color-sales)" radius={2} />
                                         </BarChart>
-                                    </ResponsiveContainer>
+                                    </ChartContainer>
                                 </CardContent>
                             </Card>
 
