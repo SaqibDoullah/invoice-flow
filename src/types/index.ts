@@ -103,6 +103,13 @@ export const inventoryItemSchema = z.object({
     category: z.string().optional(),
     manufacturer: z.string().optional(),
     stdBuyPrice: z.coerce.number().optional(),
+    stdPacking: z.string().optional(),
+    stdBinId: z.string().optional(),
+    unitOfMeasure: z.string().optional(),
+    stdAccountingCost: z.coerce.number().optional(),
+    lastPurchasePrice: z.coerce.number().optional(),
+    lastPurchaseDate: z.date().optional(),
+    // Add supplier info array
 });
 
 export type InventoryItemFormData = z.infer<typeof inventoryItemSchema>;

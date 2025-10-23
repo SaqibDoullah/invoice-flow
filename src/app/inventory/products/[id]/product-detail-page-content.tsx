@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { type InventoryItem, type Supplier } from '@/types';
-import { doc, getDoc, onSnapshot, collection, query } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, collection, query, getDocs } from 'firebase/firestore';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useAuth } from '@/context/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -51,6 +51,7 @@ const chartConfig = {
 
 export default function ProductDetailPageContent({ productId }: ProductDetailPageContentProps) {
     const [product, setProduct] = useState<InventoryItem | null>(null);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
     
@@ -65,15 +66,20 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
             return;
         }
 
-        // For a real implementation, you would fetch a single document.
-        // Since we don't have an edit/creation flow yet that writes to the DB,
-        // we'll listen to the whole collection and find our product.
+        const fetchSuppliers = async () => {
+             const supplierCollectionRef = collection(db, 'users', user.uid, 'suppliers');
+             const supplierSnapshot = await getDocs(supplierCollectionRef);
+             const supplierList = supplierSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
+             setSuppliers(supplierList);
+        }
+        
+        fetchSuppliers();
+
         const itemCollectionRef = collection(db, 'users', user.uid, 'inventory');
         const q = query(itemCollectionRef);
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
-            // Find the item with a matching SKU or ID
             const foundProduct = items.find(item => item.sku === productId || item.id === productId);
             setProduct(foundProduct || { id: productId, name: 'New Product' });
             setLoading(false);
@@ -185,7 +191,7 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <ChartContainer config={chartConfig} className="min-h-[150px] w-full">
+                                     <ChartContainer config={chartConfig} className="min-h-[150px] w-full">
                                         <BarChart data={salesHistoryData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }} accessibilityLayer>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                             <XAxis dataKey="date" tick={{fontSize: 12}} />
@@ -225,10 +231,98 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
                                     <label htmlFor="notes">Notes:</label>
                                     <Textarea id="notes" rows={4} />
                                 </div>
+                                 <div className="grid md:grid-cols-3 gap-6">
+                                     <div className="space-y-1">
+                                        <label htmlFor="stdPacking">Std packing:</label>
+                                        <Input id="stdPacking" />
+                                    </div>
+                                     <div className="space-y-1">
+                                        <label htmlFor="stdBinId">Std bin ID:</label>
+                                        <Input id="stdBinId" />
+                                    </div>
+                                     <div className="space-y-1">
+                                        <label htmlFor="unitOfMeasure">Unit of measure:</label>
+                                        <Select>
+                                            <SelectTrigger id="unitOfMeasure">
+                                                <SelectValue placeholder="-- Unspecified --" />
+                                            </SelectTrigger>
+                                             <SelectContent>
+                                                <SelectItem value="none">-- Unspecified --</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
                                 <div>
                                      <Button variant="link" className="p-0 h-auto">Add image</Button>
                                 </div>
                             </form>
+                            
+                             <Card>
+                                <CardHeader className="flex flex-row justify-between items-center">
+                                    <CardTitle>Purchasing</CardTitle>
+                                    <Link href="#" className="text-sm text-primary hover:underline">help</Link>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="grid md:grid-cols-4 gap-6">
+                                        <div className="space-y-1">
+                                            <label htmlFor="stdBuyPrice">Std buy price:</label>
+                                            <Input id="stdBuyPrice" />
+                                        </div>
+                                         <div className="space-y-1">
+                                            <label htmlFor="stdAccountingCost">Std accounting cost:</label>
+                                            <Input id="stdAccountingCost" />
+                                        </div>
+                                         <div className="space-y-1">
+                                            <label htmlFor="lastPurchasePrice">Last purchase price:</label>
+                                            <Input id="lastPurchasePrice" readOnly value="-" className="bg-muted"/>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label htmlFor="lastPurchaseDate">Last purchase date:</label>
+                                            <Input id="lastPurchaseDate" readOnly value="-" className="bg-muted"/>
+                                        </div>
+                                    </div>
+                                    {[1, 2, 3].map((num) => (
+                                        <div key={num} className="space-y-2 border-t pt-4">
+                                             <p className="text-sm font-semibold">Supplier {num}</p>
+                                             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                                 <div className="lg:col-span-1 space-y-1">
+                                                    <label>Supplier {num}:</label>
+                                                    <Select>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="-- Unspecified --" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                             <SelectItem value="none">-- Unspecified --</SelectItem>
+                                                             {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label>Supplier {num} price:</label>
+                                                    <Input />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label>Supplier {num} product ID:</label>
+                                                    <Input />
+                                                </div>
+                                                 <div className="space-y-1">
+                                                    <label>Supplier {num} qty avail:</label>
+                                                    <Input />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label>Supplier {num} lead days:</label>
+                                                    <Input placeholder="Default for supp"/>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label>Supplier {num} comments:</label>
+                                                    <Input />
+                                                </div>
+                                             </div>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+
                         </div>
                     </div>
 
