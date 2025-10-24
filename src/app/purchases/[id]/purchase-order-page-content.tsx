@@ -41,6 +41,7 @@ import { type Supplier } from '@/types';
 import AddSupplierDialog from '@/components/suppliers/add-supplier-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 interface PurchaseOrderPageContentProps {
     orderId: string;
@@ -535,9 +536,9 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                             </Card>
                         </TabsContent>
                          <TabsContent value="bill" className="mt-4">
-                             <div className="grid lg:grid-cols-3 gap-8 items-start">
+                            <div className="grid lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2 space-y-6">
-                                    <Card>
+                                     <Card>
                                         <CardContent className="p-4 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                              <div className="space-y-1">
                                                 <label className="text-sm font-medium">Bill date</label>
@@ -562,15 +563,6 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                         </CardContent>
                                     </Card>
                                     <Card>
-                                         <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Purchase Information</CardTitle></CardHeader>
-                                        <CardContent className="grid grid-cols-4 gap-4 text-sm">
-                                            <div><p className="font-semibold">Supplier</p><p className="text-primary mt-1">Payless Distributors</p></div>
-                                            <div><p className="font-semibold">Terms</p><p className="text-muted-foreground mt-1">--</p></div>
-                                            <div><p className="font-semibold">Requested shipping</p><p className="text-muted-foreground mt-1">--</p></div>
-                                            <div><p className="font-semibold">Fulfillment</p><p className="text-muted-foreground mt-1">--</p></div>
-                                        </CardContent>
-                                    </Card>
-                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between">
                                             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Items</CardTitle>
                                             <div className="flex items-center gap-2">
@@ -590,19 +582,13 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                         <th className="p-2 text-right">List price</th>
                                                         <th className="p-2 text-right">Unit price</th>
                                                         <th className="p-2 text-right">Subtotal</th>
-                                                        <th className="p-2 w-10"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td colSpan={9} className="p-8 text-center text-muted-foreground">No bill items found.</td>
+                                                        <td colSpan={8} className="p-8 text-center text-muted-foreground">Type on last line to add an item. Additional lines are automatically added.</td>
                                                     </tr>
                                                 </tbody>
-                                                <tfoot>
-                                                    <tr>
-                                                        <td colSpan={9} className="p-2 text-left text-muted-foreground">Type on last line to add an item. Additional lines are automatically added.</td>
-                                                    </tr>
-                                                </tfoot>
                                             </table>
                                             <div className="flex justify-end mt-4">
                                                 <div className="w-full max-w-xs space-y-2 text-sm">
@@ -610,22 +596,43 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                         <span>Total:</span>
                                                         <span>0.00</span>
                                                     </div>
-                                                    <div className="flex justify-between font-semibold">
+                                                     <div className="flex justify-between">
                                                         <span>Total paid:</span>
+                                                        <span>0.00</span>
+                                                    </div>
+                                                     <div className="flex justify-between font-semibold">
+                                                        <span>Outstanding balance:</span>
                                                         <span>0.00</span>
                                                     </div>
                                                 </div>
                                             </div>
+                                              <Button variant="link" className="p-0 h-auto text-primary mt-2">Add new discount/fee/tax</Button>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Notes</CardTitle></CardHeader>
+                                        <CardContent className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-sm">Public notes</label>
+                                                <Textarea />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-sm">Internal notes</label>
+                                                <Textarea />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                     <Card>
+                                        <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Attachments</CardTitle></CardHeader>
+                                        <CardContent className="text-center py-8">
+                                            <p className="text-muted-foreground text-sm">No attachments uploaded yet</p>
+                                            <Button variant="link" className="text-sm h-auto p-0 mt-1">Drag and drop attachment or <span className="underline">browse</span> (10MB limit)</Button>
                                         </CardContent>
                                     </Card>
                                 </div>
                                 <div className="space-y-6">
                                     <Card>
                                         <CardContent className="p-4 space-y-2 text-sm">
-                                            <p><span className="font-semibold">Status:</span> Draft</p>
-                                            <p><span className="font-semibold">Due date:</span> 10/16/2025</p>
-                                            <p><span className="font-semibold">Payments status:</span> N/A</p>
-                                            <p><span className="font-semibold">Synced from:</span> --</p>
                                             <p><span className="font-semibold">Synced to:</span> --</p>
                                         </CardContent>
                                         <CardContent className="p-4 border-t">
@@ -639,9 +646,9 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             <CardTitle>Purchase for bill</CardTitle>
                                         </CardHeader>
                                         <CardContent className="text-sm space-y-1">
-                                            <p><span className="font-semibold">Order ID:</span> <Link href="#" className="text-primary hover:underline">100171</Link></p>
-                                            <p><span className="font-semibold">Order date:</span> 1/29/2025</p>
-                                            <p><span className="font-semibold">Supplier:</span> <Link href="#" className="text-primary hover:underline">Payless Distributors</Link></p>
+                                            <p><span className="font-semibold">Order ID:</span> <Link href="#" className="text-primary hover:underline">{orderId}</Link></p>
+                                            <p><span className="font-semibold">Order date:</span> 10/21/2025</p>
+                                            <p><span className="font-semibold">Supplier:</span> --</p>
                                         </CardContent>
                                      </Card>
                                      <Card>
@@ -668,7 +675,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                 <div className="p-1.5 bg-blue-100 rounded-full mt-1"><Info className="w-3 h-3 text-blue-600"/></div>
                                                 <div>
                                                     <p>Created</p>
-                                                    <p className="text-muted-foreground">by You</p>
+                                                    <p className="text-muted-foreground">by You, 2 minutes ago</p>
                                                 </div>
                                             </div>
                                         </CardContent>
