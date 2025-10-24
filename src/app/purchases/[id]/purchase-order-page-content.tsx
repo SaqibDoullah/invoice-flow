@@ -107,12 +107,16 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
-                                        Print bill
+                                        Print purchase order
                                         <ChevronDown className="ml-2" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem>Print</DropdownMenuItem>
+                                    <DropdownMenuItem>Print purchase order with barcode</DropdownMenuItem>
+                                    <DropdownMenuItem>Print purchase order manifest</DropdownMenuItem>
+                                    <DropdownMenuItem>Print purchase order manifest with barcode</DropdownMenuItem>
+                                    <DropdownMenuItem>Export purchase order</DropdownMenuItem>
+                                    <DropdownMenuItem>Email purchase order</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                              <DropdownMenu>
@@ -710,6 +714,8 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
 
     
 
