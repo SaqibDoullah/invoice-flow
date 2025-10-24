@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Home,
   ChevronRight,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -31,20 +32,29 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type InventoryItem } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
-const mockData = [
-    { id: '100000-1', desc: 'Voopoo Argus P2 Kit-Crystal Pink', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: 'D1-03-C', stdBuyPrice: 13.90, reservations: 0, remaining: 12, loc1Avail: null, loc2Avail: null, loc3Avail: 12 },
-    { id: '100000-2', desc: 'Voopoo Argus P2 Kit-Emerald Green', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 13.90, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '100000-3', desc: 'Voopoo Argus P2 Kit-Matte Black', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 13.90, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '100000-4', desc: 'Voopoo Argus P2 Kit-Neon Blue', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 15.04, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '100000-5', desc: 'Voopoo Argus P2 Kit-Pearl White', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 15.04, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '100000-6', desc: 'Voopoo Argus P2 Kit-Ruby Red', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 15.04, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '100000-7', desc: 'Voopoo Argus P2 Kit-Titanium Gray', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: 'D1-03-C', stdBuyPrice: 15.04, reservations: 0, remaining: 10, loc1Avail: null, loc2Avail: null, loc3Avail: 10 },
-    { id: '100000-8', desc: 'Voopoo Argus P2 Kit-Voilet Purple', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 15.04, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '100001-1', desc: 'Yocan Ziva Pro Battery-Display of 10-Black', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: '', stdBuyPrice: 60.00, reservations: 0, remaining: 0, loc1Avail: null, loc2Avail: null, loc3Avail: null },
-    { id: '003924243-1', desc: 'SMOK Mag Solo Starter Kit (Single Unit) Color=...', salesVel: '0.67', stockout: '15 d', onOrder: 0, sublocations: 'C7-02-C', stdBuyPrice: 31.67, reservations: 0, remaining: 10, loc1Avail: null, loc2Avail: null, loc3Avail: 10 },
-    { id: '24838229-1', desc: 'SMOK Novo M Replacement Pod (3 Pack) Resi...', salesVel: '6.67', stockout: '115 d', onOrder: 0, sublocations: 'C8-02-D', stdBuyPrice: 3.98, reservations: 50, remaining: 770, loc1Avail: null, loc2Avail: null, loc3Avail: 770 },
-];
+
+type ReorderSummaryItem = {
+    id: string;
+    desc: string;
+    salesVel: string;
+    stockout: string;
+    onOrder: number;
+    sublocations: string;
+    stdBuyPrice: number;
+    reservations: number;
+    remaining: number;
+    loc1Avail: number | null;
+    loc2Avail: number | null;
+    loc3Avail: number | null;
+}
 
 type Column = {
   id: string;
@@ -69,11 +79,61 @@ const initialColumns: Column[] = [
 ];
 
 export default function ReorderingSummaryPageContent() {
-  const [data, setData] = useState(mockData);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<ReorderSummaryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const itemCollectionRef = collection(db, 'users', user.uid, 'inventory');
+    const q = query(itemCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const inventoryData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
+        
+        const summaryData: ReorderSummaryItem[] = inventoryData.map(item => ({
+            id: item.sku || item.id,
+            desc: item.name,
+            salesVel: '0.00', // Placeholder
+            stockout: '', // Placeholder
+            onOrder: item.quantityOnOrder || 0,
+            sublocations: item.sublocation || '',
+            stdBuyPrice: item.stdBuyPrice || 0,
+            reservations: item.quantityReserved || 0,
+            remaining: item.quantity || 0,
+            loc1Avail: null, // Placeholder for different locations
+            loc2Avail: null, // Placeholder for different locations
+            loc3Avail: item.quantityAvailable,
+        }));
+
+        setData(summaryData);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: itemCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch reordering summary data.' });
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -177,7 +237,7 @@ export default function ReorderingSummaryPageContent() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                     <TableRow><TableCell colSpan={19} className="h-24 text-center">Loading...</TableCell></TableRow>
+                     <TableRow><TableCell colSpan={19} className="h-96"><Skeleton className="h-full w-full" /></TableCell></TableRow>
                   ) : data.length > 0 ? (
                     data.map((item) => (
                       <TableRow key={item.id} className="text-xs">
@@ -241,9 +301,9 @@ const CustomizeColumnsDialog = ({
   const dragOverItem = useRef<number | null>(null);
   
   // Update local state if columns prop changes
-  useState(() => {
+  useEffect(() => {
     setLocalColumns(columns);
-  });
+  }, [columns]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
     draggingItem.current = position;

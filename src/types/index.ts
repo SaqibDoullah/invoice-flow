@@ -189,3 +189,23 @@ export interface BillPayment {
     recordCreated: Date;
     recordLastUpdated: Date;
 }
+
+export interface StockHistoryEntry {
+    id: string;
+    recordDate: Timestamp;
+    user: string;
+    timestamp: Timestamp;
+    productId: string;
+    description: string;
+    sublocation: string;
+    transaction: string;
+    quantity: number;
+    onHand: number;
+    avgCost: number;
+    amount: number;
+    balance: number;
+    details: string;
+    warning: string;
+    packing: string;
+    lotId: string;
+}

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Home,
   ChevronRight,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -30,21 +31,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-
-
-const mockHistoryData = [
-    { id: 1, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '34536187-2', description: 'Geekvape Aegis Legend III Kit-Blue', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -25, onHand: 71899, avgCost: 34.849917, amount: -871.25, balance: 700912.19, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 2, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-10', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71869, avgCost: 16.80, amount: -504.00, balance: 700408.19, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 3, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-17', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71839, avgCost: 16.97, amount: -509.10, balance: 699899.09, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 4, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-18', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71809, avgCost: 16.97, amount: -509.10, balance: 699389.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 5, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-11', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71789, avgCost: 16.80, amount: -336.00, balance: 699053.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 6, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-4', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71769, avgCost: 16.80, amount: -336.00, balance: 698717.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 7, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-9', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71749, avgCost: 16.80, amount: -336.00, balance: 698381.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-    { id: 8, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '34536187-9', description: 'Geekvape Aegis Legend III Kit-Rainbow', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -25, onHand: 71724, avgCost: 34.873665, amount: -871.84, balance: 697510.15, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
-];
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type StockHistoryEntry } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 type Column = {
-  id: keyof typeof mockHistoryData[0];
+  id: keyof StockHistoryEntry | 'id'; // allow 'id' for key prop
   label: string;
 };
 
@@ -70,8 +66,45 @@ const initialColumns: Column[] = [
 
 export default function StockHistoryPageContent() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  const [historyData, setHistoryData] = useState<StockHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const historyCollectionRef = collection(db, 'users', user.uid, 'stockHistory');
+    const q = query(historyCollectionRef, orderBy('timestamp', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StockHistoryEntry));
+        setHistoryData(data);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: historyCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch stock history.' });
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -81,21 +114,26 @@ export default function StockHistoryPageContent() {
       maximumFractionDigits: 2,
     }).format(amount);
   
-  const renderCell = (item: any, columnId: keyof typeof mockHistoryData[0]) => {
+  const renderCell = (item: any, columnId: keyof StockHistoryEntry | 'id') => {
+      if (columnId === 'id') return null;
+      const value = item[columnId];
       switch (columnId) {
           case 'productId':
-              return <span className="font-medium text-primary">{item[columnId]}</span>;
+              return <span className="font-medium text-primary">{value}</span>;
           case 'transaction':
-              return <span className="text-primary">{item[columnId]}</span>;
+              return <span className="text-primary">{value}</span>;
           case 'onHand':
-              return item[columnId]?.toLocaleString();
+              return value?.toLocaleString();
           case 'avgCost':
-              return item[columnId]?.toFixed(6);
+              return value?.toFixed(6);
           case 'amount':
           case 'balance':
-              return formatCurrency(item[columnId]);
+              return formatCurrency(value);
+          case 'recordDate':
+          case 'timestamp':
+              return value?.toDate ? value.toDate().toLocaleDateString() : value;
           default:
-              return item[columnId];
+              return value;
       }
   };
 
@@ -188,15 +226,29 @@ export default function StockHistoryPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockHistoryData.map((item) => (
-                    <TableRow key={item.id} className="text-xs">
-                        {columns.map(col => (
-                            <TableCell key={col.id} className={['quantity', 'onHand', 'avgCost', 'amount', 'balance'].includes(col.id) ? 'text-right' : ''}>
-                                {renderCell(item, col.id)}
-                            </TableCell>
-                        ))}
+                  {loading ? (
+                      [...Array(5)].map((_, i) => (
+                        <TableRow key={i}>
+                            <TableCell colSpan={columns.length}><Skeleton className="h-8 w-full" /></TableCell>
+                        </TableRow>
+                      ))
+                  ) : historyData.length > 0 ? (
+                    historyData.map((item) => (
+                      <TableRow key={item.id} className="text-xs">
+                          {columns.map(col => (
+                              <TableCell key={col.id} className={['quantity', 'onHand', 'avgCost', 'amount', 'balance'].includes(col.id) ? 'text-right' : ''}>
+                                  {renderCell(item, col.id)}
+                              </TableCell>
+                          ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center">
+                        No history found.
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -229,9 +281,9 @@ const CustomizeColumnsDialog = ({
   const draggingItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     setLocalColumns(columns);
-  });
+  }, [columns]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
     draggingItem.current = position;
