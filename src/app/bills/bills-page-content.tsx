@@ -33,12 +33,14 @@ import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import CreateBillFromOrderDialog from '@/components/bills/create-bill-from-order-dialog';
 
 export default function BillsPageContent() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [isCreateFromOrderDialogOpen, setIsCreateFromOrderDialogOpen] = useState(false);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -103,8 +105,8 @@ export default function BillsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <Button asChild>
-                <Link href="/purchases/new">Create bill from order</Link>
+              <Button onClick={() => setIsCreateFromOrderDialogOpen(true)}>
+                Create bill from order
               </Button>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -231,6 +233,10 @@ export default function BillsPageContent() {
             </CardContent>
           </Card>
         </main>
+        <CreateBillFromOrderDialog
+            isOpen={isCreateFromOrderDialogOpen}
+            setIsOpen={setIsCreateFromOrderDialogOpen}
+        />
       </div>
     </AuthGuard>
   );
