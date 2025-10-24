@@ -155,6 +155,7 @@ export default function StockPageContent() {
             <TabsTrigger value="stock">Stock</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="product-lookup">Product lookups</TabsTrigger>
+            <TabsTrigger value="reordering-summary">Reordering summary</TabsTrigger>
             <TabsTrigger value="stock-history">Stock history</TabsTrigger>
           </TabsList>
         </Tabs>
