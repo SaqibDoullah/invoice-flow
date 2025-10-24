@@ -89,7 +89,7 @@ export default function ProductLookupsPageContent() {
                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4"/></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Action 1</DropdownMenuItem>
+                <DropdownMenuItem>Customize this screen</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <span className="text-sm text-muted-foreground">All changes saved</span>
