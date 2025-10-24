@@ -318,9 +318,9 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                         <p>Please add items or adjustments to the purchase in order to enable actions.</p>
                                      </div>
                                      <div className="space-y-2">
-                                        <Button variant="outline" className="w-full" disabled>Change status to committed</Button>
-                                        <Button variant="outline" className="w-full" disabled>Change status to completed</Button>
-                                        <Button variant="link" className="w-full text-destructive" disabled>Cancel purchase</Button>
+                                        <Button variant="outline" className="w-full">Change status to committed</Button>
+                                        <Button variant="outline" className="w-full">Change status to completed</Button>
+                                        <Button variant="link" className="w-full text-destructive">Cancel purchase</Button>
                                      </div>
                                      <Card>
                                         <CardHeader className="flex-row items-center gap-2 space-y-0">
@@ -710,5 +710,7 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
 
     
