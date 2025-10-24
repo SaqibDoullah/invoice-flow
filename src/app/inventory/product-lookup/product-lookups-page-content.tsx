@@ -79,7 +79,9 @@ export default function ProductLookupsPageContent() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Product lookups</h1>
           <div className="flex items-center gap-2">
-            <Button>Create product lookup</Button>
+            <Button asChild>
+              <Link href="/inventory/product-lookup/new">Create product lookup</Link>
+            </Button>
             <Button variant='outline'>Import product lookups</Button>
             <Button variant='outline'>Export product lookups</Button>
             <DropdownMenu>

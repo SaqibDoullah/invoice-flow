@@ -135,16 +135,21 @@ export interface InventoryItem extends InventoryItemFormData {
     supplier?: Supplier;
 }
 
-export interface ProductLookup {
+export const productLookupFormSchema = z.object({
+  productLookup: z.string().min(1, 'Product lookup is required'),
+  productId: z.string().optional(),
+  notes: z.string().optional(),
+  lotId: z.string().optional(),
+  packing: z.string().optional(),
+  stores: z.string().optional(),
+});
+
+export type ProductLookupFormData = z.infer<typeof productLookupFormSchema>;
+
+export interface ProductLookup extends ProductLookupFormData {
     id: string;
-    productLookup: string;
-    notes: string;
-    productId: string;
     description: string;
     status: 'Active' | 'Inactive';
-    packing: string;
-    lotId: string;
-    stores: string;
 }
 
 export interface PurchaseOrder {
