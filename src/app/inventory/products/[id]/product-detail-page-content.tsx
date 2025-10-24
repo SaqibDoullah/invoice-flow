@@ -19,6 +19,7 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useAuth } from '@/context/auth-context';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface ProductDetailPageContentProps {
     productId: string;
@@ -48,6 +49,12 @@ const chartConfig = {
       color: "hsl(var(--primary))",
     },
 };
+
+const productLookupsData = [
+    { lookup: 'sample', status: 'Active', packing: '', lotId: '', notes: 'Finale short code' },
+    { lookup: '200001105562', status: 'Active', packing: '', lotId: '', notes: '' },
+];
+
 
 export default function ProductDetailPageContent({ productId }: ProductDetailPageContentProps) {
     const [product, setProduct] = useState<InventoryItem | null>(null);
@@ -320,6 +327,138 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
                                              </div>
                                         </div>
                                     ))}
+                                </CardContent>
+                            </Card>
+
+                             <Card>
+                                <CardHeader className="flex flex-row justify-between items-center">
+                                    <CardTitle>Reordering</CardTitle>
+                                    <Link href="#" className="text-sm text-primary hover:underline">help</Link>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <label className="text-sm">Reorder calculation method:</label>
+                                        <Select>
+                                            <SelectTrigger className="w-64">
+                                                <SelectValue placeholder="Default from settings" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="default">Default from settings</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid grid-cols-[100px_1fr_1fr_1fr] gap-x-4 gap-y-2 items-center text-sm">
+                                        <div></div>
+                                        <div className="font-semibold">Std reorder point:</div>
+                                        <div className="font-semibold">Std reorder point max:</div>
+                                        <div className="font-semibold">Std reorder in qty of:</div>
+                                        
+                                        <div className="font-semibold">Drop Ship:</div>
+                                        <Input /> <Input /> <Input />
+
+                                        <div className="font-semibold">Marhaba:</div>
+                                        <Input /> <Input /> <Input />
+                                        
+                                        <div className="font-semibold">Tawakkal Warehouse:</div>
+                                        <Input /> <Input /> <Input />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            <Card>
+                                <CardHeader><CardTitle>Selling</CardTitle></CardHeader>
+                                <CardContent className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    <div className="space-y-1"><label>Item price:</label><Input /></div>
+                                    <div className="space-y-1"><label>Case price:</label><Input /></div>
+                                    <div className="space-y-1"><label>Std lead days:</label><Input /></div>
+                                    <div className="space-y-1"><label>Amazon ASIN:</label><Input /></div>
+                                    <div className="space-y-1"><label>UPC:</label><Input /></div>
+                                    <div className="space-y-1"><label>EAN:</label><Input /></div>
+                                    <div className="space-y-1"><label>Code 128:</label><Input /></div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader><CardTitle>Valuation</CardTitle></CardHeader>
+                                <CardContent>
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="space-y-1"><label>Average cost:</label><Input readOnly value="-" className="bg-muted"/></div>
+                                        <p className="text-sm text-primary">To begin tracking average cost add a <Link href="/purchases/new" className="underline">purchase order</Link>.</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 text-sm">
+                                        <div className="font-semibold">Stock quantities:</div>
+                                        <div className="grid grid-cols-5 gap-4">
+                                            <div className="space-y-1"><label>Units in stock:</label><Input readOnly value="0" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Units in transit:</label><Input readOnly value="0" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Units packed:</label><Input readOnly value="0" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Units WIP:</label><Input readOnly value="0" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Units total:</label><Input readOnly value="0" className="bg-muted"/></div>
+                                        </div>
+                                    </div>
+                                     <div className="grid grid-cols-2 text-sm mt-4">
+                                        <div className="font-semibold">Stock valuation:</div>
+                                        <div className="grid grid-cols-5 gap-4">
+                                            <div className="space-y-1"><label>Value in stock:</label><Input readOnly value="-" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Value in transit:</label><Input readOnly value="-" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Value packed:</label><Input readOnly value="-" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Value WIP:</label><Input readOnly value="-" className="bg-muted"/></div>
+                                            <div className="space-y-1"><label>Value total:</label><Input readOnly value="-" className="bg-muted"/></div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            <Card>
+                                <CardHeader><CardTitle>Manufacturer</CardTitle></CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1"><label>Manufacturer:</label><Input /></div>
+                                    <div className="space-y-1"><label>Mfg product ID:</label><Input /></div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader><CardTitle>Shipping</CardTitle></CardHeader>
+                                <CardContent className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1"><label>Weight per unit:</label><Input /></div>
+                                    <div className="space-y-1">
+                                        <label>Weight unit:</label>
+                                        <Select>
+                                            <SelectTrigger><SelectValue placeholder="Pound" /></SelectTrigger>
+                                            <SelectContent><SelectItem value="pound">Pound</SelectItem></SelectContent>
+                                        </Select>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            
+                            <Card>
+                                <CardHeader className="flex flex-row justify-between items-center">
+                                    <CardTitle>Product lookups</CardTitle>
+                                    <Link href="#" className="text-sm text-primary hover:underline">Create Lookup</Link>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Product lookup</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Packing</TableHead>
+                                                <TableHead>Lot ID</TableHead>
+                                                <TableHead>Notes</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {productLookupsData.map((lookup, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell className="text-primary font-medium">{lookup.lookup}</TableCell>
+                                                    <TableCell>{lookup.status}</TableCell>
+                                                    <TableCell>{lookup.packing}</TableCell>
+                                                    <TableCell>{lookup.lotId}</TableCell>
+                                                    <TableCell>{lookup.notes}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                    <p className="text-sm text-muted-foreground mt-2">Showing first {productLookupsData.length} of {productLookupsData.length} rows</p>
                                 </CardContent>
                             </Card>
 

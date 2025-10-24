@@ -109,7 +109,24 @@ export const inventoryItemSchema = z.object({
     stdAccountingCost: z.coerce.number().optional(),
     lastPurchasePrice: z.coerce.number().optional(),
     lastPurchaseDate: z.date().optional(),
-    // Add supplier info array
+    // Reordering
+    reorderCalculationMethod: z.string().optional(),
+    stdReorderPoint: z.coerce.number().optional(),
+    stdReorderPointMax: z.coerce.number().optional(),
+    stdReorderInQtyOf: z.coerce.number().optional(),
+    // Selling
+    itemPrice: z.coerce.number().optional(),
+    casePrice: z.coerce.number().optional(),
+    stdLeadDays: z.coerce.number().optional(),
+    amazonAsin: z.string().optional(),
+    upc: z.string().optional(),
+    ean: z.string().optional(),
+    code128: z.string().optional(),
+    // Manufacturer
+    mfgProductId: z.string().optional(),
+    // Shipping
+    weightPerUnit: z.coerce.number().optional(),
+    weightUnit: z.string().optional(),
 });
 
 export type InventoryItemFormData = z.infer<typeof inventoryItemSchema>;
