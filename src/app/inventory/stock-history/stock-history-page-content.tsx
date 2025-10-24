@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Home,
   ChevronRight,
@@ -9,6 +9,7 @@ import {
   ChevronDown,
   History,
   ShieldAlert,
+  GripVertical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -28,20 +29,50 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+
 
 const mockHistoryData = [
-    { id: 1, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '34536187-2', description: 'Geekvape Aegis Legend III Kit-Blue', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -25, onHand: 71899, avgCost: 34.849917, amount: -871.25, balance: 700912.19, details: 'Customer: Four Seasons' },
-    { id: 2, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-10', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71869, avgCost: 16.80, amount: -504.00, balance: 700408.19, details: 'Customer: Four Seasons' },
-    { id: 3, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-17', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71839, avgCost: 16.97, amount: -509.10, balance: 699899.09, details: 'Customer: Four Seasons' },
-    { id: 4, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-18', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71809, avgCost: 16.97, amount: -509.10, balance: 699389.99, details: 'Customer: Four Seasons' },
-    { id: 5, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-11', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71789, avgCost: 16.80, amount: -336.00, balance: 699053.99, details: 'Customer: Four Seasons' },
-    { id: 6, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-4', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71769, avgCost: 16.80, amount: -336.00, balance: 698717.99, details: 'Customer: Four Seasons' },
-    { id: 7, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-9', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71749, avgCost: 16.80, amount: -336.00, balance: 698381.99, details: 'Customer: Four Seasons' },
-    { id: 8, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '34536187-9', description: 'Geekvape Aegis Legend III Kit-Rainbow', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -25, onHand: 71724, avgCost: 34.873665, amount: -871.84, balance: 697510.15, details: 'Customer: Four Seasons' },
+    { id: 1, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '34536187-2', description: 'Geekvape Aegis Legend III Kit-Blue', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -25, onHand: 71899, avgCost: 34.849917, amount: -871.25, balance: 700912.19, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 2, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-10', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71869, avgCost: 16.80, amount: -504.00, balance: 700408.19, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 3, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-17', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71839, avgCost: 16.97, amount: -509.10, balance: 699899.09, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 4, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-18', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -30, onHand: 71809, avgCost: 16.97, amount: -509.10, balance: 699389.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 5, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-11', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71789, avgCost: 16.80, amount: -336.00, balance: 699053.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 6, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-4', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71769, avgCost: 16.80, amount: -336.00, balance: 698717.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 7, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '607241704-9', description: 'GeekVape H45 (Aegis Hero 2) Starter Kit (Singl...', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -20, onHand: 71749, avgCost: 16.80, amount: -336.00, balance: 698381.99, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
+    { id: 8, recordDate: '9/24/2025', user: 'Juan', timestamp: '9/24/2025', productId: '34536187-9', description: 'Geekvape Aegis Legend III Kit-Rainbow', sublocation: 'Main', transaction: 'Sale 100447 packed', quantity: -25, onHand: 71724, avgCost: 34.873665, amount: -871.84, balance: 697510.15, details: 'Customer: Four Seasons', warning: '', packing: '', lotId: '' },
 ];
+
+type Column = {
+  id: keyof typeof mockHistoryData[0];
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'warning', label: 'Warning' },
+    { id: 'recordDate', label: 'Record date' },
+    { id: 'user', label: 'Transaction user' },
+    { id: 'timestamp', label: 'Transaction timestamp' },
+    { id: 'productId', label: 'Product ID' },
+    { id: 'description', label: 'Description' },
+    { id: 'sublocation', label: 'Sublocation' },
+    { id: 'packing', label: 'Packing' },
+    { id: 'lotId', label: 'Lot ID' },
+    { id: 'transaction', label: 'Transaction' },
+    { id: 'quantity', label: 'Quantity' },
+    { id: 'onHand', label: 'Quantity on hand units' },
+    { id: 'avgCost', label: 'Transaction average cost' },
+    { id: 'amount', label: 'Amount' },
+    { id: 'balance', label: 'Valuation balance' },
+    { id: 'details', label: 'Transaction details' },
+];
+
 
 export default function StockHistoryPageContent() {
   const router = useRouter();
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -49,6 +80,25 @@ export default function StockHistoryPageContent() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+  
+  const renderCell = (item: any, columnId: keyof typeof mockHistoryData[0]) => {
+      switch (columnId) {
+          case 'productId':
+              return <span className="font-medium text-primary">{item[columnId]}</span>;
+          case 'transaction':
+              return <span className="text-primary">{item[columnId]}</span>;
+          case 'onHand':
+              return item[columnId]?.toLocaleString();
+          case 'avgCost':
+              return item[columnId]?.toFixed(6);
+          case 'amount':
+          case 'balance':
+              return formatCurrency(item[columnId]);
+          default:
+              return item[columnId];
+      }
+  };
+
 
   return (
     <AuthGuard>
@@ -81,7 +131,14 @@ export default function StockHistoryPageContent() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline">Export</Button>
-            <Button variant="outline">Actions</Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4"/></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -123,43 +180,21 @@ export default function StockHistoryPageContent() {
               <Table className="whitespace-nowrap">
                 <TableHeader>
                   <TableRow className="bg-muted/50 text-xs">
-                    <TableHead>Warning</TableHead>
-                    <TableHead>Record date</TableHead>
-                    <TableHead>Transaction user</TableHead>
-                    <TableHead>Transaction timestamp</TableHead>
-                    <TableHead>Product ID</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Sublocation</TableHead>
-                    <TableHead>Packing</TableHead>
-                    <TableHead>Lot ID</TableHead>
-                    <TableHead>Transaction</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead className="text-right">Quantity on hand units</TableHead>
-                    <TableHead className="text-right">Transaction average cost</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Valuation balance</TableHead>
-                    <TableHead>Transaction details</TableHead>
+                    {columns.map(col => (
+                        <TableHead key={col.id} className={['quantity', 'onHand', 'avgCost', 'amount', 'balance'].includes(col.id) ? 'text-right' : ''}>
+                            {col.label}
+                        </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {mockHistoryData.map((item) => (
                     <TableRow key={item.id} className="text-xs">
-                      <TableCell></TableCell>
-                      <TableCell>{item.recordDate}</TableCell>
-                      <TableCell>{item.user}</TableCell>
-                      <TableCell>{item.timestamp}</TableCell>
-                      <TableCell className="font-medium text-primary">{item.productId}</TableCell>
-                      <TableCell>{item.description}</TableCell>
-                      <TableCell>{item.sublocation}</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-primary">{item.transaction}</TableCell>
-                      <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell className="text-right">{item.onHand.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{item.avgCost.toFixed(6)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.balance)}</TableCell>
-                      <TableCell>{item.details}</TableCell>
+                        {columns.map(col => (
+                            <TableCell key={col.id} className={['quantity', 'onHand', 'avgCost', 'amount', 'balance'].includes(col.id) ? 'text-right' : ''}>
+                                {renderCell(item, col.id)}
+                            </TableCell>
+                        ))}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -167,7 +202,98 @@ export default function StockHistoryPageContent() {
             </div>
           </CardContent>
         </Card>
+        
+        <CustomizeColumnsDialog
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+        />
       </div>
     </AuthGuard>
   );
 }
+
+const CustomizeColumnsDialog = ({
+  isOpen,
+  setIsOpen,
+  columns,
+  setColumns,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  columns: Column[];
+  setColumns: (columns: Column[]) => void;
+}) => {
+  const [localColumns, setLocalColumns] = useState(columns);
+  const draggingItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  useState(() => {
+    setLocalColumns(columns);
+  });
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+    draggingItem.current = position;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+    dragOverItem.current = position;
+    const newList = [...localColumns];
+    const draggingItemContent = newList[draggingItem.current!];
+    newList.splice(draggingItem.current!, 1);
+    newList.splice(dragOverItem.current!, 0, draggingItemContent);
+    draggingItem.current = dragOverItem.current;
+    dragOverItem.current = null;
+    setLocalColumns(newList);
+  };
+
+  const handleDragEnd = () => {
+    draggingItem.current = null;
+    dragOverItem.current = null;
+  };
+  
+  const handleSave = () => {
+    setColumns(localColumns);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setLocalColumns(columns);
+    setIsOpen(false);
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Customize Columns</DialogTitle>
+          <DialogDescription>
+            Drag and drop the columns to reorder them.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto">
+            {localColumns.map((col, index) => (
+                <div
+                    key={col.id}
+                    className="flex items-center p-2 border rounded-md bg-muted/50 cursor-grab"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragEnter={(e) => handleDragEnter(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => e.preventDefault()}
+                >
+                    <GripVertical className="mr-2 text-muted-foreground"/>
+                    <span>{col.label}</span>
+                </div>
+            ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleSave}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
