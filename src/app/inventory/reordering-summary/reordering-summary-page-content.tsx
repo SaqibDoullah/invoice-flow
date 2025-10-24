@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Home,
   ChevronRight,
@@ -11,6 +11,7 @@ import {
   MessageCircle,
   ImageIcon,
   ChevronDown,
+  GripVertical,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const mockData = [
     { id: '100000-1', desc: 'Voopoo Argus P2 Kit-Crystal Pink', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: 'D1-03-C', stdBuyPrice: 13.90, reservations: 0, remaining: 12, loc1Avail: null, loc2Avail: null, loc3Avail: 12 },
@@ -44,10 +46,33 @@ const mockData = [
     { id: '24838229-1', desc: 'SMOK Novo M Replacement Pod (3 Pack) Resi...', salesVel: '6.67', stockout: '115 d', onOrder: 0, sublocations: 'C8-02-D', stdBuyPrice: 3.98, reservations: 50, remaining: 770, loc1Avail: null, loc2Avail: null, loc3Avail: 770 },
 ];
 
+type Column = {
+  id: string;
+  label: string;
+  subColumns?: { id: string; label: string }[];
+};
+
+const initialColumns: Column[] = [
+    { id: 'img', label: 'Img' },
+    { id: 'productId', label: 'Product ID' },
+    { id: 'description', label: 'Description' },
+    { id: 'salesVelocity', label: 'Sales velocity' },
+    { id: 'stockout', label: 'Stockout + BOM' },
+    { id: 'onOrder', label: 'On order units' },
+    { id: 'sublocations', label: 'Sublocations' },
+    { id: 'stdBuyPrice', label: 'Std buy price' },
+    { id: 'reservations', label: 'Reservations units' },
+    { id: 'remaining', label: 'Remaining + BOM units' },
+    { id: 'loc1', label: 'Location: Drop Ship', subColumns: [{id: 'loc1Avail', label: 'Avail'}, {id: 'loc1Reorder', label: 'Reorder level'}, {id: 'loc1Variance', label: 'Variance'}] },
+    { id: 'loc2', label: 'Location: Marhaba', subColumns: [{id: 'loc2Avail', label: 'Avail'}, {id: 'loc2Reorder', label: 'Reorder level'}, {id: 'loc2Variance', label: 'Variance'}] },
+    { id: 'loc3', label: 'Location: Tawakkal Warehouse', subColumns: [{id: 'loc3Avail', label: 'Avail'}, {id: 'loc3Reorder', label: 'Reorder level'}, {id: 'loc3Variance', label: 'Variance'}] },
+];
 
 export default function ReorderingSummaryPageContent() {
   const [data, setData] = useState(mockData);
   const [loading, setLoading] = useState(false);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
   const router = useRouter();
 
   const formatCurrency = (amount: number) =>
@@ -57,6 +82,26 @@ export default function ReorderingSummaryPageContent() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+
+  const renderCell = (item: any, columnId: string) => {
+    switch (columnId) {
+        case 'img': return <ImageIcon className="w-4 h-4 text-muted-foreground"/>;
+        case 'productId': return <span className="font-medium text-primary">{item.id}</span>;
+        case 'description': return item.desc;
+        case 'salesVelocity': return item.salesVel;
+        case 'stockout': return item.stockout;
+        case 'onOrder': return item.onOrder;
+        case 'sublocations': return item.sublocations;
+        case 'stdBuyPrice': return formatCurrency(item.stdBuyPrice);
+        case 'reservations': return item.reservations;
+        case 'remaining': return item.remaining;
+        case 'loc1Avail': return item.loc1Avail;
+        case 'loc2Avail': return item.loc2Avail;
+        case 'loc3Avail': return item.loc3Avail;
+        default: return null;
+    }
+  }
+
 
   return (
     <AuthGuard>
@@ -77,7 +122,7 @@ export default function ReorderingSummaryPageContent() {
                     <Button variant='outline'>Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuItem>Customize columns</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -113,40 +158,21 @@ export default function ReorderingSummaryPageContent() {
               <Table className="whitespace-nowrap">
                 <TableHeader>
                   <TableRow className="bg-muted/50 text-xs">
-                    <TableHead className="p-2 w-10">Img</TableHead>
-                    <TableHead className="p-2">Product ID</TableHead>
-                    <TableHead className="p-2">Description</TableHead>
-                    <TableHead className="p-2">Sales velocity</TableHead>
-                    <TableHead className="p-2">Stockout + BOM</TableHead>
-                    <TableHead className="p-2">On order units</TableHead>
-                    <TableHead className="p-2">Sublocations</TableHead>
-                    <TableHead className="p-2">Std buy price</TableHead>
-                    <TableHead className="p-2">Reservations units</TableHead>
-                    <TableHead className="p-2">Remaining + BOM units</TableHead>
-                    <TableHead className="p-2 text-center border-l" colSpan={3}>Location: Drop Ship</TableHead>
-                    <TableHead className="p-2 text-center border-l" colSpan={3}>Location: Marhaba</TableHead>
-                    <TableHead className="p-2 text-center border-l" colSpan={3}>Location: Tawakkal Warehouse</TableHead>
+                    {columns.map(col => (
+                        <TableHead key={col.id} className="p-2" colSpan={col.subColumns ? col.subColumns.length : 1} >
+                            {col.subColumns ? <div className="text-center border-l">{col.label}</div> : col.label}
+                        </TableHead>
+                    ))}
                   </TableRow>
                   <TableRow className="bg-muted/50 text-xs">
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2"></TableHead>
-                    <TableHead className="p-2 text-right border-l">Avail</TableHead>
-                    <TableHead className="p-2 text-right">Reorder level</TableHead>
-                    <TableHead className="p-2 text-right">Variance</TableHead>
-                    <TableHead className="p-2 text-right border-l">Avail</TableHead>
-                    <TableHead className="p-2 text-right">Reorder level</TableHead>
-                    <TableHead className="p-2 text-right">Variance</TableHead>
-                    <TableHead className="p-2 text-right border-l">Avail</TableHead>
-                    <TableHead className="p-2 text-right">Reorder level</TableHead>
-                    <TableHead className="p-2 text-right">Variance</TableHead>
+                    {columns.map(col => {
+                        if(col.subColumns) {
+                           return col.subColumns.map(subCol => (
+                               <TableHead key={subCol.id} className="p-2 text-right border-l">{subCol.label}</TableHead>
+                           ))
+                        }
+                        return <TableHead key={col.id} className="p-2"></TableHead>
+                    })}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -155,19 +181,18 @@ export default function ReorderingSummaryPageContent() {
                   ) : data.length > 0 ? (
                     data.map((item) => (
                       <TableRow key={item.id} className="text-xs">
-                        <TableCell className="p-2"><ImageIcon className="w-4 h-4 text-muted-foreground"/></TableCell>
-                        <TableCell className="p-2 font-medium text-primary">{item.id}</TableCell>
-                        <TableCell className="p-2">{item.desc}</TableCell>
-                        <TableCell className="p-2">{item.salesVel}</TableCell>
-                        <TableCell className="p-2">{item.stockout}</TableCell>
-                        <TableCell className="p-2">{item.onOrder}</TableCell>
-                        <TableCell className="p-2">{item.sublocations}</TableCell>
-                        <TableCell className="p-2">{formatCurrency(item.stdBuyPrice)}</TableCell>
-                        <TableCell className="p-2">{item.reservations}</TableCell>
-                        <TableCell className="p-2">{item.remaining}</TableCell>
-                        <TableCell className="p-2 border-l">{item.loc1Avail}</TableCell><TableCell></TableCell><TableCell></TableCell>
-                        <TableCell className="p-2 border-l">{item.loc2Avail}</TableCell><TableCell></TableCell><TableCell></TableCell>
-                        <TableCell className="p-2 border-l">{item.loc3Avail}</TableCell><TableCell></TableCell><TableCell></TableCell>
+                          {columns.map(col => {
+                            if (col.subColumns) {
+                                return col.subColumns.map(subCol => (
+                                    <TableCell key={subCol.id} className="p-2 border-l">{renderCell(item, subCol.id)}</TableCell>
+                                ));
+                            }
+                            return (
+                                <TableCell key={col.id} className="p-2">
+                                    {renderCell(item, col.id)}
+                                </TableCell>
+                            );
+                          })}
                       </TableRow>
                     ))
                   ) : (
@@ -188,7 +213,99 @@ export default function ReorderingSummaryPageContent() {
                   <MessageCircle className="w-8 h-8" />
               </Button>
           </div>
+          
+          <CustomizeColumnsDialog 
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+          />
       </div>
     </AuthGuard>
   );
 }
+
+const CustomizeColumnsDialog = ({
+  isOpen,
+  setIsOpen,
+  columns,
+  setColumns,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  columns: Column[];
+  setColumns: (columns: Column[]) => void;
+}) => {
+  const [localColumns, setLocalColumns] = useState(columns);
+  const draggingItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+  
+  // Update local state if columns prop changes
+  useState(() => {
+    setLocalColumns(columns);
+  });
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+    draggingItem.current = position;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, position: number) => {
+    dragOverItem.current = position;
+    const newList = [...localColumns];
+    const draggingItemContent = newList[draggingItem.current!];
+    newList.splice(draggingItem.current!, 1);
+    newList.splice(dragOverItem.current!, 0, draggingItemContent);
+    draggingItem.current = dragOverItem.current;
+    dragOverItem.current = null;
+    setLocalColumns(newList);
+  };
+
+  const handleDragEnd = () => {
+    draggingItem.current = null;
+    dragOverItem.current = null;
+  };
+  
+  const handleSave = () => {
+    setColumns(localColumns);
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    setLocalColumns(columns); // Reset to original order from props
+    setIsOpen(false);
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Customize Columns</DialogTitle>
+          <DialogDescription>
+            Drag and drop the columns to reorder them.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 space-y-2">
+            {localColumns.map((col, index) => (
+                <div
+                    key={col.id}
+                    className="flex items-center p-2 border rounded-md bg-muted/50 cursor-grab"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragEnter={(e) => handleDragEnter(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => e.preventDefault()}
+                >
+                    <GripVertical className="mr-2 text-muted-foreground"/>
+                    <span>{col.label}</span>
+                </div>
+            ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleSave}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
