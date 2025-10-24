@@ -79,7 +79,7 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
   const isImplemented = href !== '#';
 
   const content = (
-      <Card className={`h-full transition-all duration-200 hover:shadow-md hover:-translate-y-1 ${!isImplemented && 'cursor-not-allowed'}`}>
+      <Card className="h-full transition-all duration-200 hover:shadow-md hover:-translate-y-1">
           <CardHeader className="flex flex-row items-center gap-4">
               <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50`}>
                   {icon}
@@ -113,13 +113,9 @@ export default function InventoryDashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
               <div className="space-y-6">
-                <FeatureCard {...inventoryFeatures[0]} />
-                <FeatureCard {...inventoryFeatures[1]} />
-                <FeatureCard {...inventoryFeatures[2]} />
-                <FeatureCard {...inventoryFeatures[3]} />
-                <FeatureCard {...inventoryFeatures[4]} />
-                <FeatureCard {...inventoryFeatures[5]} />
-                <FeatureCard {...inventoryFeatures[6]} />
+                {inventoryFeatures.map((feature) => (
+                    <FeatureCard key={feature.title} {...feature} />
+                ))}
               </div>
           </div>
         </main>
