@@ -58,8 +58,7 @@ export type InvoiceUpdateInput = Omit<InvoiceFormData, 'createdAt' | 'ownerId'>;
 
 export const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
-  email: z.string().email('Invalid email address').optional().or(z
-.literal('')),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
@@ -134,6 +133,18 @@ export type InventoryItemFormData = z.infer<typeof inventoryItemSchema>;
 export interface InventoryItem extends InventoryItemFormData {
     id: string;
     supplier?: Supplier;
+}
+
+export interface ProductLookup {
+    id: string;
+    productLookup: string;
+    notes: string;
+    productId: string;
+    description: string;
+    status: 'Active' | 'Inactive';
+    packing: string;
+    lotId: string;
+    stores: string;
 }
 
 export interface PurchaseOrder {

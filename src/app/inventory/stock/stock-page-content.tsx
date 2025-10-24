@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,7 +12,7 @@ import {
   MoreVertical,
   ArrowUpDown,
   Plus,
-  Image as ImageIcon,
+  ImageIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -153,7 +154,7 @@ export default function StockPageContent() {
           <TabsList>
             <TabsTrigger value="stock">Stock</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="product-lookup">Product lookup</TabsTrigger>
+            <TabsTrigger value="product-lookup">Product lookups</TabsTrigger>
             <TabsTrigger value="stock-history">Stock history</TabsTrigger>
           </TabsList>
         </Tabs>
