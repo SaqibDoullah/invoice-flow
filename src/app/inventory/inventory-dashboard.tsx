@@ -42,7 +42,7 @@ const inventoryFeatures = [
     title: 'Product lookups',
     description: 'View all product lookups & alias SKUs.',
     icon: <Search className="w-8 h-8 text-blue-500" />,
-    href: '#',
+    href: '/inventory/product-lookup',
     color: 'blue',
   },
   {
