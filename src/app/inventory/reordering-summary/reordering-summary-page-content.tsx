@@ -10,6 +10,7 @@ import {
   ArrowUpDown,
   MessageCircle,
   ImageIcon,
+  ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -27,6 +28,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const mockData = [
     { id: '100000-1', desc: 'Voopoo Argus P2 Kit-Crystal Pink', salesVel: '0.00', stockout: '', onOrder: 0, sublocations: 'D1-03-C', stdBuyPrice: 13.90, reservations: 0, remaining: 12, loc1Avail: null, loc2Avail: null, loc3Avail: 12 },
@@ -70,7 +72,14 @@ export default function ReorderingSummaryPageContent() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight">Reordering summary</h1>
           <div className="flex items-center gap-2">
-            <Button variant='outline'>Actions</Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant='outline'>Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem>Customize columns</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
