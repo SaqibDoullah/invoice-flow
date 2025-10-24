@@ -41,9 +41,9 @@ const inventoryFeatures = [
   {
     title: 'Product lookups',
     description: 'View all product lookups & alias SKUs.',
-    icon: <Search className="w-8 h-8 text-blue-500" />,
+    icon: <Search className="w-8 h-8 text-purple-500" />,
     href: '/inventory/product-lookup',
-    color: 'blue',
+    color: 'purple',
   },
   {
     title: 'Stock takes',
@@ -79,7 +79,7 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
   const isImplemented = href !== '#';
 
   const content = (
-      <Card className={`h-full transition-all duration-200 hover:shadow-md hover:-translate-y-1 ${!isImplemented && 'opacity-60 cursor-not-allowed'}`}>
+      <Card className={`h-full transition-all duration-200 hover:shadow-md hover:-translate-y-1 ${!isImplemented && 'cursor-not-allowed'}`}>
           <CardHeader className="flex flex-row items-center gap-4">
               <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50`}>
                   {icon}
@@ -111,18 +111,15 @@ export default function InventoryDashboard() {
         <main className="flex-1 container mx-auto p-4 md:p-8">
           <h1 className="text-3xl font-bold tracking-tight mb-8">Inventory</h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
               <div className="space-y-6">
                 <FeatureCard {...inventoryFeatures[0]} />
+                <FeatureCard {...inventoryFeatures[1]} />
                 <FeatureCard {...inventoryFeatures[2]} />
+                <FeatureCard {...inventoryFeatures[3]} />
                 <FeatureCard {...inventoryFeatures[4]} />
+                <FeatureCard {...inventoryFeatures[5]} />
                 <FeatureCard {...inventoryFeatures[6]} />
-              </div>
-              <div className="space-y-6">
-                 <FeatureCard {...inventoryFeatures[1]} />
-                 <FeatureCard {...inventoryFeatures[3]} />
-                 <FeatureCard {...inventoryFeatures[5]} />
-                 <FeatureCard {...inventoryFeatures[7]} />
               </div>
           </div>
         </main>
