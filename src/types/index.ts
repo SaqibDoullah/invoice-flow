@@ -275,3 +275,19 @@ export interface StockHistoryEntry {
     packing: string;
     lotId: string;
 }
+
+export interface SalesOrder {
+    status: 'Committed' | 'Draft';
+    orderDate: string;
+    orderId: string;
+    customer: string;
+    shipToName: string;
+    source: string;
+    origin: string;
+    batchId: string;
+    fulfillmentStatus: string;
+    shipments: string;
+    shipmentsStatusSummary: string;
+    total: number;
+    invoicesStatusSummary: string;
+}
