@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -124,6 +124,16 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                         <ChevronDown className="ml-2" />
                                     </Button>
                                 </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem>Import sales order items</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>Duplicate order</DropdownMenuItem>
+                                    <DropdownMenuItem>Duplicate order with selection</DropdownMenuItem>
+                                    <DropdownMenuItem>Create purchase order for drop ship</DropdownMenuItem>
+                                    <DropdownMenuItem>Create purchase order for drop ship with selection</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>Customize this screen</DropdownMenuItem>
+                                </DropdownMenuContent>
                             </DropdownMenu>
                             <span className="text-sm text-muted-foreground">All changes saved</span>
                         </div>
