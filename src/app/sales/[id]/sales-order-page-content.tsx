@@ -117,6 +117,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                         <ChevronDown className="ml-2" />
                                     </Button>
                                 </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem>Print sales order with barcode</DropdownMenuItem>
+                                    <DropdownMenuItem>Export sales order</DropdownMenuItem>
+                                    <DropdownMenuItem>Email sales order</DropdownMenuItem>
+                                    <DropdownMenuItem>Print sales order manifest</DropdownMenuItem>
+                                </DropdownMenuContent>
                             </DropdownMenu>
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -359,3 +365,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
