@@ -137,7 +137,7 @@ export default function ProductsPageContent() {
               <Link href="/inventory/products/new">Create product</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/inventory/product-groups">Add Product to group</Link>
+              <Link href="/inventory/product-groups/new">Add Product to group</Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button variant='outline'>Import</Button></DropdownMenuTrigger>

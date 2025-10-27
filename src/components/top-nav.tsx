@@ -45,7 +45,7 @@ const sellingFeatures = [
 const inventoryFeatures = [
     { title: 'Stock', href: '/inventory/stock', description: 'View product stock levels.' },
     { title: 'Products', href: '/inventory/products', description: 'View all products.' },
-    { title: 'Product groups', href: '/inventory/product-groups', description: 'Manage groups of related products.' },
+    { title: 'Product groups', href: '/inventory/product-groups/new', description: 'Manage groups of related products.' },
     { title: 'Product lookups', href: '/inventory/product-lookup', description: 'View all product lookups & alias SKUs.' },
     { title: 'Stock history', href: '/inventory/stock-history', description: 'View stock and transaction history.' },
     { title: 'Stock takes', href: '#', description: 'Enter physical count of stock.' },
@@ -252,5 +252,3 @@ export default function TopNav() {
     </NavigationMenu>
   );
 }
-
-    
