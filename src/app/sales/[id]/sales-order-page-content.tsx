@@ -24,6 +24,7 @@ import {
     ShoppingCart
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ interface SalesOrderPageContentProps {
 }
 
 export default function SalesOrderPageContent({ orderId }: SalesOrderPageContentProps) {
+    const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
@@ -79,6 +81,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
 
     const handleSaveAddress = () => {
         setIsEditingAddress(false);
+    };
+
+    const handleTabChange = (value: string) => {
+        if (value === 'quote') {
+            router.push('/quotes');
+        }
     };
 
     return (
@@ -122,7 +130,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                    <Tabs defaultValue="sale" className="w-full">
+                    <Tabs defaultValue="sale" className="w-full" onValueChange={handleTabChange}>
                         <TabsList>
                             <TabsTrigger value="quote">Quote</TabsTrigger>
                             <TabsTrigger value="sale">Sale</TabsTrigger>
