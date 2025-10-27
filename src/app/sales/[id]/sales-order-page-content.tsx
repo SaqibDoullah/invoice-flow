@@ -85,7 +85,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     };
 
     const handleTabChange = (value: string) => {
-        if (value === 'quote') {
+        if (value === 'quote-nav') {
             router.push('/quotes');
         }
     };
@@ -121,15 +121,17 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                    <Tabs defaultValue="quote" className="w-full">
+                    <Tabs defaultValue="quote" className="w-full" onValueChange={handleTabChange}>
                         <TabsList>
-                            <TabsTrigger value="quote">Quote</TabsTrigger>
+                            <TabsTrigger value="quote" asChild>
+                                <Link href="/quotes" className='data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'>Quote</Link>
+                            </TabsTrigger>
                             <TabsTrigger value="sale">Sale</TabsTrigger>
                             <TabsTrigger value="products">Products view</TabsTrigger>
                             <TabsTrigger value="shipments">Shipments</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="quote" className="mt-4">
-                            <div className="grid lg:grid-cols-3 gap-8 items-start">
+                        <TabsContent value="sale" className="mt-4">
+                             <div className="grid lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2 space-y-6">
                                     <Card>
                                         <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Primary Information</CardTitle></CardHeader>
