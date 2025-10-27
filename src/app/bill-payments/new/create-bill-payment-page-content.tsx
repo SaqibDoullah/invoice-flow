@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, CreditCard, ChevronDown, Check, Trash2, History, Info, MessageCircle, X } from 'lucide-react';
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,11 +44,11 @@ export default function CreateBillPaymentPageContent() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" disabled>
+                            <Button variant="outline">
                                 Actions
                                 <ChevronDown className="ml-2" />
                             </Button>
-                            <Button disabled><Check className="mr-2" /> Save changes</Button>
+                            <Button><Check className="mr-2" /> Save changes</Button>
                         </div>
                     </div>
                     
@@ -58,7 +58,7 @@ export default function CreateBillPaymentPageContent() {
                                 <CardContent className="p-4 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                      <div className="space-y-1">
                                         <label className="text-sm font-medium">Payment date</label>
-                                        <Input type="date" defaultValue="2024-11-13" disabled />
+                                        <Input type="date" defaultValue="2024-11-13" />
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium">Supplier</label>
@@ -66,15 +66,15 @@ export default function CreateBillPaymentPageContent() {
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium">Amount</label>
-                                        <Input type="number" defaultValue="310.00" disabled/>
+                                        <Input type="number" defaultValue="310.00" />
                                     </div>
                                      <div className="space-y-1">
                                         <label className="text-sm font-medium">Method</label>
-                                        <Input disabled />
+                                        <Input />
                                     </div>
                                      <div className="space-y-1">
                                         <label className="text-sm font-medium">Transaction ID</label>
-                                        <Input disabled />
+                                        <Input />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -82,14 +82,14 @@ export default function CreateBillPaymentPageContent() {
                             <Card>
                                 <CardHeader className="flex-row justify-between items-center">
                                     <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Linked bills</CardTitle>
-                                    <Button variant="outline" size="sm" disabled><Trash2 className="mr-2 w-4 h-4"/> Delete linked bills</Button>
+                                    <Button variant="outline" size="sm"><Trash2 className="mr-2 w-4 h-4"/> Delete linked bills</Button>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="border rounded-md overflow-x-auto">
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead className="w-12"><Checkbox disabled/></TableHead>
+                                                    <TableHead className="w-12"><Checkbox/></TableHead>
                                                     <TableHead>Bill ID</TableHead>
                                                     <TableHead>Bill date</TableHead>
                                                     <TableHead>Due date</TableHead>
@@ -101,22 +101,22 @@ export default function CreateBillPaymentPageContent() {
                                             </TableHeader>
                                             <TableBody>
                                                 <TableRow>
-                                                    <TableCell><Checkbox checked disabled/></TableCell>
+                                                    <TableCell><Checkbox checked /></TableCell>
                                                     <TableCell className="font-medium text-primary">SO-TX-43159</TableCell>
                                                     <TableCell>4/22/2024</TableCell>
                                                     <TableCell>4/22/2024</TableCell>
                                                     <TableCell>13,700.00</TableCell>
                                                     <TableCell>13,700.00</TableCell>
                                                     <TableCell>
-                                                        <Input type="number" defaultValue="310.00" className="w-24 text-right" disabled/>
+                                                        <Input type="number" defaultValue="310.00" className="w-24 text-right"/>
                                                     </TableCell>
-                                                    <TableCell><Button variant="ghost" size="icon" disabled><X className="w-4 h-4"/></Button></TableCell>
+                                                    <TableCell><Button variant="ghost" size="icon"><X className="w-4 h-4"/></Button></TableCell>
                                                 </TableRow>
                                             </TableBody>
                                         </Table>
                                     </div>
                                     <div className="flex justify-between items-center mt-4">
-                                        <Button variant="link" className="p-0 h-auto" disabled>Link a new bill to this payment</Button>
+                                        <Button variant="link" className="p-0 h-auto">Link a new bill to this payment</Button>
                                         <div className="text-right text-sm space-y-1 w-64">
                                             <div className="flex justify-between"><span>Total selected:</span><span>310.00</span></div>
                                             <div className="flex justify-between"><span>Total unallocated:</span><span>0.00</span></div>
@@ -135,8 +135,8 @@ export default function CreateBillPaymentPageContent() {
                                     <p><span className="font-semibold">Synced to:</span> --</p>
                                 </CardContent>
                                 <CardContent className="p-4 border-t">
-                                    <Button className="w-full" disabled>Change status to posted</Button>
-                                    <Button variant="link" className="w-full text-destructive mt-2" disabled>Void bill payment</Button>
+                                    <Button className="w-full">Change status to posted</Button>
+                                    <Button variant="link" className="w-full text-destructive mt-2">Void bill payment</Button>
                                 </CardContent>
                             </Card>
                             <Card>

@@ -271,14 +271,14 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                      <Card>
                                         <CardHeader className="flex flex-row items-center justify-between">
                                             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Items</CardTitle>
-                                            <Button variant="outline" size="sm" disabled><Trash2 className="mr-2"/> Delete items</Button>
+                                            <Button variant="outline" size="sm"><Trash2 className="mr-2"/> Delete items</Button>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground mb-4">Summary: TOTAL 0 units</p>
                                             <table className="w-full text-sm">
                                                 <thead>
                                                     <tr className="border-b">
-                                                        <th className="p-2 w-10"><Checkbox disabled/></th>
+                                                        <th className="p-2 w-10"><Checkbox/></th>
                                                         <th className="p-2 text-left">Product</th>
                                                         <th className="p-2 text-right">Quantity</th>
                                                         <th className="p-2 text-right">Received units</th>
@@ -317,10 +317,6 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             <p><span className="font-semibold">Synced to:</span> --</p>
                                         </CardContent>
                                      </Card>
-                                     <div className="p-4 bg-orange-100 dark:bg-orange-900/50 border border-orange-200 dark:border-orange-800 rounded-lg text-sm text-orange-800 dark:text-orange-200">
-                                        <p className="font-bold mb-1">No items or adjustments in purchase</p>
-                                        <p>Please add items or adjustments to the purchase in order to enable actions.</p>
-                                     </div>
                                      <div className="space-y-2">
                                         <Button variant="outline" className="w-full">Change status to committed</Button>
                                         <Button variant="outline" className="w-full">Change status to completed</Button>
@@ -345,7 +341,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             <p className="text-sm text-muted-foreground mb-2">No bills</p>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" className="w-full justify-between" disabled>Bill purchase order <ChevronDown /></Button>
+                                                    <Button variant="outline" className="w-full justify-between">Bill purchase order <ChevronDown /></Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
                                                     {/* Items would go here */}
@@ -362,7 +358,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             <p className="text-sm text-muted-foreground mb-2">No supplier credits</p>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" className="w-full justify-between" disabled>Add new supplier credit <ChevronDown /></Button>
+                                                    <Button variant="outline" className="w-full justify-between">Add new supplier credit <ChevronDown /></Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
                                                     {/* Items would go here */}
@@ -383,7 +379,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                 </div>
                                                 <span className="text-muted-foreground">seconds ago</span>
                                             </div>
-                                            <Button variant="outline" className="w-full mt-4" disabled>View detailed order history</Button>
+                                            <Button variant="outline" className="w-full mt-4">View detailed order history</Button>
                                         </CardContent>
                                     </Card>
                                      <div className="fixed bottom-8 right-8">
@@ -571,7 +567,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Items</CardTitle>
                                             <div className="flex items-center gap-2">
                                                 <Button variant="outline" size="sm">Update items from order</Button>
-                                                <Button variant="outline" size="sm" disabled><Trash2 className="mr-2"/> Delete items</Button>
+                                                <Button variant="outline" size="sm"><Trash2 className="mr-2"/> Delete items</Button>
                                             </div>
                                         </CardHeader>
                                         <CardContent>
@@ -714,9 +710,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-
-    
-
-    
-
-    
