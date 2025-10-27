@@ -84,12 +84,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         setIsEditingAddress(false);
     };
 
-    const handleTabChange = (value: string) => {
-        if (value === 'quote-nav') {
-            router.push('/quotes');
-        }
-    };
-
     return (
         <AuthGuard>
             <div className="flex flex-col bg-muted/40">
@@ -123,9 +117,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
 
                     <Tabs defaultValue="sale" className="w-full">
                         <TabsList>
-                            <TabsTrigger value="quote" asChild>
-                                <Link href="/quotes">Quote</Link>
-                            </TabsTrigger>
+                             <Link href="/quotes" className={cn(
+                                'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+                             )}>Quote</Link>
                             <TabsTrigger value="sale">Sale</TabsTrigger>
                             <TabsTrigger value="products">Products view</TabsTrigger>
                             <TabsTrigger value="shipments">Shipments</TabsTrigger>
@@ -358,3 +352,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
