@@ -1,9 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Home, ChevronRight, DollarSign, ChevronDown, Search, Filter, ArrowUpDown, MessageCircle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -27,10 +31,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type SalesOrder } from '@/types';
-import { mockSalesOrders } from '@/lib/mock-data';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function SalesPageContent() {
-  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>(mockSalesOrders);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const salesCollectionRef = collection(db, 'users', user.uid, 'sales');
+    const q = query(salesCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder));
+        setSalesOrders(orders);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching sales orders:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.'});
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -131,48 +164,62 @@ export default function SalesPageContent() {
 
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]"><Checkbox /></TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Order date</TableHead>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Ship to: name</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Origin</TableHead>
-                    <TableHead>Batch ID</TableHead>
-                    <TableHead>Fulfillment status</TableHead>
-                    <TableHead>Shipments</TableHead>
-                    <TableHead>Shipments status summary</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead>Invoices status summary</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salesOrders.map((order) => (
-                    <TableRow key={order.orderId}>
-                      <TableCell><Checkbox /></TableCell>
-                      <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
-                      <TableCell>{order.orderDate}</TableCell>
-                      <TableCell className="font-medium text-primary">{order.orderId}</TableCell>
-                      <TableCell className="text-primary">{order.customer}</TableCell>
-                      <TableCell>{order.shipToName}</TableCell>
-                      <TableCell>{order.source}</TableCell>
-                      <TableCell>{order.origin}</TableCell>
-                      <TableCell>{order.batchId}</TableCell>
-                      <TableCell className={getFulfillmentStatusBadge(order.fulfillmentStatus)}>{order.fulfillmentStatus}</TableCell>
-                      <TableCell>{order.shipments}</TableCell>
-                      <TableCell>{order.shipmentsStatusSummary}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(order.total)}</TableCell>
-                      <TableCell>{order.invoicesStatusSummary}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+             {loading || authLoading ? (
+                <div className="p-6 space-y-2">
+                  {[...Array(10)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50px]"><Checkbox /></TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Order date</TableHead>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Ship to: name</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Origin</TableHead>
+                        <TableHead>Batch ID</TableHead>
+                        <TableHead>Fulfillment status</TableHead>
+                        <TableHead>Shipments</TableHead>
+                        <TableHead>Shipments status summary</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead>Invoices status summary</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salesOrders.length > 0 ? (
+                        salesOrders.map((order) => (
+                          <TableRow key={order.orderId}>
+                            <TableCell><Checkbox /></TableCell>
+                            <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
+                            <TableCell>{order.orderDate}</TableCell>
+                            <TableCell className="font-medium text-primary">{order.orderId}</TableCell>
+                            <TableCell className="text-primary">{order.customer}</TableCell>
+                            <TableCell>{order.shipToName}</TableCell>
+                            <TableCell>{order.source}</TableCell>
+                            <TableCell>{order.origin}</TableCell>
+                            <TableCell>{order.batchId}</TableCell>
+                            <TableCell className={getFulfillmentStatusBadge(order.fulfillmentStatus)}>{order.fulfillmentStatus}</TableCell>
+                            <TableCell>{order.shipments}</TableCell>
+                            <TableCell>{order.shipmentsStatusSummary}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(order.total)}</TableCell>
+                            <TableCell>{order.invoicesStatusSummary}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                         <TableRow>
+                            <TableCell colSpan={14} className="h-24 text-center">
+                                No sales orders found.
+                            </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
           </CardContent>
         </Card>
         <div className="fixed bottom-8 right-8">

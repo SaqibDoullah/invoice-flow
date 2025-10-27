@@ -277,6 +277,7 @@ export interface StockHistoryEntry {
 }
 
 export interface SalesOrder {
+    id: string;
     status: 'Committed' | 'Draft';
     orderDate: string;
     orderId: string;
