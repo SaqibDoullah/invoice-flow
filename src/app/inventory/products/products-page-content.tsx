@@ -136,7 +136,9 @@ export default function ProductsPageContent() {
             <Button asChild>
               <Link href="/inventory/products/new">Create product</Link>
             </Button>
-            <Button variant="outline">Add Product to group</Button>
+            <Button variant="outline" asChild>
+              <Link href="/inventory/product-groups">Add Product to group</Link>
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button variant='outline'>Import</Button></DropdownMenuTrigger>
               <DropdownMenuContent><DropdownMenuItem>Import CSV</DropdownMenuItem></DropdownMenuContent>
@@ -279,5 +281,3 @@ export default function ProductsPageContent() {
     </AuthGuard>
   );
 }
-
-    
