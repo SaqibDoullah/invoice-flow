@@ -91,10 +91,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                      <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
                              <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
-                                <MessageSquareQuote className="w-8 h-8 text-green-500" />
+                                <DollarSign className="w-8 h-8 text-green-500" />
                             </div>
                             <div>
-                                <p className="text-sm text-green-600 dark:text-green-400 font-semibold">Quotes</p>
+                                <p className="text-sm text-green-600 dark:text-green-400 font-semibold">Sales</p>
                                 <div className="flex items-center gap-2 text-lg font-semibold">
                                     <span>{orderId}</span>
                                     <span className="text-muted-foreground">&bull;</span>
@@ -103,6 +103,20 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline">
+                                        Print sales order
+                                        <ChevronDown className="ml-2" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem>Print sales order with barcode</DropdownMenuItem>
+                                    <DropdownMenuItem>Export sales order</DropdownMenuItem>
+                                    <DropdownMenuItem>Email sales order</DropdownMenuItem>
+                                    <DropdownMenuItem>Print sales order manifest</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
@@ -118,7 +132,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                     <Tabs defaultValue="sale" className="w-full">
                         <TabsList>
                              <Link href="/quotes" className={cn(
-                                'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+                                'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground'
                              )}>Quote</Link>
                             <TabsTrigger value="sale">Sale</TabsTrigger>
                             <TabsTrigger value="products">Products view</TabsTrigger>
@@ -352,5 +366,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-
-    
