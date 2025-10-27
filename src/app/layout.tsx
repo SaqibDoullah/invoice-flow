@@ -1,9 +1,8 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/auth-context';
-import { Toaster } from "@/components/ui/toaster"
 import DashboardLayout from '@/components/dashboard-layout';
-import FirebaseErrorListener from '@/components/FirebaseErrorListener';
 
 
 export const metadata: Metadata = {
@@ -28,8 +27,6 @@ export default function RootLayout({
             <DashboardLayout>
               {children}
             </DashboardLayout>
-          <Toaster />
-          {process.env.NODE_ENV === 'development' && <FirebaseErrorListener />}
         </AuthProvider>
       </body>
     </html>

@@ -3,13 +3,21 @@
 
 import { usePathname } from 'next/navigation';
 import Header from './header';
+import { Toaster } from './ui/toaster';
+import FirebaseErrorListener from './FirebaseErrorListener';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isAuthPage = pathname === '/login' || pathname === '/register';
 
     if (isAuthPage) {
-        return <>{children}</>;
+        return (
+            <>
+                {children}
+                <Toaster />
+                {process.env.NODE_ENV === 'development' && <FirebaseErrorListener />}
+            </>
+        );
     }
 
     return (
@@ -18,6 +26,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <main className="flex-1">
                 {children}
             </main>
+            <Toaster />
+            {process.env.NODE_ENV === 'development' && <FirebaseErrorListener />}
         </div>
     );
 }
