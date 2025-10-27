@@ -21,7 +21,8 @@ import {
     ArrowDown,
     X,
     ChevronsUpDown,
-    ShoppingCart
+    ShoppingCart,
+    MessageSquareQuote
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -96,34 +97,18 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                      <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-4">
                              <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/50">
-                                <DollarSign className="w-8 h-8 text-green-500" />
+                                <MessageSquareQuote className="w-8 h-8 text-green-500" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight">Sales</h1>
-                                <div className="flex items-center gap-2 text-sm">
-                                    <span className="font-semibold">{orderId}</span>
+                                <p className="text-sm text-green-600 dark:text-green-400 font-semibold">Quotes</p>
+                                <div className="flex items-center gap-2 text-lg font-semibold">
+                                    <span>{orderId}</span>
                                     <span className="text-muted-foreground">&bull;</span>
                                     <span className="text-muted-foreground">10/27/2025</span>
-                                    <span className="text-muted-foreground">|</span>
-                                    <Badge variant="secondary">Draft</Badge>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
-                                        Print sales order
-                                        <ChevronDown className="ml-2" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>Print sales order with barcode</DropdownMenuItem>
-                                    <DropdownMenuItem>Export sales order</DropdownMenuItem>
-                                    <DropdownMenuItem>Email sales order</DropdownMenuItem>
-                                    <DropdownMenuItem>Print sales order manifest</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
@@ -132,17 +117,27 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                     </Button>
                                 </DropdownMenuTrigger>
                             </DropdownMenu>
-                            <Button><Check className="mr-2" /> Save changes</Button>
+                            <span className="text-sm text-muted-foreground">All changes saved</span>
                         </div>
                     </div>
 
-                    <Tabs defaultValue="sale" className="w-full" onValueChange={handleTabChange}>
-                        <TabsList>
-                            <TabsTrigger value="quote">Quote</TabsTrigger>
-                            <TabsTrigger value="sale">Sale</TabsTrigger>
-                            <TabsTrigger value="products">Products view</TabsTrigger>
-                            <TabsTrigger value="shipments">Shipments</TabsTrigger>
-                        </TabsList>
+                    <div className="flex items-center border-b">
+                        <Link href="/quotes" className={cn(
+                            "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                            "border-b-2 border-primary text-primary"
+                        )}>
+                            Quote
+                        </Link>
+                         <Tabs defaultValue="sale" className="w-full" onValueChange={handleTabChange}>
+                            <TabsList className="bg-transparent p-0">
+                                <TabsTrigger value="sale" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none">Sale</TabsTrigger>
+                                <TabsTrigger value="products">Products view</TabsTrigger>
+                                <TabsTrigger value="shipments">Shipments</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+
+                    <Tabs defaultValue="sale" className="w-full">
                         <TabsContent value="sale" className="mt-4">
                             <div className="grid lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2 space-y-6">
