@@ -35,7 +35,7 @@ const purchasingFeatures = [
 
 const sellingFeatures = [
     { title: 'Customers', href: '/customers', description: 'View and manage your customers.' },
-    { title: 'Quotes', href: '#', description: 'Send quotes to potential customers.' },
+    { title: 'Quotes', href: '/quotes', description: 'Send quotes to potential customers.' },
     { title: 'Sales orders', href: '#', description: 'View all sales orders.' },
     { title: 'Invoices', href: '/invoices', description: 'Create and manage sales invoices.' },
     { title: 'Invoice payments', href: '#', description: 'View all invoice payments.' },

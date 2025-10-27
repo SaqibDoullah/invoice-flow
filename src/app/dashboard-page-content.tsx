@@ -43,7 +43,8 @@ const inventoryFeatures = [
   { title: 'Stock', description: 'View product stock levels.', icon: <Factory className="w-6 h-6" />, href: '/inventory/stock', color: 'blue' },
   { title: 'Stock history', description: 'View stock and transaction history.', icon: <History className="w-6 h-6" />, href: '/inventory/stock-history', color: 'blue' },
   { title: 'Products', description: 'View all products.', icon: <Boxes className="w-6 h-6" />, href: '/inventory/products', color: 'blue' },
-  { title: 'Product lookups', description: 'View all product lookups & alias SKUs.', icon: <Search className="w-6 h-6" />, href: '#', color: 'blue' },
+  { title: 'Product lookups', description: 'View all product lookups & alias SKUs.', icon: <Search className="w-6 h-6" />, href: '/inventory/product-lookup', color: 'blue' },
+  { title: 'Product groups', description: 'Manage groups of related products.', icon: <Boxes className="w-6 h-6" />, href: '/inventory/product-groups/new', color: 'blue' },
   { title: 'Stock takes', description: 'Enter physical count of stock.', icon: <ClipboardList className="w-6 h-6" />, href: '#', color: 'purple' },
   { title: 'Stock changes', description: 'Adjust the stock levels.', icon: <ArrowUp className="w-6 h-6" />, href: '#', color: 'purple' },
   { title: 'Replenishment', description: 'Create a transfer order from replenishment calculations.', icon: <RefreshCcw className="w-6 h-6" />, href: '#', color: 'purple' },
@@ -52,7 +53,7 @@ const inventoryFeatures = [
 
 const sellingFeatures = [
   { title: 'Customers', description: 'View all customers.', icon: <Users className="w-6 h-6" />, href: '/customers', color: 'green' },
-  { title: 'Quotes', description: 'View all sales quotes.', icon: <MessageSquareQuote className="w-6 h-6" />, href: '#', color: 'green' },
+  { title: 'Quotes', description: 'Send quotes to potential customers.', icon: <MessageSquareQuote className="w-6 h-6" />, href: '/quotes', color: 'green' },
   { title: 'Sales', description: 'View all sales orders.', icon: <DollarSign className="w-6 h-6" />, href: '#', color: 'green' },
   { title: 'Invoices', description: 'View all invoices.', icon: <FileText className="w-6 h-6" />, href: '/invoices', color: 'green' },
   { title: 'Invoice payments', description: 'View all invoice payments.', icon: <CreditCard className="w-6 h-6" />, href: '#', color: 'green' },
@@ -86,7 +87,7 @@ const FeatureCard = ({ title, description, icon, href, color }: { title: string,
             {React.cloneElement(icon as React.ReactElement, { className: `w-6 h-6 ${colors.icon}` })}
         </div>
         <div>
-            <h3 className={`font-semibold ${colors.text}`}>{title}</h3>
+            <h3 className={`font-semibold ${isImplemented ? colors.text : 'text-muted-foreground'}`}>{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
         </div>
     </div>

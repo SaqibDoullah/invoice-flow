@@ -31,6 +31,28 @@ export const invoiceSchema = z.object({
   companyCity: z.string().optional(),
 });
 
+export const quoteSchema = z.object({
+  quoteNumber: z.string().optional(),
+  customerId: z.string().min(1, 'Please select a customer.'),
+  customerName: z.string().min(1, 'Customer name is required'),
+  customerEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+  quoteDate: z.date(),
+  expiryDate: z.date(),
+  status: z.enum(['draft', 'sent', 'accepted', 'declined']),
+  items: z.array(lineItemSchema).min(1, 'At least one line item is required'),
+  subtotal: z.number(),
+  discount: z.coerce.number().min(0, 'Discount must be non-negative').default(0),
+  discountType: z.enum(['percentage', 'fixed']).default('percentage'),
+  total: z.number(),
+  createdAt: z.custom<Timestamp>(),
+  ownerId: z.string().optional(),
+  // Company details per quote
+  companyName: z.string().min(1, 'Company name is required'),
+  companyAddress: z.string().optional(),
+  companyCity: z.string().optional(),
+});
+
+
 export type LineItem = z.infer<typeof lineItemSchema>;
 
 // The type for an invoice when being created or edited in a form
@@ -55,6 +77,25 @@ export interface Invoice
 
 export type InvoiceCreateInput = Omit<InvoiceFormData, 'id' | 'createdAt' | 'ownerId'>;
 export type InvoiceUpdateInput = Omit<InvoiceFormData, 'createdAt' | 'ownerId'>;
+
+export type QuoteFormData = z.infer<typeof quoteSchema>;
+
+export interface Quote
+  extends Omit<
+    QuoteFormData,
+    'quoteDate' | 'expiryDate' | 'quoteNumber' | 'createdAt' | 'ownerId'
+  > {
+  id: string;
+  quoteNumber: string;
+  createdAt: Timestamp;
+  quoteDate: Timestamp;
+  expiryDate: Timestamp;
+  discount: number;
+}
+
+export type QuoteCreateInput = Omit<QuoteFormData, 'id' | 'createdAt' | 'ownerId'>;
+export type QuoteUpdateInput = Omit<QuoteFormData, 'createdAt' | 'ownerId'>;
+
 
 export const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
@@ -234,5 +275,3 @@ export interface StockHistoryEntry {
     packing: string;
     lotId: string;
 }
-
-    
