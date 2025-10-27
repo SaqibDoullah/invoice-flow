@@ -121,10 +121,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                    <Tabs defaultValue="quote" className="w-full" onValueChange={handleTabChange}>
+                    <Tabs defaultValue="sale" className="w-full">
                         <TabsList>
                             <TabsTrigger value="quote" asChild>
-                                <Link href="/quotes" className='data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm'>Quote</Link>
+                                <Link href="/quotes">Quote</Link>
                             </TabsTrigger>
                             <TabsTrigger value="sale">Sale</TabsTrigger>
                             <TabsTrigger value="products">Products view</TabsTrigger>
@@ -320,6 +320,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 </div>
                             </div>
                         </TabsContent>
+                        <TabsContent value="products">
+                            <p>Products view content goes here.</p>
+                        </TabsContent>
+                        <TabsContent value="shipments">
+                            <p>Shipments content goes here.</p>
+                        </TabsContent>
                     </Tabs>
                 </main>
                 <AddCustomerDialog
@@ -352,5 +358,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-
-    
