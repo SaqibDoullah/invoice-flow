@@ -152,6 +152,31 @@ export interface ProductLookup extends ProductLookupFormData {
     status: 'Active' | 'Inactive';
 }
 
+export const productGroupSchema = z.object({
+    type: z.enum(['Goods', 'Service']),
+    name: z.string().min(1, "Item Group Name is required"),
+    description: z.string().optional(),
+    isReturnable: z.boolean().default(false),
+    unit: z.string().optional(),
+    manufacturer: z.string().optional(),
+    brand: z.string().optional(),
+    valuationMethod: z.string().default('FIFO'),
+    createAttributes: z.boolean().default(false),
+    attributes: z.array(z.object({
+        attribute: z.string(),
+        options: z.string(),
+    })).optional(),
+    itemType: z.array(z.string()).optional(),
+});
+
+export type ProductGroupFormData = z.infer<typeof productGroupSchema>;
+
+export interface ProductGroup extends ProductGroupFormData {
+    id: string;
+    // Add other fields as they are defined for Firestore
+}
+
+
 export interface PurchaseOrder {
     id: string;
     status: 'draft' | 'committed';
@@ -209,3 +234,5 @@ export interface StockHistoryEntry {
     packing: string;
     lotId: string;
 }
+
+    
