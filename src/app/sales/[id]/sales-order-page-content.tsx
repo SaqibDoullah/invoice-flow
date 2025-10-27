@@ -121,24 +121,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                    <div className="flex items-center border-b">
-                        <Link href="/quotes" className={cn(
-                            "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-                            "border-b-2 border-primary text-primary"
-                        )}>
-                            Quote
-                        </Link>
-                         <Tabs defaultValue="sale" className="w-full" onValueChange={handleTabChange}>
-                            <TabsList className="bg-transparent p-0">
-                                <TabsTrigger value="sale" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none">Sale</TabsTrigger>
-                                <TabsTrigger value="products">Products view</TabsTrigger>
-                                <TabsTrigger value="shipments">Shipments</TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
-
-                    <Tabs defaultValue="sale" className="w-full">
-                        <TabsContent value="sale" className="mt-4">
+                    <Tabs defaultValue="quote" className="w-full">
+                        <TabsList>
+                            <TabsTrigger value="quote">Quote</TabsTrigger>
+                            <TabsTrigger value="sale">Sale</TabsTrigger>
+                            <TabsTrigger value="products">Products view</TabsTrigger>
+                            <TabsTrigger value="shipments">Shipments</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="quote" className="mt-4">
                             <div className="grid lg:grid-cols-3 gap-8 items-start">
                                 <div className="lg:col-span-2 space-y-6">
                                     <Card>
