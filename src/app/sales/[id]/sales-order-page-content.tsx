@@ -313,14 +313,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <p><span className="font-semibold">Last synced to:</span> --</p>
                                         </CardContent>
                                         <CardContent className="p-4 border-t">
-                                            <div className="bg-orange-50 border border-orange-200 text-orange-700 text-sm p-3 rounded-md mb-4">
-                                                <p className="font-semibold">No items or adjustments in sale</p>
-                                                <p>Please add items or adjustments to the sale in order to enable actions.</p>
-                                            </div>
                                             <div className="space-y-2">
-                                                <Button variant="outline" className="w-full" disabled>Change status to committed</Button>
-                                                <Button variant="outline" className="w-full" disabled>Change status to completed</Button>
-                                                <Button variant="link" className="w-full text-destructive" disabled>Cancel sale</Button>
+                                                <Button variant="outline" className="w-full">Change status to committed</Button>
+                                                <Button variant="outline" className="w-full">Change status to completed</Button>
+                                                <Button variant="link" className="w-full text-destructive">Cancel sale</Button>
                                             </div>
                                         </CardContent>
                                      </Card>
