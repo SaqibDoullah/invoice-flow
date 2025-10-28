@@ -84,6 +84,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [manufacturerFilter, setManufacturerFilter] = useState('all');
     const [quantityFilter, setQuantityFilter] = useState('all');
+    const [actionsDisabled, setActionsDisabled] = useState(true);
 
     const [salesOrder, setSalesOrder] = useState<SalesOrder>({
         id: orderId,
@@ -124,6 +125,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         publicNotes: '',
         internalNotes: '',
     });
+    
+    useEffect(() => {
+        setActionsDisabled(salesOrder.items.length === 0);
+    }, [salesOrder.items]);
 
     // Fetch dependent data (customers, inventory)
     useEffect(() => {
@@ -380,7 +385,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
 
                      <Tabs defaultValue="sale" className="w-full">
                         <div className="border-b">
-                            <TabsList className="bg-transparent p-0 -mb-px">
+                           <TabsList className="bg-transparent p-0 -mb-px">
                                  <TabsTrigger value="quote" asChild>
                                     <Link href="/quotes" className='data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none'>Quote</Link>
                                 </TabsTrigger>
@@ -599,13 +604,17 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                 <p><span className="font-semibold">Synced to:</span> --</p>
                                                 <p><span className="font-semibold">Last synced to:</span> --</p>
                                             </CardContent>
-                                            <CardContent className="p-4 border-t">
+                                             <CardContent className="p-4 border-t">
+                                                {actionsDisabled && (
+                                                    <div className="bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-100 p-3 rounded-md text-sm mb-4">
+                                                        <p className="font-semibold">No items or adjustments in sale</p>
+                                                        <p>Please add items or adjustments to the sale in order to enable actions.</p>
+                                                    </div>
+                                                )}
                                                 <div className="space-y-2">
-                                                    {salesOrder.status === 'Draft' && <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')}>Change status to committed</Button>}
-                                                    {salesOrder.status === 'Committed' && <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')}>Change status to completed</Button>}
-                                                    {(salesOrder.status === 'Draft' || salesOrder.status === 'Committed') && <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')}>Cancel sale</Button>}
-                                                    {salesOrder.status === 'Completed' && <p className="text-sm text-center text-muted-foreground">This sale is completed.</p>}
-                                                    {salesOrder.status === 'Canceled' && <p className="text-sm text-center text-destructive">This sale is canceled.</p>}
+                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')} disabled={actionsDisabled}>Change status to committed</Button>
+                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')} disabled={actionsDisabled}>Change status to completed</Button>
+                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')} disabled={actionsDisabled}>Cancel sale</Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
