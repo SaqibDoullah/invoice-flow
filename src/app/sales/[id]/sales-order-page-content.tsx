@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { 
     DollarSign,
@@ -89,6 +89,15 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     
+    // State for Products View filters
+    const [productSearchTerm, setProductSearchTerm] = useState('');
+    const [supplierFilter, setSupplierFilter] = useState('all');
+    const [locationFilter, setLocationFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [manufacturerFilter, setManufacturerFilter] = useState('all');
+    const [quantityFilter, setQuantityFilter] = useState('all');
+
+
     const [salesOrder, setSalesOrder] = useState<SalesOrderState>({
         id: orderId,
         orderDate: new Date().toISOString().split('T')[0],
@@ -147,6 +156,24 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             unsubscribeInventory();
         };
     }, [user, authLoading]);
+    
+    const filteredInventoryItems = useMemo(() => {
+        return inventoryItems.filter(item => {
+            const searchTermLower = productSearchTerm.toLowerCase();
+            const matchesSearch = productSearchTerm ? 
+                (item.sku?.toLowerCase().includes(searchTermLower) || item.name.toLowerCase().includes(searchTermLower))
+                : true;
+            
+            const matchesSupplier = supplierFilter !== 'all' ? item.supplierId === supplierFilter : true;
+            const matchesCategory = categoryFilter !== 'all' ? item.category === categoryFilter : true;
+            const matchesManufacturer = manufacturerFilter !== 'all' ? item.manufacturer === manufacturerFilter : true;
+            const matchesQuantity = quantityFilter !== 'all' ? (item.quantity || 0) > 0 : true;
+            // Location filter is not implemented on item data yet
+
+            return matchesSearch && matchesSupplier && matchesCategory && matchesManufacturer && matchesQuantity;
+        });
+    }, [inventoryItems, productSearchTerm, supplierFilter, categoryFilter, manufacturerFilter, quantityFilter]);
+
 
     // Recalculate totals whenever items or discount change
     useEffect(() => {
@@ -198,6 +225,31 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         newItems[index] = itemToUpdate;
         setSalesOrder(prev => ({ ...prev, items: newItems }));
     };
+    
+    const handleAddProductFromInventory = (product: InventoryItem, quantity: number) => {
+        if (quantity <= 0) return;
+
+        const newItem: LineItem = {
+            name: product.name,
+            specification: product.sku || product.id,
+            price: product.price || 0,
+            quantity: quantity,
+            lineTotal: (product.price || 0) * quantity
+        };
+        
+        // Check if item already exists, if so update quantity
+        const existingItemIndex = salesOrder.items.findIndex(item => item.specification === newItem.specification);
+
+        if (existingItemIndex > -1) {
+             const newItems = [...salesOrder.items];
+             newItems[existingItemIndex].quantity += quantity;
+             newItems[existingItemIndex].lineTotal = newItems[existingItemIndex].price * newItems[existingItemIndex].quantity;
+             setSalesOrder(prev => ({ ...prev, items: newItems }));
+        } else {
+            setSalesOrder(prev => ({ ...prev, items: [...prev.items, newItem] }));
+        }
+    };
+
 
     const handleRemoveItem = (index: number) => {
         setSalesOrder(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
@@ -254,11 +306,11 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                    <Tabs defaultValue="sale" className="w-full">
+                     <Tabs defaultValue="sale" className="w-full">
                         <div className="border-b">
                             <TabsList className="bg-transparent p-0 -mb-px">
                                  <TabsTrigger value="quote" asChild>
-                                  <Link href="/quotes" className='data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none'>Quote</Link>
+                                    <Link href="/quotes" className='data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none'>Quote</Link>
                                 </TabsTrigger>
                                 <TabsTrigger value="sale" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Sale</TabsTrigger>
                                 <TabsTrigger value="products" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Products view</TabsTrigger>
@@ -266,7 +318,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                             </TabsList>
                         </div>
                          <TabsContent value="quote">
-                            <p className="p-4">Quote content goes here.</p>
+                            {/* This content is not part of the active flow. */}
                         </TabsContent>
                         <TabsContent value="sale" className="mt-4">
                                 <div className="grid lg:grid-cols-3 gap-8 items-start">
@@ -398,16 +450,17 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                                     <td className="p-1"></td>
                                                                     <td className="p-1"><Input className="min-w-[100px]" /></td>
                                                                     <td className="p-1">
-                                                                        <Select onValueChange={(value) => {
-                                                                            const product = inventoryItems.find(p => p.id === value);
+                                                                        <Select value={item.name} onValueChange={(value) => {
+                                                                            const product = inventoryItems.find(p => p.name === value);
                                                                             if (product) {
                                                                                 handleItemChange(index, 'name', product.name);
+                                                                                handleItemChange(index, 'specification', product.sku || product.id);
                                                                                 handleItemChange(index, 'price', product.price || 0);
                                                                             }
                                                                         }}>
                                                                             <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
                                                                             <SelectContent>
-                                                                                {inventoryItems.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                                                {inventoryItems.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
                                                                             </SelectContent>
                                                                         </Select>
                                                                     </td>
@@ -501,40 +554,43 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                     </div>
                                 </div>
                             </TabsContent>
-                        <TabsContent value="products" className="mt-4">
+                         <TabsContent value="products" className="mt-4">
                             <Card>
                                 <CardContent className="p-4 space-y-4">
                                      <div className="flex items-center justify-between">
-                                        <p className="text-sm text-muted-foreground font-semibold">Summary: TOTAL: 0 units</p>
+                                        <p className="text-sm text-muted-foreground font-semibold">Summary: TOTAL: {filteredInventoryItems.length} units</p>
                                      </div>
                                      <div className="flex flex-wrap items-center gap-2">
                                         <div className="relative">
-                                            <Input placeholder="Search..." className="pl-8" />
+                                            <Input placeholder="Search..." className="pl-8" value={productSearchTerm} onChange={(e) => setProductSearchTerm(e.target.value)}/>
                                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
                                         </div>
                                         <span className="text-sm font-semibold">Filters:</span>
-                                        <div className="relative">
-                                             <Input placeholder="All suppliers" className="w-40" />
-                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                        </div>
-                                        <div className="relative">
-                                             <Input placeholder="All locations" className="w-40" />
-                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                        </div>
-                                        <Select>
-                                            <SelectTrigger className="w-[180px]">
-                                                <SelectValue placeholder="All categories" />
-                                            </SelectTrigger>
+                                        <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                                            <SelectTrigger className="w-40"><SelectValue placeholder="All suppliers" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All suppliers</SelectItem>
+                                                {/* This should be dynamic based on available suppliers */}
+                                            </SelectContent>
                                         </Select>
-                                        <Select>
-                                            <SelectTrigger className="w-[180px]">
-                                                <SelectValue placeholder="All manufacturers" />
-                                            </SelectTrigger>
+                                        <Select value={locationFilter} onValueChange={setLocationFilter}>
+                                            <SelectTrigger className="w-40"><SelectValue placeholder="All locations" /></SelectTrigger>
+                                            <SelectContent><SelectItem value="all">All locations</SelectItem></SelectContent>
                                         </Select>
-                                         <Select>
-                                            <SelectTrigger className="w-[180px]">
-                                                <SelectValue placeholder="QoH total > 0" />
-                                            </SelectTrigger>
+                                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                                            <SelectTrigger className="w-[180px]"><SelectValue placeholder="All categories" /></SelectTrigger>
+                                            <SelectContent><SelectItem value="all">All categories</SelectItem></SelectContent>
+                                        </Select>
+                                        <Select value={manufacturerFilter} onValueChange={setManufacturerFilter}>
+                                            <SelectTrigger className="w-[180px]"><SelectValue placeholder="All manufacturers" /></SelectTrigger>
+                                            <SelectContent><SelectItem value="all">All manufacturers</SelectItem></SelectContent>
+                                        </Select>
+                                         <Select value={quantityFilter} onValueChange={setQuantityFilter}>
+                                            <SelectTrigger className="w-[180px]"><SelectValue placeholder="All quantities" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All quantities</SelectItem>
+                                                <SelectItem value="gt_zero">QoH total > 0</SelectItem>
+                                            </SelectContent>
                                         </Select>
                                      </div>
                                     <div className="border rounded-md overflow-x-auto">
@@ -544,7 +600,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     <TableHead className="p-2 font-medium text-left flex items-center gap-1"><ArrowDown className="w-4 h-4"/> Product ID</TableHead>
                                                     <TableHead className="p-2 font-medium text-left">Description</TableHead>
                                                     <TableHead className="p-2 font-medium text-left">Std packing</TableHead>
-                                                    <TableHead colSpan={3} className="p-2 font-medium text-center border-l">Open Stock</TableHead>
+                                                    <TableHead colSpan={4} className="p-2 font-medium text-center border-l">Open Stock</TableHead>
                                                     <TableHead colSpan={3} className="p-2 font-medium text-center border-l">Case Stock</TableHead>
                                                     <TableHead className="p-2 font-medium text-left border-l">Sublocation(s)</TableHead>
                                                 </TableRow>
@@ -554,6 +610,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     <TableHead className="p-2"></TableHead>
                                                     <TableHead className="p-2 font-medium text-right border-l">QoH</TableHead>
                                                     <TableHead className="p-2 font-medium text-right">Avail</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">On Order</TableHead>
                                                     <TableHead className="p-2 font-medium text-right">Order</TableHead>
                                                     <TableHead className="p-2 font-medium text-right border-l">QoH</TableHead>
                                                     <TableHead className="p-2 font-medium text-right">Avail</TableHead>
@@ -563,9 +620,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             </TableHeader>
                                             <TableBody>
                                                 {inventoryLoading ? (
-                                                     <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Loading...</td></tr>
-                                                ) : inventoryItems.length > 0 ? (
-                                                    inventoryItems.map((product) => (
+                                                     <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Loading...</td></tr>
+                                                ) : filteredInventoryItems.length > 0 ? (
+                                                    filteredInventoryItems.map((product) => (
                                                     <TableRow key={product.id}>
                                                         <TableCell className="p-2 text-primary">{product.sku || product.id}</TableCell>
                                                         <TableCell className="p-2">{product.name}</TableCell>
@@ -573,14 +630,27 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                         <TableCell className="p-2 text-right border-l">{product.quantity}</TableCell>
                                                         <TableCell className="p-2 text-right">{product.quantityAvailable}</TableCell>
                                                         <TableCell className="p-2 text-right">{product.quantityOnOrder}</TableCell>
+                                                        <TableCell className="p-1 text-right w-24">
+                                                            <Input 
+                                                                type="number" 
+                                                                className="h-8 text-right"
+                                                                onBlur={(e) => handleAddProductFromInventory(product, parseInt(e.target.value))}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        handleAddProductFromInventory(product, parseInt(e.currentTarget.value));
+                                                                        e.currentTarget.value = '';
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </TableCell>
                                                         <TableCell className="p-2 text-right border-l">{product.casesOnHand}</TableCell>
                                                         <TableCell className="p-2 text-right">{product.casesAvailable}</TableCell>
-                                                        <TableCell className="p-2 text-right">{product.casesOnOrder}</TableCell>
+                                                        <TableCell className="p-1 text-right w-24"><Input type="number" className="h-8 text-right"/></TableCell>
                                                         <TableCell className="p-2 border-l">{product.sublocation}</TableCell>
                                                     </TableRow>
                                                     ))
                                                 ) : (
-                                                    <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">No items to display.</td></tr>
+                                                    <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">No items match your filters.</td></tr>
                                                 )}
                                             </TableBody>
                                         </Table>
