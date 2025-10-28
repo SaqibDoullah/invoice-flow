@@ -383,17 +383,15 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                     <Tabs defaultValue="sale" className="w-full">
-                        <div className="border-b">
-                           <TabsList className="bg-transparent p-0 -mb-px">
-                                 <TabsTrigger value="quote" asChild>
-                                    <Link href="/quotes" className='data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none'>Quote</Link>
-                                </TabsTrigger>
-                                <TabsTrigger value="sale" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Sale</TabsTrigger>
-                                <TabsTrigger value="products" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Products view</TabsTrigger>
-                                <TabsTrigger value="shipments" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Shipments</TabsTrigger>
-                            </TabsList>
-                        </div>
+                    <Tabs defaultValue="sale" className="w-full">
+                        <TabsList className="bg-transparent p-0 -mb-px border-b">
+                            <TabsTrigger value="quote" asChild>
+                                <Link href="/quotes" className="data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Quote</Link>
+                            </TabsTrigger>
+                            <TabsTrigger value="sale" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Sale</TabsTrigger>
+                            <TabsTrigger value="products" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Products view</TabsTrigger>
+                            <TabsTrigger value="shipments" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Shipments</TabsTrigger>
+                        </TabsList>
                         <TabsContent value="sale" className="mt-4">
                                 <div className="grid lg:grid-cols-3 gap-8 items-start">
                                     <div className="lg:col-span-2 space-y-6">
@@ -462,7 +460,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     <div className="grid grid-cols-3 gap-4">
                                                         <div><label className="text-sm font-semibold">Bill to</label><Input value={salesOrder.billToAddress} onChange={(e) => handleInputChange('billToAddress', e.target.value)} /></div>
                                                         <div><label className="text-sm font-semibold">Ship to</label><Input value={salesOrder.shipToAddress} onChange={(e) => handleInputChange('shipToAddress', e.target.value)} /></div>
-                                                        <div><label className="text-sm font-semibold">Ship from</label><p className="text-sm pt-2">Heartland</p></div>
+                                                        <div><p className="text-sm font-semibold">Ship from</p><p>Heartland</p></div>
                                                     </div>
                                                 ) : (
                                                     <div className="grid grid-cols-3 gap-4 text-sm">
