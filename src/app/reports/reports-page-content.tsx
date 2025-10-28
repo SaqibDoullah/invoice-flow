@@ -1,8 +1,9 @@
+
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
-import { subMonths, format, isAfter, startOfMonth, endOfMonth } from 'date-fns';
+import { subMonths, format, isAfter, startOfMonth, endOfMonth, isValid } from 'date-fns';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 import AuthGuard from '@/components/auth/auth-guard';
@@ -38,12 +39,23 @@ const initialReportData: ReportData = {
     overdue: 0,
 };
 
-const PIE_CHART_COLORS = {
+const PIE_CHART_COLORS: Record<Invoice['status'], string> = {
     draft: 'hsl(var(--chart-1))',
     sent: 'hsl(var(--chart-2))',
     paid: 'hsl(var(--chart-3))',
     void: 'hsl(var(--chart-4))',
 };
+
+// Helper to safely convert Firestore Timestamps or other date formats to a JS Date object
+const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v.toDate === 'function') return v.toDate(); // Firestore Timestamp
+    
+    const d = new Date(v);
+    return isValid(d) ? d : null;
+};
+
 
 export default function ReportsPageContent() {
   const [reportData, setReportData] = useState<ReportData>(initialReportData);
@@ -68,19 +80,26 @@ export default function ReportsPageContent() {
         const invoices = querySnapshot.docs.map(doc => doc.data() as Invoice);
         
         const now = new Date();
+        
         const totalRevenue = invoices
           .filter(inv => inv.status === 'paid')
-          .reduce((acc, inv) => acc + inv.total, 0);
+          .reduce((acc, inv) => acc + (inv.total || 0), 0);
         
         const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
         
         const outstanding = invoices
-          .filter(inv => inv.status === 'sent' && inv.dueDate && !isAfter(now, inv.dueDate.toDate()))
-          .reduce((acc, inv) => acc + inv.total, 0);
+          .filter(inv => {
+            const dueDate = toDate(inv.dueDate);
+            return inv.status === 'sent' && dueDate && !isAfter(now, dueDate);
+          })
+          .reduce((acc, inv) => acc + (inv.total || 0), 0);
 
         const overdue = invoices
-          .filter(inv => inv.status === 'sent' && inv.dueDate && isAfter(now, inv.dueDate.toDate()))
-          .reduce((acc, inv) => acc + inv.total, 0);
+          .filter(inv => {
+             const dueDate = toDate(inv.dueDate);
+             return inv.status === 'sent' && dueDate && isAfter(now, dueDate);
+          })
+          .reduce((acc, inv) => acc + (inv.total || 0), 0);
 
         setReportData({
           totalRevenue,
@@ -89,15 +108,17 @@ export default function ReportsPageContent() {
           overdue,
         });
 
-        // Process data for charts
         const last6MonthsRevenue = Array.from({ length: 6 }).map((_, i) => {
             const date = subMonths(now, 5 - i);
             const monthStart = startOfMonth(date);
             const monthEnd = endOfMonth(date);
             
             const revenue = invoices
-                .filter(inv => inv.status === 'paid' && inv.invoiceDate.toDate() >= monthStart && inv.invoiceDate.toDate() <= monthEnd)
-                .reduce((acc, inv) => acc + inv.total, 0);
+                .filter(inv => {
+                    const invoiceDate = toDate(inv.invoiceDate);
+                    return inv.status === 'paid' && invoiceDate && invoiceDate >= monthStart && invoiceDate <= monthEnd;
+                })
+                .reduce((acc, inv) => acc + (inv.total || 0), 0);
 
             return {
                 name: format(date, 'MMM'),
@@ -111,10 +132,10 @@ export default function ReportsPageContent() {
             return acc;
         }, {} as Record<Invoice['status'], number>);
         
-        const statusData = Object.entries(statusCounts).map(([status, count]) => ({
+        const statusData = (Object.entries(statusCounts) as [Invoice['status'], number][]).map(([status, count]) => ({
             name: status.charAt(0).toUpperCase() + status.slice(1),
             value: count,
-            fill: PIE_CHART_COLORS[status as keyof typeof PIE_CHART_COLORS],
+            fill: PIE_CHART_COLORS[status] || '#cccccc',
         }));
         setStatusDistribution(statusData);
 
@@ -125,8 +146,10 @@ export default function ReportsPageContent() {
       }
     };
 
-    if (!authLoading) {
+    if (!authLoading && user) {
       fetchReportData();
+    } else if (!authLoading) {
+        setLoading(false);
     }
   }, [user, authLoading]);
 
@@ -160,6 +183,8 @@ export default function ReportsPageContent() {
       </Card>
   );
 
+  const isLoading = loading || authLoading;
+
   return (
     <AuthGuard>
       <div className="flex flex-col">
@@ -169,10 +194,10 @@ export default function ReportsPageContent() {
           </div>
           
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-              {renderSummaryCard('Total Revenue', formatCurrency(reportData.totalRevenue), 'All-time paid invoices', '', loading || authLoading)}
-              {renderSummaryCard('Invoices Paid', reportData.paidInvoices, 'Total invoices marked as paid', '', loading || authLoading)}
-              {renderSummaryCard('Outstanding', formatCurrency(reportData.outstanding), 'Invoices sent but not overdue', '', loading || authLoading)}
-              {renderSummaryCard('Overdue', formatCurrency(reportData.overdue), 'Invoices past their due date', 'text-destructive', loading || authLoading)}
+              {renderSummaryCard('Total Revenue', formatCurrency(reportData.totalRevenue), 'All-time paid invoices', '', isLoading)}
+              {renderSummaryCard('Invoices Paid', reportData.paidInvoices, 'Total invoices marked as paid', '', isLoading)}
+              {renderSummaryCard('Outstanding', formatCurrency(reportData.outstanding), 'Invoices sent but not overdue', '', isLoading)}
+              {renderSummaryCard('Overdue', formatCurrency(reportData.overdue), 'Invoices past their due date', 'text-destructive', isLoading)}
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -181,7 +206,7 @@ export default function ReportsPageContent() {
                       <CardTitle>Revenue Overview</CardTitle>
                   </CardHeader>
                   <CardContent>
-                      {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
+                      {isLoading ? <Skeleton className="w-full h-[300px]" /> : (
                         <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
                             <BarChart data={monthlyRevenue} accessibilityLayer>
                                 <CartesianGrid vertical={false} />
@@ -200,7 +225,7 @@ export default function ReportsPageContent() {
                       <CardTitle>Invoice Status</CardTitle>
                   </CardHeader>
                   <CardContent>
-                        {loading || authLoading ? <Skeleton className="w-full h-[300px]" /> : (
+                        {isLoading ? <Skeleton className="w-full h-[300px]" /> : (
                            <ChartContainer config={{}} className="min-h-[300px] w-full">
                                 <PieChart>
                                     <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
