@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, query, onSnapshot, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, getDoc, runTransaction, Timestamp, where, getDocs } from 'firebase/firestore';
 import { 
     DollarSign,
     Home, 
@@ -288,39 +288,75 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             return;
         }
         setIsSaving(true);
-        const docRef = doc(db, 'users', user.uid, 'sales', orderId);
         
-        const dataToSave = {
-            ...salesOrder,
-            orderDate: Timestamp.fromDate(salesOrder.orderDate),
-            estimatedShipDate: salesOrder.estimatedShipDate ? Timestamp.fromDate(salesOrder.estimatedShipDate) : null,
-            shipmentDate: salesOrder.shipmentDate ? Timestamp.fromDate(salesOrder.shipmentDate) : null,
-            deliveryDate: salesOrder.deliveryDate ? Timestamp.fromDate(salesOrder.deliveryDate) : null,
-        };
-        
-        delete (dataToSave as any).id;
-        delete (dataToSave as any).customer; // Don't save the nested customer object
+        const salesOrderRef = doc(db, 'users', user.uid, 'sales', orderId);
 
-        setDoc(docRef, dataToSave, { merge: true })
-            .then(() => {
-                toast({ title: 'Success', description: 'Sales order saved successfully.' });
-            })
-            .catch((serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: docRef.path,
-                    operation: 'write',
-                    requestResourceData: dataToSave,
-                });
-                errorEmitter.emit('permission-error', permissionError);
+        try {
+            await runTransaction(db, async (transaction) => {
+                const salesOrderSnap = await transaction.get(salesOrderRef);
+                const previousItems: LineItem[] = salesOrderSnap.exists() ? salesOrderSnap.data().items : [];
 
-                if (serverError?.code !== 'permission-denied') {
-                    toast({ variant: 'destructive', title: 'Error', description: 'Failed to save sales order.' });
+                // Update inventory based on newly shipped items
+                for (const currentItem of salesOrder.items) {
+                    if (!currentItem.specification) continue;
+
+                    const prevItem = previousItems.find(pi => pi.specification === currentItem.specification);
+                    const previouslyShipped = prevItem?.shippedQuantity || 0;
+                    const newlyShipped = (currentItem.shippedQuantity || 0) - previouslyShipped;
+
+                    if (newlyShipped > 0) {
+                        const inventoryCollectionRef = collection(db, 'users', user.uid, 'inventory');
+                        const q = query(inventoryCollectionRef, where('sku', '==', currentItem.specification), limit(1));
+                        const inventorySnaps = await getDocs(q);
+                        
+                        if (!inventorySnaps.empty) {
+                            const inventoryDoc = inventorySnaps.docs[0];
+                            const inventoryItemRef = inventoryDoc.ref;
+                            const currentInventoryData = inventoryDoc.data() as InventoryItem;
+
+                            const newQuantity = (currentInventoryData.quantity || 0) - newlyShipped;
+                            const newQuantityAvailable = (currentInventoryData.quantityAvailable || 0) - newlyShipped;
+
+                            transaction.update(inventoryItemRef, { 
+                                quantity: newQuantity,
+                                quantityAvailable: newQuantityAvailable
+                            });
+                        }
+                    }
                 }
-            })
-            .finally(() => {
-                setIsSaving(false);
+                
+                // Save the sales order itself
+                const dataToSave = {
+                    ...salesOrder,
+                    orderDate: Timestamp.fromDate(salesOrder.orderDate),
+                    estimatedShipDate: salesOrder.estimatedShipDate ? Timestamp.fromDate(salesOrder.estimatedShipDate) : null,
+                    shipmentDate: salesOrder.shipmentDate ? Timestamp.fromDate(salesOrder.shipmentDate) : null,
+                    deliveryDate: salesOrder.deliveryDate ? Timestamp.fromDate(salesOrder.deliveryDate) : null,
+                };
+                delete (dataToSave as any).id;
+                delete (dataToSave as any).customer;
+
+                transaction.set(salesOrderRef, dataToSave, { merge: true });
             });
+
+            toast({ title: 'Success', description: 'Sales order and inventory updated successfully.' });
+        } catch (serverError: any) {
+            console.error("Transaction failed: ", serverError);
+            const permissionError = new FirestorePermissionError({
+                path: salesOrderRef.path,
+                operation: 'write',
+                requestResourceData: salesOrder,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+
+            if (serverError?.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: `Failed to save sales order. ${serverError.message}` });
+            }
+        } finally {
+            setIsSaving(false);
+        }
     };
+
 
     const handleDuplicate = () => {
         const orderData = JSON.stringify({ ...salesOrder, orderId: '', status: 'Draft' });
@@ -612,9 +648,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     </div>
                                                 )}
                                                 <div className="space-y-2">
-                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')}>Change status to committed</Button>
-                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')}>Change status to completed</Button>
-                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')}>Cancel sale</Button>
+                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')} disabled={actionsDisabled}>Change status to committed</Button>
+                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')} disabled={actionsDisabled}>Change status to completed</Button>
+                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')} disabled={actionsDisabled}>Cancel sale</Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -888,3 +924,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
