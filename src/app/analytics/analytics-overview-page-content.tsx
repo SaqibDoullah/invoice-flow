@@ -1,12 +1,15 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect }
+from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, BarChart3, TrendingDown, TrendingUp, Ban, MessageCircle, Search, MoreVertical, Filter } from 'lucide-react';
+import { Home, ChevronRight, BarChart3, TrendingUp, TrendingDown, Ban, MessageCircle } from 'lucide-react';
 import { Area, AreaChart, Bar, Pie, PieChart, Cell, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart } from 'recharts';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { scaleQuantile } from 'd3-scale';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { subDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -17,42 +20,12 @@ import { Badge } from '@/components/ui/badge';
 import { ChartTooltipContent, ChartTooltip, ChartContainer } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { type SalesOrder } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
-
-const salesData = [
-  { date: 'Sep 19', sales: 1 }, { date: 'Sep 20', sales: 1 },
-  { date: 'Sep 21', sales: 0 }, { date: 'Sep 22', sales: 0 },
-  { date: 'Sep 23', sales: 2 }, { date: 'Sep 24', sales: 1 },
-  { date: 'Sep 25', sales: 1 }, { date: 'Sep 26', sales: 0 },
-  { date: 'Sep 27', sales: 0 }, { date: 'Sep 28', sales: 2 },
-  { date: 'Sep 29', sales: 1 }, { date: 'Sep 30', sales: 3 },
-  { date: 'Oct 01', sales: 3 }, { date: 'Oct 02', sales: 2 },
-  { date: 'Oct 03', sales: 2 }, { date: 'Oct 04', sales: 1 },
-  { date: 'Oct 05', sales: 1 }, { date: 'Oct 06', sales: 1 },
-  { date: 'Oct 07', sales: 2 }, { date: 'Oct 08', sales: 2 },
-  { date: 'Oct 09', sales: 1 }, { date: 'Oct 10', sales: 2 },
-  { date: 'Oct 11', sales: 1 }, { date: 'Oct 12', sales: 1 },
-  { date: 'Oct 13', sales: 0 }, { date: 'Oct 14', sales: 1 },
-  { date: 'Oct 15', sales: 0 },
-];
-
-const salesTotalData = [
-    { date: 'Sep 19', total: 20000 }, { date: 'Sep 20', total: 25000 },
-    { date: 'Sep 21', total: 0 }, { date: 'Sep 22', total: 0 },
-    { date: 'Sep 23', total: 60000 }, { date: 'Sep 24', total: 15000 },
-    { date: 'Sep 25', total: 20000 }, { date: 'Sep 26', total: 0 },
-    { date: 'Sep 27', total: 0 }, { date: 'Sep 28', total: 40000 },
-    { date: 'Sep 29', total: 10000 }, { date: 'Sep 30', total: 90000 },
-    { date: 'Oct 01', total: 70000 }, { date: 'Oct 02', total: 30000 },
-    { date: 'Oct 03', total: 35000 }, { date: 'Oct 04', total: 5000 },
-    { date: 'Oct 05', total: 10000 }, { date: 'Oct 06', total: 15000 },
-    { date: 'Oct 07', total: 45000 }, { date: 'Oct 08', total: 30000 },
-    { date: 'Oct 09', total: 10000 }, { date: 'Oct 10', total: 40000 },
-    { date: 'Oct 11', total: 20000 }, { date: 'Oct 12', total: 15000 },
-    { date: 'Oct 13', total: 0 }, { date: 'Oct 14', total: 20000 },
-    { date: 'Oct 15', total: 0 },
-];
 
 const sourceData = [
   { name: 'Source 1', value: 20, fill: '#f97316' },
@@ -96,75 +69,167 @@ new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 }).format(amount);
 
-const KpiCard = ({ title, value, change, changeType, subValue, subTitle, showSubBan = false }: { title: string, value: string, change?: string, changeType?: 'increase' | 'decrease', subValue: string, subTitle: string, showSubBan?: boolean }) => (
+const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v.toDate === 'function') return v.toDate();
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+};
+
+
+const KpiCard = ({ title, value, change, changeType, subValue, subTitle, isLoading }: { title: string, value: string, change?: string, changeType?: 'increase' | 'decrease', subValue: string, subTitle: string, isLoading: boolean }) => (
     <Card>
         <CardContent className="p-4">
-            <div className="flex justify-between items-start">
-                <p className="text-sm text-muted-foreground">{title}</p>
-                {change && (
-                     <Badge variant={changeType === 'increase' ? 'default' : 'destructive'} className={changeType === 'increase' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                        {changeType === 'increase' ? <TrendingUp className="mr-1" /> : <TrendingDown className="mr-1" />}
-                        {change}
-                    </Badge>
-                )}
+           {isLoading ? (
+            <div className="space-y-2">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-4 w-full" />
             </div>
-            <p className="text-3xl font-bold mt-1">{value}</p>
-            <div className="flex justify-between items-center mt-4 text-sm">
-                <p className="text-muted-foreground">{subTitle}</p>
-                <div className="flex items-center gap-1">
-                     {showSubBan && <Ban className="text-red-500 w-4 h-4" />}
-                     <p>{subValue}</p>
-                </div>
-            </div>
+           ) : (
+            <>
+              <div className="flex justify-between items-start">
+                  <p className="text-sm text-muted-foreground">{title}</p>
+                  {change && (
+                       <Badge variant={changeType === 'increase' ? 'default' : 'destructive'} className={changeType === 'increase' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                          {changeType === 'increase' ? <TrendingUp className="mr-1" /> : <TrendingDown className="mr-1" />}
+                          {change}
+                      </Badge>
+                  )}
+              </div>
+              <p className="text-3xl font-bold mt-1">{value}</p>
+              <div className="flex justify-between items-center mt-4 text-sm">
+                  <p className="text-muted-foreground">{subTitle}</p>
+                  <p>{subValue}</p>
+              </div>
+            </>
+           )}
         </CardContent>
     </Card>
 );
 
-const SalesChartCard = ({ title, value, change, chartData }: { title: string, value: string, change?: string, chartData: any[] }) => (
+const SalesChartCard = ({ title, value, change, chartData, isLoading }: { title: string, value: string, change?: string, chartData: any[], isLoading: boolean }) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">{title}</p>
-                <p className="text-2xl font-bold">{value}</p>
-                 {change && <Badge variant="default" className="bg-green-100 text-green-800"><TrendingUp className="mr-1" /> {change}</Badge>}
+                {isLoading ? (
+                    <>
+                     <Skeleton className="h-4 w-20" />
+                     <Skeleton className="h-7 w-24" />
+                    </>
+                ) : (
+                    <>
+                    <p className="text-sm text-muted-foreground">{title}</p>
+                    <p className="text-2xl font-bold">{value}</p>
+                    {change && <Badge variant="default" className="bg-green-100 text-green-800"><TrendingUp className="mr-1" /> {change}</Badge>}
+                    </>
+                )}
             </div>
-            <Button variant="ghost" size="icon" className="text-muted-foreground"><Ban className="w-4 h-4" /></Button>
         </CardHeader>
         <CardContent className="h-24 p-0">
-             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                    <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    <XAxis dataKey="date" hide />
-                    <YAxis domain={[0, 'dataMax']} hide/>
-                </LineChart>
-            </ResponsiveContainer>
+             {isLoading ? <Skeleton className="h-full w-full" /> : (
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                        <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                        <XAxis dataKey="date" hide />
+                        <YAxis domain={[0, 'dataMax']} hide/>
+                    </LineChart>
+                </ResponsiveContainer>
+             )}
         </CardContent>
     </Card>
 );
 
 export default function AnalyticsOverviewPageContent() {
-  const [mapData, setMapData] = useState(geoSalesData);
+  const { user, loading: authLoading } = useAuth();
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [grossSales, setGrossSales] = useState(0);
+  const [netSales, setNetSales] = useState(0);
+  const [numberOfSales, setNumberOfSales] = useState(0);
+  const [avgPerSale, setAvgPerSale] = useState(0);
+  const [salesByDay, setSalesByDay] = useState<{date: string, sales: number}[]>([]);
+  const [salesTotalByDay, setSalesTotalByDay] = useState<{date: string, total: number}[]>([]);
+  
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+      if (!authLoading) setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    const thirtyDaysAgo = subDays(new Date(), 29);
+    const salesQuery = query(
+        collection(db, 'users', user.uid, 'sales'), 
+        where('orderDate', '>=', thirtyDaysAgo)
+    );
+
+    const unsubscribe = onSnapshot(salesQuery, (snapshot) => {
+        const orders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as SalesOrder));
+        setSalesOrders(orders);
+        
+        // Process data
+        const gross = orders.reduce((acc, order) => acc + order.total, 0);
+        setGrossSales(gross);
+
+        const net = orders.reduce((acc, order) => acc + order.subtotal, 0);
+        setNetSales(net);
+        
+        const numSales = orders.length;
+        setNumberOfSales(numSales);
+        setAvgPerSale(numSales > 0 ? gross / numSales : 0);
+
+        const interval = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
+        const dailySales = interval.map(day => {
+            const formattedDate = format(day, 'MMM dd');
+            const dayStart = startOfDay(day);
+            const salesCount = orders.filter(order => {
+                const orderDate = toDate(order.orderDate);
+                return orderDate && startOfDay(orderDate).getTime() === dayStart.getTime();
+            }).length;
+            return { date: formattedDate, sales: salesCount };
+        });
+        setSalesByDay(dailySales);
+
+        const dailyTotals = interval.map(day => {
+            const formattedDate = format(day, 'MMM dd');
+            const dayStart = startOfDay(day);
+            const totalForDay = orders.filter(order => {
+                const orderDate = toDate(order.orderDate);
+                return orderDate && startOfDay(orderDate).getTime() === dayStart.getTime();
+            }).reduce((acc, order) => acc + order.total, 0);
+            return { date: formattedDate, total: totalForDay };
+        });
+        setSalesTotalByDay(dailyTotals);
+
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching sales data: ", error);
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading]);
+  
+  const mapData = geoSalesData; // Still mock
   const colorScale = scaleQuantile<string>()
     .domain(mapData.map(d => d.value))
     .range([
-      "#c7e9c0",
-      "#a1d99b",
-      "#74c476",
-      "#41ab5d",
-      "#238b45",
-      "#006d2c",
-      "#ef4444" // for highest value
+      "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#ef4444"
     ]);
     
-    // Quick hack to ensure Texas gets the red color from the screenshot
-    const finalColorScale = (val: number) => {
-        if (val >= 20) return '#ef4444';
-        if (val >= 15) return '#006d2c';
-        if (val >= 10) return '#238b45';
-        if (val >= 5) return '#74c476';
-        return '#c7e9c0';
-    }
+  const finalColorScale = (val: number) => {
+      if (val >= 20) return '#ef4444';
+      if (val >= 15) return '#006d2c';
+      if (val >= 10) return '#238b45';
+      if (val >= 5) return '#74c476';
+      return '#c7e9c0';
+  }
 
+  const isLoading = loading || authLoading;
 
   return (
     <AuthGuard>
@@ -172,8 +237,7 @@ export default function AnalyticsOverviewPageContent() {
         <main className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Link href="/" className="flex items-center gap-1 hover:text-foreground">
-              <Home className="w-4 h-4" />
-              Home
+              <Home className="w-4 h-4" /> Home
             </Link>
             <ChevronRight className="w-4 h-4" />
             <span>Analytics</span>
@@ -190,7 +254,7 @@ export default function AnalyticsOverviewPageContent() {
                 </div>
           </div>
         
-          <Tabs defaultValue="sales">
+          <Tabs defaultValue="overview">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="sales">Sales</TabsTrigger>
@@ -208,7 +272,6 @@ export default function AnalyticsOverviewPageContent() {
                                 <SelectItem value="last-30">Last 30 days</SelectItem>
                             </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground mt-1">compared to 31 to 60 days ago</p>
                     </div>
                     <div className="w-48">
                          <Select defaultValue="day">
@@ -224,10 +287,10 @@ export default function AnalyticsOverviewPageContent() {
 
                 <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Overview</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <KpiCard title="Gross sales" value={formatCurrency(392085)} change="-3.3%" changeType="decrease" subTitle="Net sales" subValue="--" showSubBan />
-                    <KpiCard title="Number of sales" value="29" change="-6.5%" changeType="decrease" subTitle="COGS" subValue="--" showSubBan />
-                    <KpiCard title="Avg. per sale" value={formatCurrency(13520)} subTitle="Gross income" subValue="--" showSubBan />
-                    <KpiCard title="Avg. units per sale" value="--" change="+3.3%" changeType="increase" subTitle="Gross margin" subValue="--" showSubBan />
+                    <KpiCard title="Gross sales" value={formatCurrency(grossSales)} subTitle="Net sales" subValue={formatCurrency(netSales)} isLoading={isLoading} />
+                    <KpiCard title="Number of sales" value={numberOfSales.toString()} subTitle="COGS" subValue="--" isLoading={isLoading} />
+                    <KpiCard title="Avg. per sale" value={formatCurrency(avgPerSale)} subTitle="Gross income" subValue="--" isLoading={isLoading} />
+                    <KpiCard title="Avg. units per sale" value="--" subTitle="Gross margin" subValue="--" isLoading={isLoading} />
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
                     <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Purchases total</p><div className="flex justify-between items-center"><p className="text-3xl font-bold mt-1">$115,060</p><Badge variant="destructive" className="bg-red-100 text-red-800"><TrendingDown className="mr-1"/>61.8%</Badge></div><div className="flex justify-between items-center mt-4 text-sm"><p className="text-muted-foreground">Pending purchases</p><div className="flex items-center gap-1"><Ban className="text-red-500 w-4 h-4"/>--</div></div></CardContent></Card>
@@ -240,27 +303,31 @@ export default function AnalyticsOverviewPageContent() {
                     <Card className="lg:col-span-2">
                         <CardHeader><CardTitle>Number of sales</CardTitle></CardHeader>
                         <CardContent>
+                           {isLoading ? <Skeleton className="h-[150px] w-full" /> : (
                             <ResponsiveContainer width="100%" height={150}>
-                                <LineChart data={salesData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                <LineChart data={salesByDay} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="date" tick={{fontSize: 12}} />
-                                    <YAxis tick={{fontSize: 12}} domain={[0, 4]} ticks={[0, 1, 2, 3, 4]}/>
+                                    <YAxis tick={{fontSize: 12}} allowDecimals={false}/>
                                     <Tooltip />
                                     <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={{r: 3}} activeDot={{r: 5}}/>
                                 </LineChart>
                             </ResponsiveContainer>
+                           )}
                         </CardContent>
                          <CardHeader><CardTitle>Sales total ($)</CardTitle></CardHeader>
                          <CardContent>
+                            {isLoading ? <Skeleton className="h-[150px] w-full" /> : (
                             <ResponsiveContainer width="100%" height={150}>
-                                <AreaChart data={salesTotalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                <AreaChart data={salesTotalByDay} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false}/>
                                     <XAxis dataKey="date" tick={{fontSize: 12}} />
-                                    <YAxis tickFormatter={(val) => `${val/1000}k`} tick={{fontSize: 12}} domain={[0, 100000]} ticks={[0, 50000, 100000]} />
+                                    <YAxis tickFormatter={(val) => `${val/1000}k`} tick={{fontSize: 12}} />
                                     <Tooltip formatter={(value: number) => formatCurrency(value)}/>
                                     <Area type="monotone" dataKey="total" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} />
                                 </AreaChart>
                             </ResponsiveContainer>
+                            )}
                         </CardContent>
                     </Card>
                     <Card>
@@ -313,7 +380,6 @@ export default function AnalyticsOverviewPageContent() {
                                     <SelectItem value="last-30">Last 30 days</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <p className="text-xs text-muted-foreground mt-1">compared to 31 to 60 days ago</p>
                         </div>
                         <div className="relative">
                             <Input placeholder="Source" className="w-40 pl-8"/>
@@ -353,9 +419,9 @@ export default function AnalyticsOverviewPageContent() {
                 <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Sales</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-6">
-                        <SalesChartCard title="Number of sales" value="30" change="+3.2%" chartData={salesData} />
-                        <SalesChartCard title="Total units" value="--" chartData={[]} />
-                        <SalesChartCard title="Avg. units per sale" value="--" chartData={[]} />
+                        <SalesChartCard title="Number of sales" value={numberOfSales.toString()} chartData={salesByDay} isLoading={isLoading}/>
+                        <SalesChartCard title="Total units" value="--" chartData={[]} isLoading={isLoading} />
+                        <SalesChartCard title="Avg. units per sale" value="--" chartData={[]} isLoading={isLoading} />
                     </div>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
