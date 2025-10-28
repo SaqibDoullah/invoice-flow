@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { collection, query, onSnapshot, doc, getDoc, runTransaction, Timestamp, where, getDocs } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, getDoc, runTransaction, Timestamp, where, getDocs, limit } from 'firebase/firestore';
 import { 
     DollarSign,
     Home, 
@@ -42,7 +42,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Customer, type InventoryItem, type LineItem, type SalesOrder } from '@/types';
+import { type Customer, type InventoryItem, type LineItem, type SalesOrder, type Supplier } from '@/types';
 import AddCustomerDialog from '@/components/customers/add-customer-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -71,6 +71,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [pageLoading, setPageLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -142,10 +143,15 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         const unsubInventory = onSnapshot(query(collection(db, 'users', user.uid, 'inventory')), (snapshot) => {
             setInventoryItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem)));
         }, (error) => console.error("Error fetching inventory:", error));
+        
+        const unsubSuppliers = onSnapshot(query(collection(db, 'users', user.uid, 'suppliers')), (snapshot) => {
+            setSuppliers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier)));
+        }, (error) => console.error("Error fetching suppliers:", error));
 
         return () => {
             unsubCustomers();
             unsubInventory();
+            unsubSuppliers();
         };
     }, [user, authLoading]);
 
@@ -190,10 +196,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             const matchesSupplier = supplierFilter !== 'all' ? item.supplierId === supplierFilter : true;
             const matchesCategory = categoryFilter !== 'all' ? item.category === categoryFilter : true;
             const matchesManufacturer = manufacturerFilter !== 'all' ? item.manufacturer === manufacturerFilter : true;
-            // Simple quantity check
-            const matchesQuantity = quantityFilter !== 'all' ? (item.quantityAvailable || 0) > 0 : true;
+            
+            const matchesQuantity = quantityFilter === 'gt_zero' ? (item.quantityAvailable || 0) > 0 : true;
 
-            return matchesSearch && matchesSupplier && matchesCategory && matchesManufacturer && matchesQuantity;
+            // Location filter is not directly on the item, so we skip it for now
+            // or assume a default logic if applicable.
+            const matchesLocation = locationFilter !== 'all' ? true : true; // Placeholder
+
+            return matchesSearch && matchesSupplier && matchesCategory && matchesManufacturer && matchesQuantity && matchesLocation;
         });
     }, [inventoryItems, productSearchTerm, supplierFilter, locationFilter, categoryFilter, manufacturerFilter, quantityFilter]);
 
@@ -365,6 +375,8 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     };
 
     const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
+    const uniqueCategories = useMemo(() => [...new Set(inventoryItems.map(item => item.category).filter(Boolean))], [inventoryItems]);
+    const uniqueManufacturers = useMemo(() => [...new Set(inventoryItems.map(item => item.manufacturer).filter(Boolean))], [inventoryItems]);
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -650,7 +662,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                 <div className="space-y-2">
                                                     <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')} disabled={actionsDisabled}>Change status to committed</Button>
                                                     <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')} disabled={actionsDisabled}>Change status to completed</Button>
-                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')} disabled={actionsDisabled}>Cancel sale</Button>
+                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')}>Cancel sale</Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -684,6 +696,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <SelectTrigger className="w-40"><SelectValue placeholder="All suppliers" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">All suppliers</SelectItem>
+                                                {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                         <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -692,11 +705,17 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                         </Select>
                                         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                                             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All categories" /></SelectTrigger>
-                                            <SelectContent><SelectItem value="all">All categories</SelectItem></SelectContent>
+                                            <SelectContent>
+                                                <SelectItem value="all">All categories</SelectItem>
+                                                {uniqueCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                            </SelectContent>
                                         </Select>
                                         <Select value={manufacturerFilter} onValueChange={setManufacturerFilter}>
                                             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All manufacturers" /></SelectTrigger>
-                                            <SelectContent><SelectItem value="all">All manufacturers</SelectItem></SelectContent>
+                                            <SelectContent>
+                                                <SelectItem value="all">All manufacturers</SelectItem>
+                                                 {uniqueManufacturers.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                                            </SelectContent>
                                         </Select>
                                          <Select value={quantityFilter} onValueChange={setQuantityFilter}>
                                             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All quantities" /></SelectTrigger>
@@ -924,5 +943,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-
-    
