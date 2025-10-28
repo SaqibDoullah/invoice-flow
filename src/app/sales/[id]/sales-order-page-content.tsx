@@ -41,7 +41,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Customer } from '@/types';
+import { type Customer, type InventoryItem } from '@/types';
 import AddCustomerDialog from '@/components/customers/add-customer-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -54,19 +54,6 @@ interface SalesOrderPageContentProps {
 
 type OrderStatus = 'Draft' | 'Committed' | 'Completed' | 'Canceled';
 
-const productsViewData = [
-    { id: '100000-1', description: 'Voopoo Argus P2 Kit-Crystal Pink', openQoh: 12, openAvail: 12, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'D1-03-C' },
-    { id: '100000-7', description: 'Voopoo Argus P2 Kit-Titanium Gray', openQoh: 10, openAvail: 10, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'D1-03-C' },
-    { id: '24838229-1', description: 'SMOK Novo M Replacement Pod (3 Pack) Resistance Level=0.6 Ohms', openQoh: 770, openAvail: 770, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C8-02-D' },
-    { id: '24838229-3', description: 'SMOK Novo M Replacement Pod (3 Pack) Resistance Level=1.0 Ohms', openQoh: 150, openAvail: 150, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C7-01-C, Main' },
-    { id: '34536187-1', description: 'Geekvape Aegis Legend III Kit-Black', openQoh: 5, openAvail: 5, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C4-02-A' },
-    { id: '34536187-2', description: 'Geekvape Aegis Legend III Kit-Blue', openQoh: 15, openAvail: 15, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C2-01-A' },
-    { id: '34536187-6', description: 'Geekvape Aegis Legend III Kit-Silver', openQoh: 1, openAvail: 0, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'A1-01-A' },
-    { id: '34536187-9', description: 'Geekvape Aegis Legend III Kit-Rainbow', openQoh: 15, openAvail: 15, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C2-02-A' },
-    { id: '44980907-1', description: 'Vaporesso Xros 4 Nano Starter Kit (Single Unit) Color=Aquamarine', openQoh: 30, openAvail: 25, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C1-02-B, Main' },
-];
-
-
 export default function SalesOrderPageContent({ orderId }: SalesOrderPageContentProps) {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
@@ -78,22 +65,44 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     const [billToAddress, setBillToAddress] = useState('--');
     const [shipToAddress, setShipToAddress] = useState('--');
     const [status, setStatus] = useState<OrderStatus>('Draft');
+    const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+    const [inventoryLoading, setInventoryLoading] = useState(true);
 
     useEffect(() => {
         const db = getFirestoreDb();
-        if (authLoading || !user || !db) return;
+        if (authLoading || !user || !db) {
+            if (!authLoading) {
+                setInventoryLoading(false);
+            }
+            return;
+        }
 
         const customersRef = collection(db, 'users', user.uid, 'customers');
-        const q = query(customersRef);
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const qCustomers = query(customersRef);
+        const unsubscribeCustomers = onSnapshot(qCustomers, (snapshot) => {
             const customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
             setCustomers(customersData);
         }, (error) => {
             console.error("Error fetching customers:", error);
         });
 
-        return () => unsubscribe();
+        setInventoryLoading(true);
+        const inventoryRef = collection(db, 'users', user.uid, 'inventory');
+        const qInventory = query(inventoryRef);
+        const unsubscribeInventory = onSnapshot(qInventory, (snapshot) => {
+            const itemsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
+            setInventoryItems(itemsData);
+            setInventoryLoading(false);
+        }, (error) => {
+            console.error("Error fetching inventory:", error);
+            setInventoryLoading(false);
+        });
+
+
+        return () => {
+            unsubscribeCustomers();
+            unsubscribeInventory();
+        };
     }, [user, authLoading]);
 
     const selectedCustomerName = customers.find(c => c.id === selectedCustomerId)?.name || 'Unspecified';
@@ -422,20 +431,26 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {productsViewData.map((product) => (
-                                                <TableRow key={product.id}>
-                                                    <TableCell className="p-2 text-primary">{product.id}</TableCell>
-                                                    <TableCell className="p-2">{product.description}</TableCell>
-                                                    <TableCell className="p-2"></TableCell>
-                                                    <TableCell className="p-2 text-right border-l">{product.openQoh}</TableCell>
-                                                    <TableCell className="p-2 text-right">{product.openAvail}</TableCell>
-                                                    <TableCell className="p-2 text-right">{product.openOrder}</TableCell>
-                                                    <TableCell className="p-2 text-right border-l">{product.caseQoh}</TableCell>
-                                                    <TableCell className="p-2 text-right">{product.caseAvail}</TableCell>
-                                                    <TableCell className="p-2 text-right">{product.caseOrder}</TableCell>
-                                                    <TableCell className="p-2 border-l">{product.sublocation}</TableCell>
-                                                </TableRow>
-                                                ))}
+                                                {inventoryLoading ? (
+                                                     <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">Loading...</td></tr>
+                                                ) : inventoryItems.length > 0 ? (
+                                                    inventoryItems.map((product) => (
+                                                    <TableRow key={product.id}>
+                                                        <TableCell className="p-2 text-primary">{product.sku || product.id}</TableCell>
+                                                        <TableCell className="p-2">{product.name}</TableCell>
+                                                        <TableCell className="p-2">{product.stdPacking || ''}</TableCell>
+                                                        <TableCell className="p-2 text-right border-l">{product.quantity}</TableCell>
+                                                        <TableCell className="p-2 text-right">{product.quantityAvailable}</TableCell>
+                                                        <TableCell className="p-2 text-right">{product.quantityOnOrder}</TableCell>
+                                                        <TableCell className="p-2 text-right border-l">{product.casesOnHand}</TableCell>
+                                                        <TableCell className="p-2 text-right">{product.casesAvailable}</TableCell>
+                                                        <TableCell className="p-2 text-right">{product.casesOnOrder}</TableCell>
+                                                        <TableCell className="p-2 border-l">{product.sublocation}</TableCell>
+                                                    </TableRow>
+                                                    ))
+                                                ) : (
+                                                    <tr><td colSpan={10} className="p-8 text-center text-muted-foreground">No items to display.</td></tr>
+                                                )}
                                             </TableBody>
                                         </Table>
                                      </div>
