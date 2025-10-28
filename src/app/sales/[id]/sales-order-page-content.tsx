@@ -199,8 +199,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             
             const matchesQuantity = quantityFilter === 'gt_zero' ? (item.quantityAvailable || 0) > 0 : true;
 
-            // Location filter is not directly on the item, so we skip it for now
-            // or assume a default logic if applicable.
             const matchesLocation = locationFilter !== 'all' ? true : true; // Placeholder
 
             return matchesSearch && matchesSupplier && matchesCategory && matchesManufacturer && matchesQuantity && matchesLocation;
@@ -338,10 +336,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                 // Save the sales order itself
                 const dataToSave = {
                     ...salesOrder,
-                    orderDate: Timestamp.fromDate(salesOrder.orderDate),
-                    estimatedShipDate: salesOrder.estimatedShipDate ? Timestamp.fromDate(salesOrder.estimatedShipDate) : null,
-                    shipmentDate: salesOrder.shipmentDate ? Timestamp.fromDate(salesOrder.shipmentDate) : null,
-                    deliveryDate: salesOrder.deliveryDate ? Timestamp.fromDate(salesOrder.deliveryDate) : null,
+                    orderDate: Timestamp.fromDate(toDate(salesOrder.orderDate)),
+                    estimatedShipDate: salesOrder.estimatedShipDate ? Timestamp.fromDate(toDate(salesOrder.estimatedShipDate)) : null,
+                    shipmentDate: salesOrder.shipmentDate ? Timestamp.fromDate(toDate(salesOrder.shipmentDate)) : null,
+                    deliveryDate: salesOrder.deliveryDate ? Timestamp.fromDate(toDate(salesOrder.deliveryDate)) : null,
                 };
                 delete (dataToSave as any).id;
                 delete (dataToSave as any).customer;
@@ -372,6 +370,13 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         const orderData = JSON.stringify({ ...salesOrder, orderId: '', status: 'Draft' });
         localStorage.setItem('duplicateOrderData', orderData);
         router.push('/sales/new');
+    };
+
+    const showComingSoon = () => {
+        toast({
+            title: 'Coming Soon',
+            description: 'This feature is not yet implemented.',
+        });
     };
 
     const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
@@ -419,14 +424,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem>Import sales order items</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon}>Import sales order items</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onSelect={handleDuplicate}>Duplicate order</DropdownMenuItem>
-                                    <DropdownMenuItem disabled>Duplicate order with selection</DropdownMenuItem>
-                                    <DropdownMenuItem disabled>Create purchase order for drop ship</DropdownMenuItem>
-                                    <DropdownMenuItem disabled>Create purchase order for drop ship with selection</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon} disabled>Duplicate order with selection</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon} disabled>Create purchase order for drop ship</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon} disabled>Create purchase order for drop ship with selection</DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem disabled>Customize this screen</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon} disabled>Customize this screen</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <span className="text-sm text-muted-foreground">All changes saved</span>
@@ -764,10 +769,15 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                             <Input 
                                                                 type="number" 
                                                                 className="h-8 text-right"
-                                                                onBlur={(e) => handleAddProductFromInventory(product, parseInt(e.target.value))}
+                                                                onBlur={(e) => {
+                                                                    const val = parseInt(e.target.value);
+                                                                    if (val > 0) handleAddProductFromInventory(product, val);
+                                                                    e.target.value = '';
+                                                                }}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === 'Enter') {
-                                                                        handleAddProductFromInventory(product, parseInt(e.currentTarget.value));
+                                                                        const val = parseInt(e.currentTarget.value);
+                                                                        if (val > 0) handleAddProductFromInventory(product, val);
                                                                         e.currentTarget.value = '';
                                                                     }
                                                                 }}
