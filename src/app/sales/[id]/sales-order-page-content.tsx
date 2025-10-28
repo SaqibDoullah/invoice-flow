@@ -89,7 +89,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     };
 
     const handleStatusChange = (newStatus: OrderStatus) => {
-        // In a real app, you would also update this in your database
         setStatus(newStatus);
     }
 
@@ -148,18 +147,19 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                         </div>
                     </div>
 
-                    <div className="flex items-center border-b mb-4">
-                        <Link href="/quotes" className={cn(
-                            'inline-flex items-center justify-center whitespace-nowrap rounded-t-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
-                            'border-b-2 border-transparent text-muted-foreground hover:bg-accent/50'
-                        )}>Quote</Link>
-                        <Tabs defaultValue="sale" className="w-full">
-                            <TabsList className="bg-transparent p-0">
-                                <TabsTrigger value="sale" className="rounded-t-sm rounded-b-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Sale</TabsTrigger>
-                                <TabsTrigger value="products" className="rounded-t-sm rounded-b-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Products view</TabsTrigger>
-                                <TabsTrigger value="shipments" className="rounded-t-sm rounded-b-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Shipments</TabsTrigger>
+                    <Tabs defaultValue="sale" className="w-full">
+                        <div className="border-b">
+                            <TabsList className="bg-transparent p-0 -mb-px">
+                                <Link href="/quotes" className={cn(
+                                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+                                    'border-b-2 border-transparent text-muted-foreground hover:text-accent-foreground data-[state=active]:text-foreground'
+                                )}>Quote</Link>
+                                <TabsTrigger value="sale" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Sale</TabsTrigger>
+                                <TabsTrigger value="products" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Products view</TabsTrigger>
+                                <TabsTrigger value="shipments" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Shipments</TabsTrigger>
                             </TabsList>
-                            <TabsContent value="sale" className="mt-4">
+                        </div>
+                        <TabsContent value="sale" className="mt-4">
                                 <div className="grid lg:grid-cols-3 gap-8 items-start">
                                     <div className="lg:col-span-2 space-y-6">
                                         <Card>
@@ -347,14 +347,13 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                     </div>
                                 </div>
                             </TabsContent>
-                            <TabsContent value="products">
+                        <TabsContent value="products">
                                 <p>Products view content goes here.</p>
                             </TabsContent>
-                            <TabsContent value="shipments">
+                        <TabsContent value="shipments">
                                 <p>Shipments content goes here.</p>
                             </TabsContent>
-                        </Tabs>
-                    </div>
+                    </Tabs>
                 </main>
                 <AddCustomerDialog
                     isOpen={isAddCustomerOpen}
