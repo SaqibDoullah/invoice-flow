@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -45,12 +46,25 @@ import AddCustomerDialog from '@/components/customers/add-customer-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface SalesOrderPageContentProps {
     orderId: string;
 }
 
 type OrderStatus = 'Draft' | 'Committed' | 'Completed' | 'Canceled';
+
+const productsViewData = [
+    { id: '100000-1', description: 'Voopoo Argus P2 Kit-Crystal Pink', openQoh: 12, openAvail: 12, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'D1-03-C' },
+    { id: '100000-7', description: 'Voopoo Argus P2 Kit-Titanium Gray', openQoh: 10, openAvail: 10, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'D1-03-C' },
+    { id: '24838229-1', description: 'SMOK Novo M Replacement Pod (3 Pack) Resistance Level=0.6 Ohms', openQoh: 770, openAvail: 770, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C8-02-D' },
+    { id: '24838229-3', description: 'SMOK Novo M Replacement Pod (3 Pack) Resistance Level=1.0 Ohms', openQoh: 150, openAvail: 150, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C7-01-C, Main' },
+    { id: '34536187-1', description: 'Geekvape Aegis Legend III Kit-Black', openQoh: 5, openAvail: 5, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C4-02-A' },
+    { id: '34536187-2', description: 'Geekvape Aegis Legend III Kit-Blue', openQoh: 15, openAvail: 15, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C2-01-A' },
+    { id: '34536187-6', description: 'Geekvape Aegis Legend III Kit-Silver', openQoh: 1, openAvail: 0, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'A1-01-A' },
+    { id: '34536187-9', description: 'Geekvape Aegis Legend III Kit-Rainbow', openQoh: 15, openAvail: 15, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C2-02-A' },
+    { id: '44980907-1', description: 'Vaporesso Xros 4 Nano Starter Kit (Single Unit) Color=Aquamarine', openQoh: 30, openAvail: 25, openOrder: 0, caseQoh: 0, caseAvail: 0, caseOrder: 0, sublocation: 'C1-02-B, Main' },
+];
 
 
 export default function SalesOrderPageContent({ orderId }: SalesOrderPageContentProps) {
@@ -347,10 +361,88 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                     </div>
                                 </div>
                             </TabsContent>
-                        <TabsContent value="products">
-                                <p>Products view content goes here.</p>
-                            </TabsContent>
-                        <TabsContent value="shipments">
+                        <TabsContent value="products" className="mt-4">
+                            <Card>
+                                <CardContent className="p-4 space-y-4">
+                                     <div className="flex items-center justify-between">
+                                        <p className="text-sm text-muted-foreground font-semibold">Summary: TOTAL: 0 units</p>
+                                     </div>
+                                     <div className="flex flex-wrap items-center gap-2">
+                                        <div className="relative">
+                                            <Input placeholder="Search..." className="pl-8" />
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                                        </div>
+                                        <span className="text-sm font-semibold">Filters:</span>
+                                        <div className="relative">
+                                             <Input placeholder="All suppliers" className="w-40" />
+                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                        <div className="relative">
+                                             <Input placeholder="All locations" className="w-40" />
+                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All categories" />
+                                            </SelectTrigger>
+                                        </Select>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All manufacturers" />
+                                            </SelectTrigger>
+                                        </Select>
+                                         <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="QoH total > 0" />
+                                            </SelectTrigger>
+                                        </Select>
+                                     </div>
+                                    <div className="border rounded-md overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-muted/50">
+                                                    <TableHead className="p-2 font-medium text-left flex items-center gap-1"><ArrowDown className="w-4 h-4"/> Product ID</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left">Description</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left">Std packing</TableHead>
+                                                    <TableHead colSpan={3} className="p-2 font-medium text-center border-l">Open Stock</TableHead>
+                                                    <TableHead colSpan={3} className="p-2 font-medium text-center border-l">Case Stock</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left border-l">Sublocation(s)</TableHead>
+                                                </TableRow>
+                                                <TableRow className="border-b bg-muted/50">
+                                                    <TableHead className="p-2"></TableHead>
+                                                    <TableHead className="p-2"></TableHead>
+                                                    <TableHead className="p-2"></TableHead>
+                                                    <TableHead className="p-2 font-medium text-right border-l">QoH</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Avail</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Order</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right border-l">QoH</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Avail</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Order</TableHead>
+                                                    <TableHead className="p-2 border-l"></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {productsViewData.map((product) => (
+                                                <TableRow key={product.id}>
+                                                    <TableCell className="p-2 text-primary">{product.id}</TableCell>
+                                                    <TableCell className="p-2">{product.description}</TableCell>
+                                                    <TableCell className="p-2"></TableCell>
+                                                    <TableCell className="p-2 text-right border-l">{product.openQoh}</TableCell>
+                                                    <TableCell className="p-2 text-right">{product.openAvail}</TableCell>
+                                                    <TableCell className="p-2 text-right">{product.openOrder}</TableCell>
+                                                    <TableCell className="p-2 text-right border-l">{product.caseQoh}</TableCell>
+                                                    <TableCell className="p-2 text-right">{product.caseAvail}</TableCell>
+                                                    <TableCell className="p-2 text-right">{product.caseOrder}</TableCell>
+                                                    <TableCell className="p-2 border-l">{product.sublocation}</TableCell>
+                                                </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                     </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                         <TabsContent value="shipments">
                                 <p>Shipments content goes here.</p>
                             </TabsContent>
                     </Tabs>
