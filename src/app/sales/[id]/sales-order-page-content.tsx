@@ -157,7 +157,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         setPageLoading(true);
         const docRef = doc(db, 'users', user.uid, 'sales', orderId);
         
-        getDoc(docRef).then(docSnap => {
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as Omit<SalesOrder, 'id'>;
                 setSalesOrder(prev => ({
@@ -170,12 +170,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                     deliveryDate: data.deliveryDate ? toDate(data.deliveryDate) : null,
                 }));
             }
-        }).catch(error => {
+            setPageLoading(false);
+        }, (error) => {
             console.error("Error fetching sales order:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not load sales order data.' });
-        }).finally(() => {
             setPageLoading(false);
         });
+        
+        return () => unsubscribe();
     }, [orderId, user, authLoading, toast]);
     
     const filteredInventoryItems = useMemo(() => {
@@ -384,13 +386,13 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                     </div>
 
                     <Tabs defaultValue="sale" className="w-full">
-                        <TabsList className="bg-transparent p-0 -mb-px border-b">
+                        <TabsList>
                             <TabsTrigger value="quote" asChild>
-                                <Link href="/quotes" className="data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Quote</Link>
+                                <Link href="/quotes" >Quote</Link>
                             </TabsTrigger>
-                            <TabsTrigger value="sale" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Sale</TabsTrigger>
-                            <TabsTrigger value="products" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Products view</TabsTrigger>
-                            <TabsTrigger value="shipments" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none">Shipments</TabsTrigger>
+                            <TabsTrigger value="sale">Sale</TabsTrigger>
+                            <TabsTrigger value="products">Products view</TabsTrigger>
+                            <TabsTrigger value="shipments">Shipments</TabsTrigger>
                         </TabsList>
                         <TabsContent value="sale" className="mt-4">
                                 <div className="grid lg:grid-cols-3 gap-8 items-start">
@@ -610,9 +612,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     </div>
                                                 )}
                                                 <div className="space-y-2">
-                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')} disabled={actionsDisabled}>Change status to committed</Button>
-                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')} disabled={actionsDisabled}>Change status to completed</Button>
-                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')} disabled={actionsDisabled}>Cancel sale</Button>
+                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')}>Change status to committed</Button>
+                                                    <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')}>Change status to completed</Button>
+                                                    <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')}>Cancel sale</Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
