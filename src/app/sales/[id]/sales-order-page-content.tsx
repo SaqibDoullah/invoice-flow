@@ -90,6 +90,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         orderId: orderId,
         orderDate: new Date(),
         customerId: null,
+        customer: null,
         source: '',
         origin: 'Tawakkal Warehouse',
         estimatedShipDate: null,
@@ -101,6 +102,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         batchId: '',
         billToAddress: '--',
         shipToAddress: '--',
+        shipToName: '',
         employeeName: '',
         productType: '',
         salesPerson: '',
@@ -111,6 +113,16 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         discountType: 'percentage',
         total: 0,
         status: 'Draft',
+        fulfillmentStatus: 'Not packed or shipped',
+        shipments: '',
+        shipmentsStatusSummary: '',
+        invoicesStatusSummary: '',
+        carrier: '',
+        trackingNumber: '',
+        shipmentDate: null,
+        deliveryDate: null,
+        publicNotes: '',
+        internalNotes: '',
     });
 
     // Fetch dependent data (customers, inventory)
@@ -143,14 +155,16 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         getDoc(docRef).then(docSnap => {
             if (docSnap.exists()) {
                 const data = docSnap.data() as Omit<SalesOrder, 'id'>;
-                setSalesOrder({
+                setSalesOrder(prev => ({
+                    ...prev,
                     ...data,
                     id: docSnap.id,
                     orderDate: toDate(data.orderDate),
                     estimatedShipDate: data.estimatedShipDate ? toDate(data.estimatedShipDate) : null,
-                });
+                    shipmentDate: data.shipmentDate ? toDate(data.shipmentDate) : null,
+                    deliveryDate: data.deliveryDate ? toDate(data.deliveryDate) : null,
+                }));
             }
-            // If it doesn't exist, we just keep the default state for a new order.
         }).catch(error => {
             console.error("Error fetching sales order:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not load sales order data.' });
@@ -197,6 +211,8 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             setSalesOrder(prev => ({
                 ...prev,
                 customerId: customerId,
+                customer: customer,
+                shipToName: customer.name,
                 billToAddress: customer.address || '--',
                 shipToAddress: customer.address || '--',
             }));
@@ -204,7 +220,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     };
     
     const handleAddItem = () => {
-        const newItem: LineItem = { name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 };
+        const newItem: LineItem = { name: '', specification: '', price: 0, quantity: 1, lineTotal: 0, shippedQuantity: 0 };
         setSalesOrder(prev => ({ ...prev, items: [...prev.items, newItem] }));
     };
 
@@ -212,7 +228,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         const newItems = [...salesOrder.items];
         const itemToUpdate = { ...newItems[index] };
         
-        if (field === 'price' || field === 'quantity') {
+        if (field === 'price' || field === 'quantity' || field === 'shippedQuantity') {
             (itemToUpdate as any)[field] = parseFloat(value) || 0;
         } else {
             (itemToUpdate as any)[field] = value;
@@ -231,7 +247,8 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             specification: product.sku || product.id,
             price: product.price || 0,
             quantity: quantity,
-            lineTotal: (product.price || 0) * quantity
+            lineTotal: (product.price || 0) * quantity,
+            shippedQuantity: 0,
         };
         
         const existingItemIndex = salesOrder.items.findIndex(item => item.specification === newItem.specification);
@@ -269,10 +286,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             ...salesOrder,
             orderDate: Timestamp.fromDate(salesOrder.orderDate),
             estimatedShipDate: salesOrder.estimatedShipDate ? Timestamp.fromDate(salesOrder.estimatedShipDate) : null,
+            shipmentDate: salesOrder.shipmentDate ? Timestamp.fromDate(salesOrder.shipmentDate) : null,
+            deliveryDate: salesOrder.deliveryDate ? Timestamp.fromDate(salesOrder.deliveryDate) : null,
         };
         
-        // Remove the local 'id' field before saving to Firestore
         delete (dataToSave as any).id;
+        delete (dataToSave as any).customer; // Don't save the nested customer object
 
         setDoc(docRef, dataToSave, { merge: true })
             .then(() => {
@@ -295,7 +314,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             });
     };
 
-    const selectedCustomerName = customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
+    const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -321,7 +340,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 <div className="flex items-center gap-2 text-lg font-semibold">
                                     <span>{orderId}</span>
                                     <span className="text-muted-foreground">&bull;</span>
-                                    <span className="text-muted-foreground">{format(salesOrder.orderDate, 'MM/dd/yyyy')}</span>
+                                    <span className="text-muted-foreground">{format(toDate(salesOrder.orderDate), 'MM/dd/yyyy')}</span>
                                 </div>
                             </div>
                         </div>
@@ -363,9 +382,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 <TabsTrigger value="shipments" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Shipments</TabsTrigger>
                             </TabsList>
                         </div>
-                         <TabsContent value="quote">
-                            {/* This content is not part of the active flow. */}
-                        </TabsContent>
                         <TabsContent value="sale" className="mt-4">
                                 <div className="grid lg:grid-cols-3 gap-8 items-start">
                                     <div className="lg:col-span-2 space-y-6">
@@ -416,9 +432,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     </Popover>
                                                 </div>
                                                 <div className="space-y-1 relative"><label className="text-sm font-medium">Source</label><Input value={salesOrder.source} onChange={(e) => handleInputChange('source', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Order date</label><Input type="date" value={format(salesOrder.orderDate, 'yyyy-MM-dd')} onChange={(e) => handleInputChange('orderDate', new Date(e.target.value))} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Order date</label><Input type="date" value={format(toDate(salesOrder.orderDate), 'yyyy-MM-dd')} onChange={(e) => handleInputChange('orderDate', new Date(e.target.value))} /></div>
                                                 <div className="space-y-1"><label className="text-sm font-medium">Origin</label><Input value={salesOrder.origin} onChange={(e) => handleInputChange('origin', e.target.value)} /></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Estimated ship date</label><Input type="date" value={salesOrder.estimatedShipDate ? format(salesOrder.estimatedShipDate, 'yyyy-MM-dd') : ''} onChange={(e) => handleInputChange('estimatedShipDate', new Date(e.target.value))} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Estimated ship date</label><Input type="date" value={salesOrder.estimatedShipDate ? format(toDate(salesOrder.estimatedShipDate), 'yyyy-MM-dd') : ''} onChange={(e) => handleInputChange('estimatedShipDate', new Date(e.target.value))} /></div>
                                                 <div className="space-y-1"><label className="text-sm font-medium">Customer PO</label><Input value={salesOrder.customerPO} onChange={(e) => handleInputChange('customerPO', e.target.value)} /></div>
                                                 <div className="space-y-1 relative"><label className="text-sm font-medium">Fulfillment</label><Input value={salesOrder.fulfillment} onChange={(e) => handleInputChange('fulfillment', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
                                                 <div className="space-y-1"><label className="text-sm font-medium">Terms</label><Input value={salesOrder.terms} onChange={(e) => handleInputChange('terms', e.target.value)} /></div>
@@ -511,8 +527,8 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                                         </Select>
                                                                     </td>
                                                                     <td className="p-1"><Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className="min-w-[70px] text-right" /></td>
-                                                                    <td className="p-1 text-right">0</td>
-                                                                    <td className="p-1 text-right">{item.quantity}</td>
+                                                                    <td className="p-1 text-right">{item.shippedQuantity || 0}</td>
+                                                                    <td className="p-1 text-right">{item.quantity - (item.shippedQuantity || 0)}</td>
                                                                     <td className="p-1 text-right">{formatCurrency(item.price)}</td>
                                                                     <td className="p-1"></td>
                                                                     <td className="p-1"></td>
@@ -568,9 +584,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             </CardHeader>
                                             <CardContent className="space-y-1 text-sm">
                                                 <p><span className="font-semibold">Status:</span> <Badge variant={salesOrder.status === 'Draft' ? 'secondary' : 'default'} className={salesOrder.status === 'Committed' ? 'bg-green-100 text-green-800' : ''}>{salesOrder.status}</Badge></p>
-                                                <p><span className="font-semibold">Shipment status:</span> Not packed or shipped</p>
-                                                <p><span className="font-semibold">Invoice status:</span> No invoice posted</p>
-                                                <p><span className="font-semibold">Due date:</span> {format(salesOrder.orderDate, 'MM/dd/yyyy')}</p>
+                                                <p><span className="font-semibold">Shipment status:</span> {salesOrder.fulfillmentStatus}</p>
+                                                <p><span className="font-semibold">Invoice status:</span> {salesOrder.invoicesStatusSummary}</p>
+                                                <p><span className="font-semibold">Due date:</span> {format(toDate(salesOrder.orderDate), 'MM/dd/yyyy')}</p>
                                                 <p><span className="font-semibold">Synced from:</span> --</p>
                                                 <p><span className="font-semibold">Last synced from:</span> --</p>
                                                 <p><span className="font-semibold">Synced to:</span> --</p>
@@ -709,23 +725,24 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <h3 className="font-semibold text-lg">Shipment ID: {orderId}-1</h3>
                                             <p className="text-sm text-muted-foreground">Status: Editable</p>
                                         </div>
-                                        <div className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 p-3 rounded-md text-sm">
-                                            <p>Shipment can not be packed or shipped since it is empty.</p>
-                                            <p>Manually enter quantities for the shipment in the table below.</p>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground">All shipment products and quantities match ordered products and quantities.</p>
+                                        {salesOrder.items.length === 0 && (
+                                            <div className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 p-3 rounded-md text-sm">
+                                                <p>Shipment can not be packed or shipped since it is empty.</p>
+                                                <p>Manually enter quantities for the shipment in the table below.</p>
+                                            </div>
+                                        )}
                                         <p className="text-sm text-muted-foreground">Created: {format(new Date(), 'PPp')} by {user?.displayName || 'You'}</p>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-4">
-                                            <div className="space-y-1"><label className="text-xs">Carrier</label><Select><SelectTrigger><SelectValue placeholder="-- Unspecified --"/></SelectTrigger></Select></div>
-                                            <div className="space-y-1"><label className="text-xs">Tracking number</label><Input/></div>
-                                            <div className="space-y-1"><label className="text-xs">Estimated ship date</label><Input type="date"/></div>
-                                            <div className="space-y-1"><label className="text-xs">Estimated delivery date</label><Input type="date"/></div>
+                                            <div className="space-y-1"><label className="text-xs">Carrier</label><Select value={salesOrder.carrier} onValueChange={(value) => handleInputChange('carrier', value)}><SelectTrigger><SelectValue placeholder="-- Unspecified --"/></SelectTrigger></Select></div>
+                                            <div className="space-y-1"><label className="text-xs">Tracking number</label><Input value={salesOrder.trackingNumber} onChange={(e) => handleInputChange('trackingNumber', e.target.value)}/></div>
+                                            <div className="space-y-1"><label className="text-xs">Estimated ship date</label><Input type="date" value={salesOrder.shipmentDate ? format(toDate(salesOrder.shipmentDate), 'yyyy-MM-dd') : ''} onChange={e => handleInputChange('shipmentDate', new Date(e.target.value))} /></div>
+                                            <div className="space-y-1"><label className="text-xs">Estimated delivery date</label><Input type="date" value={salesOrder.deliveryDate ? format(toDate(salesOrder.deliveryDate), 'yyyy-MM-dd') : ''} onChange={e => handleInputChange('deliveryDate', new Date(e.target.value))} /></div>
                                             <div className="space-y-1"><label className="text-xs">Shipment origin</label><Select><SelectTrigger><SelectValue placeholder="Default to order origin (Tawakkal Wa..."/></SelectTrigger></Select></div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                                            <div className="space-y-1"><label className="text-xs">Public notes</label><Textarea/></div>
-                                            <div className="space-y-1"><label className="text-xs">Internal notes</label><Textarea/></div>
+                                            <div className="space-y-1"><label className="text-xs">Public notes</label><Textarea value={salesOrder.publicNotes} onChange={e => handleInputChange('publicNotes', e.target.value)} /></div>
+                                            <div className="space-y-1"><label className="text-xs">Internal notes</label><Textarea value={salesOrder.internalNotes} onChange={e => handleInputChange('internalNotes', e.target.value)} /></div>
                                         </div>
                                     </div>
                                      <div className="flex flex-wrap items-center gap-2">
@@ -756,39 +773,69 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                         <Input placeholder="All lot ids" className="w-32" />
                                      </div>
                                       <div className="border rounded-md overflow-x-auto">
-                                        <table className="w-full text-sm whitespace-nowrap">
-                                            <thead className="bg-muted/50">
-                                                <tr className="border-b">
-                                                    <th className="p-2 font-medium text-left flex items-center gap-1"><Checkbox className="mr-2" /> <ArrowDown className="w-4 h-4"/> Product ID</th>
-                                                    <th className="p-2 font-medium text-left">Description</th>
-                                                    <th colSpan={4} className="p-2 font-medium text-center border-l">Open Stock</th>
-                                                    <th colSpan={4} className="p-2 font-medium text-center border-l">Case Stock</th>
-                                                    <th className="p-2 font-medium text-left border-l">Packing</th>
-                                                    <th className="p-2 font-medium text-left border-l">Sublocation</th>
-                                                    <th className="p-2 font-medium text-left border-l">Lot ID</th>
-                                                </tr>
-                                                <tr className="border-b">
-                                                    <th className="p-2"></th>
-                                                    <th className="p-2"></th>
-                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
-                                                    <th className="p-2 font-medium text-right">Avail</th>
-                                                    <th className="p-2 font-medium text-right">Order</th>
-                                                    <th className="p-2 font-medium text-right">Shpmnt</th>
-                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
-                                                    <th className="p-2 font-medium text-right">Avail</th>
-                                                    <th className="p-2 font-medium text-right">Order</th>
-                                                    <th className="p-2 font-medium text-right">Shpmnt</th>
-                                                    <th className="p-2 border-l"></th>
-                                                    <th className="p-2 border-l"></th>
-                                                    <th className="p-2 border-l"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                 <tr>
-                                                    <td colSpan={13} className="p-8 text-center text-muted-foreground">No items to display.</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-muted/50">
+                                                    <TableHead className="p-2 font-medium text-left flex items-center gap-1"><Checkbox className="mr-2" /> <ArrowDown className="w-4 h-4"/> Product ID</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left">Description</TableHead>
+                                                    <TableHead colSpan={4} className="p-2 font-medium text-center border-l">Open Stock</TableHead>
+                                                    <TableHead colSpan={4} className="p-2 font-medium text-center border-l">Case Stock</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left border-l">Packing</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left border-l">Sublocation</TableHead>
+                                                    <TableHead className="p-2 font-medium text-left border-l">Lot ID</TableHead>
+                                                </TableRow>
+                                                <TableRow className="border-b bg-muted/50">
+                                                    <TableHead className="p-2"></TableHead>
+                                                    <TableHead className="p-2"></TableHead>
+                                                    <TableHead className="p-2 font-medium text-right border-l">QoH</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Avail</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Order</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Shpmnt</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right border-l">QoH</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Avail</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Order</TableHead>
+                                                    <TableHead className="p-2 font-medium text-right">Shpmnt</TableHead>
+                                                    <TableHead className="p-2 border-l"></TableHead>
+                                                    <TableHead className="p-2 border-l"></TableHead>
+                                                    <TableHead className="p-2 border-l"></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                 {salesOrder.items.length > 0 ? (
+                                                     salesOrder.items.map((item, index) => {
+                                                         const inventoryItem = inventoryItems.find(p => p.sku === item.specification || p.id === item.specification);
+                                                         return (
+                                                            <TableRow key={index}>
+                                                                <TableCell className="p-2 text-primary font-medium flex items-center gap-1"><Checkbox/> {item.specification}</TableCell>
+                                                                <TableCell className="p-2">{item.name}</TableCell>
+                                                                <TableCell className="p-2 text-right border-l">{inventoryItem?.quantity || 0}</TableCell>
+                                                                <TableCell className="p-2 text-right">{inventoryItem?.quantityAvailable || 0}</TableCell>
+                                                                <TableCell className="p-2 text-right">{item.quantity}</TableCell>
+                                                                <TableCell className="p-1 w-24">
+                                                                    <Input 
+                                                                        type="number" 
+                                                                        value={item.shippedQuantity || ''}
+                                                                        onChange={(e) => handleItemChange(index, 'shippedQuantity', e.target.value)}
+                                                                        className="h-8 text-right"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell className="p-2 text-right border-l">{inventoryItem?.casesOnHand || 0}</TableCell>
+                                                                <TableCell className="p-2 text-right">{inventoryItem?.casesAvailable || 0}</TableCell>
+                                                                <TableCell className="p-2 text-right">_</TableCell>
+                                                                <TableCell className="p-1 w-24"><Input type="number" className="h-8 text-right"/></TableCell>
+                                                                <TableCell className="p-2 border-l"></TableCell>
+                                                                <TableCell className="p-2 border-l">{inventoryItem?.sublocation || ''}</TableCell>
+                                                                <TableCell className="p-2 border-l"></TableCell>
+                                                            </TableRow>
+                                                         )
+                                                     })
+                                                 ) : (
+                                                    <tr>
+                                                        <td colSpan={13} className="p-8 text-center text-muted-foreground">No items in this order to ship.</td>
+                                                    </tr>
+                                                 )}
+                                            </TableBody>
+                                        </Table>
                                      </div>
                                 </CardContent>
                             </Card>

@@ -8,6 +8,7 @@ export const lineItemSchema = z.object({
   price: z.coerce.number().min(0, 'Price must be non-negative'),
   quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
   lineTotal: z.number(),
+  shippedQuantity: z.coerce.number().optional(),
 });
 
 export const invoiceSchema = z.object({
@@ -282,6 +283,7 @@ export interface SalesOrder {
     orderId: string;
     orderDate: Date | Timestamp;
     customerId: string | null;
+    customer: Customer | null;
     source: string;
     origin: string;
     estimatedShipDate: Date | Timestamp | null;
@@ -293,6 +295,7 @@ export interface SalesOrder {
     batchId: string;
     billToAddress: string;
     shipToAddress: string;
+    shipToName: string;
     employeeName: string;
     productType: string;
     salesPerson: string;
@@ -303,4 +306,14 @@ export interface SalesOrder {
     discountType: 'percentage' | 'fixed';
     total: number;
     status: 'Draft' | 'Committed' | 'Completed' | 'Canceled';
+    fulfillmentStatus: string;
+    shipments: string;
+    shipmentsStatusSummary: string;
+    invoicesStatusSummary: string;
+    carrier: string;
+    trackingNumber: string;
+    shipmentDate: Date | Timestamp | null;
+    deliveryDate: Date | Timestamp | null;
+    publicNotes: string;
+    internalNotes: string;
 }
