@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Home, ChevronRight, DollarSign } from 'lucide-react';
@@ -13,6 +13,15 @@ import AuthGuard from '@/components/auth/auth-guard';
 export default function CreateSalesOrderPageContent() {
     const [orderId, setOrderId] = useState('');
     const router = useRouter();
+
+    useEffect(() => {
+        const duplicatedOrderData = localStorage.getItem('duplicateOrderData');
+        if (duplicatedOrderData) {
+            // Immediately redirect to the new order page, which will handle the data
+            const systemOrderId = '100500'; // Or generate a new unique ID
+            router.push(`/sales/${systemOrderId}`);
+        }
+    }, [router]);
 
     const handleCreateWithSystemId = () => {
         // In a real app, you'd fetch this from a backend service.

@@ -183,11 +183,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             const matchesSupplier = supplierFilter !== 'all' ? item.supplierId === supplierFilter : true;
             const matchesCategory = categoryFilter !== 'all' ? item.category === categoryFilter : true;
             const matchesManufacturer = manufacturerFilter !== 'all' ? item.manufacturer === manufacturerFilter : true;
-            const matchesQuantity = quantityFilter !== 'all' ? (item.quantity || 0) > 0 : true;
+            // Simple quantity check
+            const matchesQuantity = quantityFilter !== 'all' ? (item.quantityAvailable || 0) > 0 : true;
 
             return matchesSearch && matchesSupplier && matchesCategory && matchesManufacturer && matchesQuantity;
         });
-    }, [inventoryItems, productSearchTerm, supplierFilter, categoryFilter, manufacturerFilter, quantityFilter]);
+    }, [inventoryItems, productSearchTerm, supplierFilter, locationFilter, categoryFilter, manufacturerFilter, quantityFilter]);
 
 
     // Recalculate totals whenever items or discount change
@@ -314,6 +315,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             });
     };
 
+    const handleDuplicate = () => {
+        const orderData = JSON.stringify({ ...salesOrder, orderId: '', status: 'Draft' });
+        localStorage.setItem('duplicateOrderData', orderData);
+        router.push('/sales/new');
+    };
+
     const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -359,12 +366,12 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 <DropdownMenuContent>
                                     <DropdownMenuItem>Import sales order items</DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem>Duplicate order</DropdownMenuItem>
-                                    <DropdownMenuItem>Duplicate order with selection</DropdownMenuItem>
-                                    <DropdownMenuItem>Create purchase order for drop ship</DropdownMenuItem>
-                                    <DropdownMenuItem>Create purchase order for drop ship with selection</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={handleDuplicate}>Duplicate order</DropdownMenuItem>
+                                    <DropdownMenuItem disabled>Duplicate order with selection</DropdownMenuItem>
+                                    <DropdownMenuItem disabled>Create purchase order for drop ship</DropdownMenuItem>
+                                    <DropdownMenuItem disabled>Create purchase order for drop ship with selection</DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem>Customize this screen</DropdownMenuItem>
+                                    <DropdownMenuItem disabled>Customize this screen</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <span className="text-sm text-muted-foreground">All changes saved</span>
