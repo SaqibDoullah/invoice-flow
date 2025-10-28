@@ -40,7 +40,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Customer, type InventoryItem } from '@/types';
+import { type Customer, type InventoryItem, type LineItem } from '@/types';
 import AddCustomerDialog from '@/components/customers/add-customer-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -53,26 +53,73 @@ interface SalesOrderPageContentProps {
 
 type OrderStatus = 'Draft' | 'Committed' | 'Completed' | 'Canceled';
 
+interface SalesOrderState {
+    id: string;
+    orderDate: string;
+    customerId: string | null;
+    source: string;
+    origin: string;
+    estimatedShipDate: string;
+    customerPO: string;
+    fulfillment: string;
+    terms: string;
+    requestedShipping: string;
+    priceLevel: string;
+    batchId: string;
+    billToAddress: string;
+    shipToAddress: string;
+    employeeName: string;
+    productType: string;
+    salesPerson: string;
+    businessType: string;
+    items: LineItem[];
+    subtotal: number;
+    discount: number;
+    discountType: 'percentage' | 'fixed';
+    total: number;
+    status: OrderStatus;
+}
+
 export default function SalesOrderPageContent({ orderId }: SalesOrderPageContentProps) {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-    const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
-    const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
-    const [isEditingAddress, setIsEditingAddress] = useState(false);
-    const [billToAddress, setBillToAddress] = useState('--');
-    const [shipToAddress, setShipToAddress] = useState('--');
-    const [status, setStatus] = useState<OrderStatus>('Draft');
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [inventoryLoading, setInventoryLoading] = useState(true);
+    const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    
+    const [salesOrder, setSalesOrder] = useState<SalesOrderState>({
+        id: orderId,
+        orderDate: new Date().toISOString().split('T')[0],
+        customerId: null,
+        source: '',
+        origin: 'Tawakkal Warehouse',
+        estimatedShipDate: '',
+        customerPO: '',
+        fulfillment: '',
+        terms: '',
+        requestedShipping: '',
+        priceLevel: 'Item/case price',
+        batchId: '',
+        billToAddress: '--',
+        shipToAddress: '--',
+        employeeName: '',
+        productType: '',
+        salesPerson: '',
+        businessType: '',
+        items: [],
+        subtotal: 0,
+        discount: 0,
+        discountType: 'percentage',
+        total: 0,
+        status: 'Draft',
+    });
 
     useEffect(() => {
         const db = getFirestoreDb();
         if (authLoading || !user || !db) {
-            if (!authLoading) {
-                setInventoryLoading(false);
-            }
+            if (!authLoading) setInventoryLoading(false);
             return;
         }
 
@@ -81,9 +128,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         const unsubscribeCustomers = onSnapshot(qCustomers, (snapshot) => {
             const customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
             setCustomers(customersData);
-        }, (error) => {
-            console.error("Error fetching customers:", error);
-        });
+        }, (error) => console.error("Error fetching customers:", error));
 
         setInventoryLoading(true);
         const inventoryRef = collection(db, 'users', user.uid, 'inventory');
@@ -97,22 +142,76 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             setInventoryLoading(false);
         });
 
-
         return () => {
             unsubscribeCustomers();
             unsubscribeInventory();
         };
     }, [user, authLoading]);
 
-    const selectedCustomerName = customers.find(c => c.id === selectedCustomerId)?.name || 'Unspecified';
+    // Recalculate totals whenever items or discount change
+    useEffect(() => {
+        const subtotal = salesOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const discountAmount = salesOrder.discountType === 'percentage'
+            ? subtotal * (salesOrder.discount / 100)
+            : salesOrder.discount;
+        const total = subtotal - discountAmount;
+        
+        setSalesOrder(prev => ({
+            ...prev,
+            subtotal,
+            total
+        }));
+    }, [salesOrder.items, salesOrder.discount, salesOrder.discountType]);
 
-    const handleSaveAddress = () => {
-        setIsEditingAddress(false);
+    const handleInputChange = (field: keyof SalesOrderState, value: any) => {
+        setSalesOrder(prev => ({ ...prev, [field]: value }));
+    };
+    
+    const handleCustomerSelect = (customerId: string) => {
+        const customer = customers.find(c => c.id === customerId);
+        if (customer) {
+            setSalesOrder(prev => ({
+                ...prev,
+                customerId: customerId,
+                billToAddress: customer.address || '--',
+                shipToAddress: customer.address || '--',
+            }));
+        }
+    };
+    
+    const handleAddItem = () => {
+        const newItem: LineItem = { name: '', specification: '', price: 0, quantity: 1, lineTotal: 0 };
+        setSalesOrder(prev => ({ ...prev, items: [...prev.items, newItem] }));
     };
 
+    const handleItemChange = (index: number, field: keyof LineItem, value: any) => {
+        const newItems = [...salesOrder.items];
+        const itemToUpdate = { ...newItems[index] };
+        
+        if (field === 'price' || field === 'quantity') {
+            (itemToUpdate as any)[field] = parseFloat(value) || 0;
+        } else {
+            (itemToUpdate as any)[field] = value;
+        }
+        
+        itemToUpdate.lineTotal = itemToUpdate.price * itemToUpdate.quantity;
+        newItems[index] = itemToUpdate;
+        setSalesOrder(prev => ({ ...prev, items: newItems }));
+    };
+
+    const handleRemoveItem = (index: number) => {
+        setSalesOrder(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
+    };
+
+    const handleSaveAddress = () => setIsEditingAddress(false);
+
     const handleStatusChange = (newStatus: OrderStatus) => {
-        setStatus(newStatus);
-    }
+        setSalesOrder(prev => ({ ...prev, status: newStatus }));
+    };
+
+    const selectedCustomerName = customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
+
+    const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
     return (
         <AuthGuard>
@@ -158,7 +257,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                     <Tabs defaultValue="sale" className="w-full">
                         <div className="border-b">
                             <TabsList className="bg-transparent p-0 -mb-px">
-                                <TabsTrigger value="quote" asChild>
+                                 <TabsTrigger value="quote" asChild>
                                   <Link href="/quotes" className='data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none'>Quote</Link>
                                 </TabsTrigger>
                                 <TabsTrigger value="sale" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Sale</TabsTrigger>
@@ -166,7 +265,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 <TabsTrigger value="shipments" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Shipments</TabsTrigger>
                             </TabsList>
                         </div>
-                        <TabsContent value="quote">
+                         <TabsContent value="quote">
                             <p className="p-4">Quote content goes here.</p>
                         </TabsContent>
                         <TabsContent value="sale" className="mt-4">
@@ -177,12 +276,11 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 <div className="space-y-1">
                                                     <LabelWithTooltip label="Customer" tooltip="The customer for this sale." />
-                                                    <Popover open={isCustomerPopoverOpen} onOpenChange={setIsCustomerPopoverOpen}>
+                                                    <Popover>
                                                         <PopoverTrigger asChild>
                                                             <Button
                                                                 variant="outline"
                                                                 role="combobox"
-                                                                aria-expanded={isCustomerPopoverOpen}
                                                                 className="w-full justify-between font-normal"
                                                             >
                                                                 <span className="truncate">{selectedCustomerName}</span>
@@ -199,16 +297,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                                             <CommandItem
                                                                                 key={customer.id}
                                                                                 value={customer.name}
-                                                                                onSelect={() => {
-                                                                                    setSelectedCustomerId(customer.id);
-                                                                                    setIsCustomerPopoverOpen(false);
-                                                                                }}
+                                                                                onSelect={() => handleCustomerSelect(customer.id)}
                                                                             >
                                                                                 <Check
-                                                                                    className={cn(
-                                                                                        "mr-2 h-4 w-4",
-                                                                                        selectedCustomerId === customer.id ? "opacity-100" : "opacity-0"
-                                                                                    )}
+                                                                                    className={cn("mr-2 h-4 w-4", salesOrder.customerId === customer.id ? "opacity-100" : "opacity-0")}
                                                                                 />
                                                                                 {customer.name}
                                                                             </CommandItem>
@@ -216,10 +308,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                                     </CommandGroup>
                                                                 </CommandList>
                                                                 <div className="p-1 border-t">
-                                                                    <CommandItem onSelect={() => {
-                                                                        setIsCustomerPopoverOpen(false);
-                                                                        setIsAddCustomerOpen(true);
-                                                                    }}>
+                                                                    <CommandItem onSelect={() => setIsAddCustomerOpen(true)}>
                                                                         <Plus className="mr-2 h-4 w-4" />
                                                                         Create new customer
                                                                     </CommandItem>
@@ -228,16 +317,16 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                         </PopoverContent>
                                                     </Popover>
                                                 </div>
-                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Source</label><Input /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Order date</label><Input type="date" defaultValue="2025-10-27" /></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Origin</label><Input defaultValue="Tawakkal Warehouse" /></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Estimated ship date</label><Input type="date" /></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Customer PO</label><Input /></div>
-                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Fulfillment</label><Input /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Terms</label><Input /></div>
-                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Requested shipping</label><Input /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Price level</label><Input defaultValue="Item/case price"/><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Batch ID</label><Input /></div>
+                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Source</label><Input value={salesOrder.source} onChange={(e) => handleInputChange('source', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Order date</label><Input type="date" value={salesOrder.orderDate} onChange={(e) => handleInputChange('orderDate', e.target.value)} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Origin</label><Input value={salesOrder.origin} onChange={(e) => handleInputChange('origin', e.target.value)} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Estimated ship date</label><Input type="date" value={salesOrder.estimatedShipDate} onChange={(e) => handleInputChange('estimatedShipDate', e.target.value)} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Customer PO</label><Input value={salesOrder.customerPO} onChange={(e) => handleInputChange('customerPO', e.target.value)} /></div>
+                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Fulfillment</label><Input value={salesOrder.fulfillment} onChange={(e) => handleInputChange('fulfillment', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Terms</label><Input value={salesOrder.terms} onChange={(e) => handleInputChange('terms', e.target.value)} /></div>
+                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Requested shipping</label><Input value={salesOrder.requestedShipping} onChange={(e) => handleInputChange('requestedShipping', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
+                                                <div className="space-y-1 relative"><label className="text-sm font-medium">Price level</label><Input value={salesOrder.priceLevel} onChange={(e) => handleInputChange('priceLevel', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Batch ID</label><Input value={salesOrder.batchId} onChange={(e) => handleInputChange('batchId', e.target.value)} /></div>
                                             </CardContent>
                                         </Card>
                                         <Card>
@@ -245,14 +334,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <CardContent>
                                                 {isEditingAddress ? (
                                                     <div className="grid grid-cols-3 gap-4">
-                                                        <div><label className="text-sm font-semibold">Bill to</label><Input value={billToAddress} onChange={(e) => setBillToAddress(e.target.value)} /></div>
-                                                        <div><label className="text-sm font-semibold">Ship to</label><Input value={shipToAddress} onChange={(e) => setShipToAddress(e.target.value)} /></div>
+                                                        <div><label className="text-sm font-semibold">Bill to</label><Input value={salesOrder.billToAddress} onChange={(e) => handleInputChange('billToAddress', e.target.value)} /></div>
+                                                        <div><label className="text-sm font-semibold">Ship to</label><Input value={salesOrder.shipToAddress} onChange={(e) => handleInputChange('shipToAddress', e.target.value)} /></div>
                                                         <div><label className="text-sm font-semibold">Ship from</label><p className="text-sm pt-2">Heartland</p></div>
                                                     </div>
                                                 ) : (
                                                     <div className="grid grid-cols-3 gap-4 text-sm">
-                                                        <div><p className="font-semibold">Bill to</p><p>{billToAddress}</p></div>
-                                                        <div><p className="font-semibold">Ship to</p><p>{shipToAddress}</p></div>
+                                                        <div><p className="font-semibold">Bill to</p><p>{salesOrder.billToAddress}</p></div>
+                                                        <div><p className="font-semibold">Ship to</p><p>{salesOrder.shipToAddress}</p></div>
                                                         <div><p className="font-semibold">Ship from</p><p>Heartland</p></div>
                                                     </div>
                                                 )}
@@ -269,10 +358,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                         <Card>
                                             <CardHeader><CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Custom Fields</CardTitle></CardHeader>
                                             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                <div className="space-y-1"><label>Employee Name</label><Input/></div>
-                                                <div className="space-y-1"><label>Product Type</label><Input/></div>
-                                                <div className="space-y-1 relative"><label>Sales Person</label><Input/><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1"><label>Business Type</label><Input/></div>
+                                                <div className="space-y-1"><label>Employee Name</label><Input value={salesOrder.employeeName} onChange={(e) => handleInputChange('employeeName', e.target.value)} /></div>
+                                                <div className="space-y-1"><label>Product Type</label><Input value={salesOrder.productType} onChange={(e) => handleInputChange('productType', e.target.value)} /></div>
+                                                <div className="space-y-1 relative"><label>Sales Person</label><Input value={salesOrder.salesPerson} onChange={(e) => handleInputChange('salesPerson', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
+                                                <div className="space-y-1"><label>Business Type</label><Input value={salesOrder.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} /></div>
                                             </CardContent>
                                         </Card>
                                         <Card>
@@ -282,7 +371,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <CardContent>
                                                 <div className="flex items-center justify-between mb-4">
                                                     <Button variant="outline" size="sm"><Trash2 className="mr-2"/> Delete items</Button>
-                                                    <p className="text-sm text-muted-foreground">Summary: TOTAL 0 units</p>
+                                                    <p className="text-sm text-muted-foreground">Summary: TOTAL {salesOrder.items.reduce((sum, item) => sum + item.quantity, 0)} units</p>
                                                 </div>
                                                 <div className="overflow-x-auto">
                                                     <table className="w-full text-sm whitespace-nowrap">
@@ -292,26 +381,81 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                                 <th className="p-2 font-normal text-left">Item note</th>
                                                                 <th className="p-2 font-normal text-left">Product</th>
                                                                 <th className="p-2 font-normal text-right">Quantity</th>
-                                                                <th className="p-2 font-normal text-right">Quantity shipped units</th>
-                                                                <th className="p-2 font-normal text-right">Quantity not shipped units</th>
+                                                                <th className="p-2 font-normal text-right">Qty shipped</th>
+                                                                <th className="p-2 font-normal text-right">Qty not shipped</th>
                                                                 <th className="p-2 font-normal text-right">List Price</th>
                                                                 <th className="p-2 font-normal text-right">Discount</th>
                                                                 <th className="p-2 font-normal text-right">Last purchase price</th>
                                                                 <th className="p-2 font-normal text-right">Price</th>
                                                                 <th className="p-2 font-normal text-right">Subtotal</th>
                                                                 <th className="p-2 font-normal text-right">Income after adjustments</th>
+                                                                <th className="p-2 w-10"></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <tr><td colSpan={12} className="p-4 text-center text-muted-foreground">Type on last line to add an item. Additional lines are automatically added.</td></tr>
+                                                            {salesOrder.items.map((item, index) => (
+                                                                <tr key={index} className="border-b">
+                                                                    <td className="p-1"></td>
+                                                                    <td className="p-1"><Input className="min-w-[100px]" /></td>
+                                                                    <td className="p-1">
+                                                                        <Select onValueChange={(value) => {
+                                                                            const product = inventoryItems.find(p => p.id === value);
+                                                                            if (product) {
+                                                                                handleItemChange(index, 'name', product.name);
+                                                                                handleItemChange(index, 'price', product.price || 0);
+                                                                            }
+                                                                        }}>
+                                                                            <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {inventoryItems.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </td>
+                                                                    <td className="p-1"><Input type="number" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', e.target.value)} className="min-w-[70px] text-right" /></td>
+                                                                    <td className="p-1 text-right">0</td>
+                                                                    <td className="p-1 text-right">{item.quantity}</td>
+                                                                    <td className="p-1 text-right">{formatCurrency(item.price)}</td>
+                                                                    <td className="p-1"></td>
+                                                                    <td className="p-1"></td>
+                                                                    <td className="p-1"><Input type="number" value={item.price} onChange={e => handleItemChange(index, 'price', e.target.value)} className="min-w-[100px] text-right" /></td>
+                                                                    <td className="p-1 text-right">{formatCurrency(item.lineTotal)}</td>
+                                                                    <td className="p-1"></td>
+                                                                    <td className="p-1">
+                                                                        <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                                                                            <Trash2 className="w-4 h-4 text-destructive" />
+                                                                        </Button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
                                                         </tbody>
                                                     </table>
                                                 </div>
+                                                 <Button variant="link" className="p-0 h-auto text-primary mt-4" onClick={handleAddItem}><Plus className="mr-2"/>Add new item</Button>
                                                 <div className="flex justify-between items-start mt-4">
                                                     <Button variant="link" className="p-0 h-auto text-primary">Show income after adjustments details</Button>
-                                                    <div className="w-full max-w-xs space-y-1 text-sm text-right">
-                                                        <p>Total: $0.00</p>
-                                                        <Button variant="link" className="p-0 h-auto text-primary">Add new discount/fee/tax</Button>
+                                                    <div className="w-full max-w-xs space-y-1 text-sm">
+                                                        <div className="flex justify-between">
+                                                            <span>Subtotal:</span>
+                                                            <span>{formatCurrency(salesOrder.subtotal)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span>Discount:</span>
+                                                            <div className="flex w-32">
+                                                                <Input type="number" value={salesOrder.discount} onChange={e => handleInputChange('discount', parseFloat(e.target.value) || 0)} className="h-8 text-right"/>
+                                                                <Select value={salesOrder.discountType} onValueChange={(value: 'percentage' | 'fixed') => handleInputChange('discountType', value)}>
+                                                                    <SelectTrigger className="h-8 w-16"><SelectValue /></SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="percentage">%</SelectItem>
+                                                                        <SelectItem value="fixed">$</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                        </div>
+                                                         <div className="flex justify-between font-bold">
+                                                            <span>Total:</span>
+                                                            <span>{formatCurrency(salesOrder.total)}</span>
+                                                        </div>
+                                                        <Button variant="link" className="p-0 h-auto text-primary float-right">Add new discount/fee/tax</Button>
                                                     </div>
                                                 </div>
                                             </CardContent>
@@ -324,7 +468,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                 <CardTitle>Sale</CardTitle>
                                             </CardHeader>
                                             <CardContent className="space-y-1 text-sm">
-                                                <p><span className="font-semibold">Status:</span> <Badge variant={status === 'Draft' ? 'secondary' : 'default'} className={status === 'Committed' ? 'bg-green-100 text-green-800' : ''}>{status}</Badge></p>
+                                                <p><span className="font-semibold">Status:</span> <Badge variant={salesOrder.status === 'Draft' ? 'secondary' : 'default'} className={salesOrder.status === 'Committed' ? 'bg-green-100 text-green-800' : ''}>{salesOrder.status}</Badge></p>
                                                 <p><span className="font-semibold">Shipment status:</span> Not packed or shipped</p>
                                                 <p><span className="font-semibold">Invoice status:</span> No invoice posted</p>
                                                 <p><span className="font-semibold">Due date:</span> 10/27/2025</p>
@@ -335,11 +479,11 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             </CardContent>
                                             <CardContent className="p-4 border-t">
                                                 <div className="space-y-2">
-                                                    {status === 'Draft' && <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')}>Change status to committed</Button>}
-                                                    {status === 'Committed' && <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')}>Change status to completed</Button>}
-                                                    {(status === 'Draft' || status === 'Committed') && <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')}>Cancel sale</Button>}
-                                                    {status === 'Completed' && <p className="text-sm text-center text-muted-foreground">This sale is completed.</p>}
-                                                    {status === 'Canceled' && <p className="text-sm text-center text-destructive">This sale is canceled.</p>}
+                                                    {salesOrder.status === 'Draft' && <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Committed')}>Change status to committed</Button>}
+                                                    {salesOrder.status === 'Committed' && <Button variant="outline" className="w-full" onClick={() => handleStatusChange('Completed')}>Change status to completed</Button>}
+                                                    {(salesOrder.status === 'Draft' || salesOrder.status === 'Committed') && <Button variant="link" className="w-full text-destructive" onClick={() => handleStatusChange('Canceled')}>Cancel sale</Button>}
+                                                    {salesOrder.status === 'Completed' && <p className="text-sm text-center text-muted-foreground">This sale is completed.</p>}
+                                                    {salesOrder.status === 'Canceled' && <p className="text-sm text-center text-destructive">This sale is canceled.</p>}
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -568,5 +712,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-
-    
