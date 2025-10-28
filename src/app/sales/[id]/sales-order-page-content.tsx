@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { collection, query, onSnapshot, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { 
     DollarSign,
     Home, 
@@ -22,7 +22,8 @@ import {
     X,
     ChevronsUpDown,
     ShoppingCart,
-    MessageSquareQuote
+    MessageSquareQuote,
+    Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -40,52 +41,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Customer, type InventoryItem, type LineItem } from '@/types';
+import { type Customer, type InventoryItem, type LineItem, type SalesOrder } from '@/types';
 import AddCustomerDialog from '@/components/customers/add-customer-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 interface SalesOrderPageContentProps {
     orderId: string;
 }
 
-type OrderStatus = 'Draft' | 'Committed' | 'Completed' | 'Canceled';
-
-interface SalesOrderState {
-    id: string;
-    orderDate: string;
-    customerId: string | null;
-    source: string;
-    origin: string;
-    estimatedShipDate: string;
-    customerPO: string;
-    fulfillment: string;
-    terms: string;
-    requestedShipping: string;
-    priceLevel: string;
-    batchId: string;
-    billToAddress: string;
-    shipToAddress: string;
-    employeeName: string;
-    productType: string;
-    salesPerson: string;
-    businessType: string;
-    items: LineItem[];
-    subtotal: number;
-    discount: number;
-    discountType: 'percentage' | 'fixed';
-    total: number;
-    status: OrderStatus;
-}
+const toDate = (v: any): Date => {
+  if (v instanceof Date) return v;
+  if (v?.toDate) return v.toDate();
+  if (typeof v === 'string' || typeof v === 'number') {
+    const d = new Date(v);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return new Date();
+};
 
 export default function SalesOrderPageContent({ orderId }: SalesOrderPageContentProps) {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-    const [inventoryLoading, setInventoryLoading] = useState(true);
+    const [pageLoading, setPageLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     
@@ -97,14 +84,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     const [manufacturerFilter, setManufacturerFilter] = useState('all');
     const [quantityFilter, setQuantityFilter] = useState('all');
 
-
-    const [salesOrder, setSalesOrder] = useState<SalesOrderState>({
+    const [salesOrder, setSalesOrder] = useState<SalesOrder>({
         id: orderId,
-        orderDate: new Date().toISOString().split('T')[0],
+        orderId: orderId,
+        orderDate: new Date(),
         customerId: null,
         source: '',
         origin: 'Tawakkal Warehouse',
-        estimatedShipDate: '',
+        estimatedShipDate: null,
         customerPO: '',
         fulfillment: '',
         terms: '',
@@ -125,37 +112,51 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         status: 'Draft',
     });
 
+    // Fetch dependent data (customers, inventory)
     useEffect(() => {
         const db = getFirestoreDb();
-        if (authLoading || !user || !db) {
-            if (!authLoading) setInventoryLoading(false);
-            return;
-        }
+        if (authLoading || !user || !db) return;
 
-        const customersRef = collection(db, 'users', user.uid, 'customers');
-        const qCustomers = query(customersRef);
-        const unsubscribeCustomers = onSnapshot(qCustomers, (snapshot) => {
-            const customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
-            setCustomers(customersData);
+        const unsubCustomers = onSnapshot(query(collection(db, 'users', user.uid, 'customers')), (snapshot) => {
+            setCustomers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer)));
         }, (error) => console.error("Error fetching customers:", error));
 
-        setInventoryLoading(true);
-        const inventoryRef = collection(db, 'users', user.uid, 'inventory');
-        const qInventory = query(inventoryRef);
-        const unsubscribeInventory = onSnapshot(qInventory, (snapshot) => {
-            const itemsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
-            setInventoryItems(itemsData);
-            setInventoryLoading(false);
-        }, (error) => {
-            console.error("Error fetching inventory:", error);
-            setInventoryLoading(false);
-        });
+        const unsubInventory = onSnapshot(query(collection(db, 'users', user.uid, 'inventory')), (snapshot) => {
+            setInventoryItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem)));
+        }, (error) => console.error("Error fetching inventory:", error));
 
         return () => {
-            unsubscribeCustomers();
-            unsubscribeInventory();
+            unsubCustomers();
+            unsubInventory();
         };
     }, [user, authLoading]);
+
+    // Fetch existing sales order or set up a new one
+    useEffect(() => {
+        const db = getFirestoreDb();
+        if (authLoading || !user || !db) return;
+
+        setPageLoading(true);
+        const docRef = doc(db, 'users', user.uid, 'sales', orderId);
+        
+        getDoc(docRef).then(docSnap => {
+            if (docSnap.exists()) {
+                const data = docSnap.data() as Omit<SalesOrder, 'id'>;
+                setSalesOrder({
+                    ...data,
+                    id: docSnap.id,
+                    orderDate: toDate(data.orderDate),
+                    estimatedShipDate: data.estimatedShipDate ? toDate(data.estimatedShipDate) : null,
+                });
+            }
+            // If it doesn't exist, we just keep the default state for a new order.
+        }).catch(error => {
+            console.error("Error fetching sales order:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not load sales order data.' });
+        }).finally(() => {
+            setPageLoading(false);
+        });
+    }, [orderId, user, authLoading, toast]);
     
     const filteredInventoryItems = useMemo(() => {
         return inventoryItems.filter(item => {
@@ -168,7 +169,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             const matchesCategory = categoryFilter !== 'all' ? item.category === categoryFilter : true;
             const matchesManufacturer = manufacturerFilter !== 'all' ? item.manufacturer === manufacturerFilter : true;
             const matchesQuantity = quantityFilter !== 'all' ? (item.quantity || 0) > 0 : true;
-            // Location filter is not implemented on item data yet
 
             return matchesSearch && matchesSupplier && matchesCategory && matchesManufacturer && matchesQuantity;
         });
@@ -183,14 +183,10 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             : salesOrder.discount;
         const total = subtotal - discountAmount;
         
-        setSalesOrder(prev => ({
-            ...prev,
-            subtotal,
-            total
-        }));
+        setSalesOrder(prev => ({ ...prev, subtotal, total }));
     }, [salesOrder.items, salesOrder.discount, salesOrder.discountType]);
 
-    const handleInputChange = (field: keyof SalesOrderState, value: any) => {
+    const handleInputChange = (field: keyof SalesOrder, value: any) => {
         setSalesOrder(prev => ({ ...prev, [field]: value }));
     };
     
@@ -237,7 +233,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
             lineTotal: (product.price || 0) * quantity
         };
         
-        // Check if item already exists, if so update quantity
         const existingItemIndex = salesOrder.items.findIndex(item => item.specification === newItem.specification);
 
         if (existingItemIndex > -1) {
@@ -250,21 +245,67 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         }
     };
 
-
     const handleRemoveItem = (index: number) => {
         setSalesOrder(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== index) }));
     };
 
     const handleSaveAddress = () => setIsEditingAddress(false);
 
-    const handleStatusChange = (newStatus: OrderStatus) => {
+    const handleStatusChange = (newStatus: SalesOrder['status']) => {
         setSalesOrder(prev => ({ ...prev, status: newStatus }));
+    };
+
+    const handleSaveChanges = async () => {
+        const db = getFirestoreDb();
+        if (!user || !db) {
+            toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to save.' });
+            return;
+        }
+        setIsSaving(true);
+        const docRef = doc(db, 'users', user.uid, 'sales', orderId);
+        
+        const dataToSave = {
+            ...salesOrder,
+            orderDate: Timestamp.fromDate(salesOrder.orderDate),
+            estimatedShipDate: salesOrder.estimatedShipDate ? Timestamp.fromDate(salesOrder.estimatedShipDate) : null,
+        };
+        
+        // Remove the local 'id' field before saving to Firestore
+        delete (dataToSave as any).id;
+
+        setDoc(docRef, dataToSave, { merge: true })
+            .then(() => {
+                toast({ title: 'Success', description: 'Sales order saved successfully.' });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'write',
+                    requestResourceData: dataToSave,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+
+                if (serverError?.code !== 'permission-denied') {
+                    toast({ variant: 'destructive', title: 'Error', description: 'Failed to save sales order.' });
+                }
+            })
+            .finally(() => {
+                setIsSaving(false);
+            });
     };
 
     const selectedCustomerName = customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
+    if (pageLoading || authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        );
+    }
+    
     return (
         <AuthGuard>
             <div className="flex flex-col bg-muted/40">
@@ -279,11 +320,15 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 <div className="flex items-center gap-2 text-lg font-semibold">
                                     <span>{orderId}</span>
                                     <span className="text-muted-foreground">&bull;</span>
-                                    <span className="text-muted-foreground">10/27/2025</span>
+                                    <span className="text-muted-foreground">{format(salesOrder.orderDate, 'MM/dd/yyyy')}</span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            <Button onClick={handleSaveChanges} disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save changes
+                            </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
@@ -370,9 +415,9 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                     </Popover>
                                                 </div>
                                                 <div className="space-y-1 relative"><label className="text-sm font-medium">Source</label><Input value={salesOrder.source} onChange={(e) => handleInputChange('source', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Order date</label><Input type="date" value={salesOrder.orderDate} onChange={(e) => handleInputChange('orderDate', e.target.value)} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Order date</label><Input type="date" value={format(salesOrder.orderDate, 'yyyy-MM-dd')} onChange={(e) => handleInputChange('orderDate', new Date(e.target.value))} /></div>
                                                 <div className="space-y-1"><label className="text-sm font-medium">Origin</label><Input value={salesOrder.origin} onChange={(e) => handleInputChange('origin', e.target.value)} /></div>
-                                                <div className="space-y-1"><label className="text-sm font-medium">Estimated ship date</label><Input type="date" value={salesOrder.estimatedShipDate} onChange={(e) => handleInputChange('estimatedShipDate', e.target.value)} /></div>
+                                                <div className="space-y-1"><label className="text-sm font-medium">Estimated ship date</label><Input type="date" value={salesOrder.estimatedShipDate ? format(salesOrder.estimatedShipDate, 'yyyy-MM-dd') : ''} onChange={(e) => handleInputChange('estimatedShipDate', new Date(e.target.value))} /></div>
                                                 <div className="space-y-1"><label className="text-sm font-medium">Customer PO</label><Input value={salesOrder.customerPO} onChange={(e) => handleInputChange('customerPO', e.target.value)} /></div>
                                                 <div className="space-y-1 relative"><label className="text-sm font-medium">Fulfillment</label><Input value={salesOrder.fulfillment} onChange={(e) => handleInputChange('fulfillment', e.target.value)} /><Search className="absolute right-3 top-1/2 mt-1.5 w-4 h-4 text-muted-foreground"/></div>
                                                 <div className="space-y-1"><label className="text-sm font-medium">Terms</label><Input value={salesOrder.terms} onChange={(e) => handleInputChange('terms', e.target.value)} /></div>
@@ -524,7 +569,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                 <p><span className="font-semibold">Status:</span> <Badge variant={salesOrder.status === 'Draft' ? 'secondary' : 'default'} className={salesOrder.status === 'Committed' ? 'bg-green-100 text-green-800' : ''}>{salesOrder.status}</Badge></p>
                                                 <p><span className="font-semibold">Shipment status:</span> Not packed or shipped</p>
                                                 <p><span className="font-semibold">Invoice status:</span> No invoice posted</p>
-                                                <p><span className="font-semibold">Due date:</span> 10/27/2025</p>
+                                                <p><span className="font-semibold">Due date:</span> {format(salesOrder.orderDate, 'MM/dd/yyyy')}</p>
                                                 <p><span className="font-semibold">Synced from:</span> --</p>
                                                 <p><span className="font-semibold">Last synced from:</span> --</p>
                                                 <p><span className="font-semibold">Synced to:</span> --</p>
@@ -570,7 +615,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <SelectTrigger className="w-40"><SelectValue placeholder="All suppliers" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">All suppliers</SelectItem>
-                                                {/* This should be dynamic based on available suppliers */}
                                             </SelectContent>
                                         </Select>
                                         <Select value={locationFilter} onValueChange={setLocationFilter}>
@@ -619,9 +663,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {inventoryLoading ? (
-                                                     <tr><td colSpan={11} className="p-8 text-center text-muted-foreground">Loading...</td></tr>
-                                                ) : filteredInventoryItems.length > 0 ? (
+                                                {filteredInventoryItems.length > 0 ? (
                                                     filteredInventoryItems.map((product) => (
                                                     <TableRow key={product.id}>
                                                         <TableCell className="p-2 text-primary">{product.sku || product.id}</TableCell>
@@ -671,7 +713,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <p>Manually enter quantities for the shipment in the table below.</p>
                                         </div>
                                         <p className="text-sm text-muted-foreground">All shipment products and quantities match ordered products and quantities.</p>
-                                        <p className="text-sm text-muted-foreground">Created: Oct 27 2025 3:57:49 pm by Saqib</p>
+                                        <p className="text-sm text-muted-foreground">Created: {format(new Date(), 'PPp')} by {user?.displayName || 'You'}</p>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-4">
                                             <div className="space-y-1"><label className="text-xs">Carrier</label><Select><SelectTrigger><SelectValue placeholder="-- Unspecified --"/></SelectTrigger></Select></div>

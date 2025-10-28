@@ -100,6 +100,7 @@ export type QuoteUpdateInput = Omit<QuoteFormData, 'createdAt' | 'ownerId'>;
 export const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  address: z.string().optional(),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
@@ -278,17 +279,28 @@ export interface StockHistoryEntry {
 
 export interface SalesOrder {
     id: string;
-    status: 'Committed' | 'Draft';
-    orderDate: string;
     orderId: string;
-    customer: string;
-    shipToName: string;
+    orderDate: Date | Timestamp;
+    customerId: string | null;
     source: string;
     origin: string;
+    estimatedShipDate: Date | Timestamp | null;
+    customerPO: string;
+    fulfillment: string;
+    terms: string;
+    requestedShipping: string;
+    priceLevel: string;
     batchId: string;
-    fulfillmentStatus: string;
-    shipments: string;
-    shipmentsStatusSummary: string;
+    billToAddress: string;
+    shipToAddress: string;
+    employeeName: string;
+    productType: string;
+    salesPerson: string;
+    businessType: string;
+    items: LineItem[];
+    subtotal: number;
+    discount: number;
+    discountType: 'percentage' | 'fixed';
     total: number;
-    invoicesStatusSummary: string;
+    status: 'Draft' | 'Committed' | 'Completed' | 'Canceled';
 }
