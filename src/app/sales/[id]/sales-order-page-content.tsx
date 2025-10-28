@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -137,20 +136,6 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline">
-                                        Print sales order
-                                        <ChevronDown className="ml-2" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>Print sales order with barcode</DropdownMenuItem>
-                                    <DropdownMenuItem>Export sales order</DropdownMenuItem>
-                                    <DropdownMenuItem>Email sales order</DropdownMenuItem>
-                                    <DropdownMenuItem>Print sales order manifest</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
                                         Actions
                                         <ChevronDown className="ml-2" />
                                     </Button>
@@ -173,15 +158,17 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                     <Tabs defaultValue="sale" className="w-full">
                         <div className="border-b">
                             <TabsList className="bg-transparent p-0 -mb-px">
-                                <Link href="/quotes" className={cn(
-                                    'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
-                                    'border-b-2 border-transparent text-muted-foreground hover:text-accent-foreground data-[state=active]:text-foreground'
-                                )}>Quote</Link>
+                                <TabsTrigger value="quote" asChild>
+                                  <Link href="/quotes" className='data-[state=active]:bg-transparent data-[state=inactive]:hover:bg-muted data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none'>Quote</Link>
+                                </TabsTrigger>
                                 <TabsTrigger value="sale" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Sale</TabsTrigger>
                                 <TabsTrigger value="products" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Products view</TabsTrigger>
                                 <TabsTrigger value="shipments" className="rounded-none data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none">Shipments</TabsTrigger>
                             </TabsList>
                         </div>
+                        <TabsContent value="quote">
+                            <p className="p-4">Quote content goes here.</p>
+                        </TabsContent>
                         <TabsContent value="sale" className="mt-4">
                                 <div className="grid lg:grid-cols-3 gap-8 items-start">
                                     <div className="lg:col-span-2 space-y-6">
@@ -457,9 +444,98 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                 </CardContent>
                             </Card>
                         </TabsContent>
-                         <TabsContent value="shipments">
-                                <p>Shipments content goes here.</p>
-                            </TabsContent>
+                         <TabsContent value="shipments" className="mt-4">
+                            <Card>
+                                <CardContent className="p-4 space-y-4">
+                                    <div className="bg-muted p-4 rounded-lg space-y-2">
+                                        <div>
+                                            <h3 className="font-semibold text-lg">Shipment ID: {orderId}-1</h3>
+                                            <p className="text-sm text-muted-foreground">Status: Editable</p>
+                                        </div>
+                                        <div className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 p-3 rounded-md text-sm">
+                                            <p>Shipment can not be packed or shipped since it is empty.</p>
+                                            <p>Manually enter quantities for the shipment in the table below.</p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">All shipment products and quantities match ordered products and quantities.</p>
+                                        <p className="text-sm text-muted-foreground">Created: Oct 27 2025 3:57:49 pm by Saqib</p>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 pt-4">
+                                            <div className="space-y-1"><label className="text-xs">Carrier</label><Select><SelectTrigger><SelectValue placeholder="-- Unspecified --"/></SelectTrigger></Select></div>
+                                            <div className="space-y-1"><label className="text-xs">Tracking number</label><Input/></div>
+                                            <div className="space-y-1"><label className="text-xs">Estimated ship date</label><Input type="date"/></div>
+                                            <div className="space-y-1"><label className="text-xs">Estimated delivery date</label><Input type="date"/></div>
+                                            <div className="space-y-1"><label className="text-xs">Shipment origin</label><Select><SelectTrigger><SelectValue placeholder="Default to order origin (Tawakkal Wa..."/></SelectTrigger></Select></div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                            <div className="space-y-1"><label className="text-xs">Public notes</label><Textarea/></div>
+                                            <div className="space-y-1"><label className="text-xs">Internal notes</label><Textarea/></div>
+                                        </div>
+                                    </div>
+                                     <div className="flex flex-wrap items-center gap-2">
+                                        <div className="relative">
+                                            <Input placeholder="Search..." className="pl-8" />
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
+                                        </div>
+                                        <span className="text-sm font-semibold">Filters:</span>
+                                        <div className="relative">
+                                             <Input placeholder="All locations" className="w-40" />
+                                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        </div>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All categories" />
+                                            </SelectTrigger>
+                                        </Select>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="All manufacturers" />
+                                            </SelectTrigger>
+                                        </Select>
+                                         <Select>
+                                            <SelectTrigger className="w-[200px]">
+                                                <SelectValue placeholder="Order or Shipment > 0" />
+                                            </SelectTrigger>
+                                        </Select>
+                                        <Input placeholder="All lot ids" className="w-32" />
+                                     </div>
+                                      <div className="border rounded-md overflow-x-auto">
+                                        <table className="w-full text-sm whitespace-nowrap">
+                                            <thead className="bg-muted/50">
+                                                <tr className="border-b">
+                                                    <th className="p-2 font-medium text-left flex items-center gap-1"><Checkbox className="mr-2" /> <ArrowDown className="w-4 h-4"/> Product ID</th>
+                                                    <th className="p-2 font-medium text-left">Description</th>
+                                                    <th colSpan={4} className="p-2 font-medium text-center border-l">Open Stock</th>
+                                                    <th colSpan={4} className="p-2 font-medium text-center border-l">Case Stock</th>
+                                                    <th className="p-2 font-medium text-left border-l">Packing</th>
+                                                    <th className="p-2 font-medium text-left border-l">Sublocation</th>
+                                                    <th className="p-2 font-medium text-left border-l">Lot ID</th>
+                                                </tr>
+                                                <tr className="border-b">
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2"></th>
+                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
+                                                    <th className="p-2 font-medium text-right">Avail</th>
+                                                    <th className="p-2 font-medium text-right">Order</th>
+                                                    <th className="p-2 font-medium text-right">Shpmnt</th>
+                                                    <th className="p-2 font-medium text-right border-l">QoH</th>
+                                                    <th className="p-2 font-medium text-right">Avail</th>
+                                                    <th className="p-2 font-medium text-right">Order</th>
+                                                    <th className="p-2 font-medium text-right">Shpmnt</th>
+                                                    <th className="p-2 border-l"></th>
+                                                    <th className="p-2 border-l"></th>
+                                                    <th className="p-2 border-l"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                 <tr>
+                                                    <td colSpan={13} className="p-8 text-center text-muted-foreground">No items to display.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                     </div>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
                     </Tabs>
                 </main>
                 <AddCustomerDialog
@@ -492,3 +568,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
