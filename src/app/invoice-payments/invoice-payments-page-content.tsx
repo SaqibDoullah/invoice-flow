@@ -121,7 +121,7 @@ export default function InvoicePaymentsPageContent() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>Action 1</DropdownMenuItem>
+                  <DropdownMenuItem>Customize columns</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
