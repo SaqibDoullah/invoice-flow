@@ -1,7 +1,7 @@
 
-# InvoiceFlow
+# CoreOps
 
-InvoiceFlow is a production-ready Invoice Generator web app built with Next.js, Firebase, and Tailwind CSS. It allows users to securely manage their invoices with features like creation, editing, PDF export, and status tracking, all while being optimized for Firebase's free tier.
+CoreOps is a production-ready Invoice Generator web app built with Next.js, Firebase, and Tailwind CSS. It allows users to securely manage their invoices with features like creation, editing, PDF export, and status tracking, all while being optimized for Firebase's free tier.
 
 ## Getting Started
 
@@ -158,6 +158,7 @@ To deploy the application to Firebase Hosting:
     ```
 
 After deployment, Firebase CLI will provide you with the URL to your live application.
+
 
 
 

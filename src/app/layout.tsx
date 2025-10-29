@@ -6,8 +6,8 @@ import DashboardLayout from '@/components/dashboard-layout';
 
 
 export const metadata: Metadata = {
-  title: 'InvoiceFlow',
-  description: 'A production-ready Invoice Generator web app.',
+  title: 'CoreOps',
+  description: 'A production-ready business operations web app.',
 };
 
 export default function RootLayout({

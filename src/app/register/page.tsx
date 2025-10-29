@@ -31,7 +31,7 @@ export default function RegisterPage() {
         <div className="grid gap-2 text-center mb-8">
           <div className="flex justify-center items-center mb-2">
             <FileText className="h-8 w-8 mr-2 text-primary" />
-            <h1 className="text-3xl font-bold">InvoiceFlow</h1>
+            <h1 className="text-3xl font-bold">CoreOps</h1>
           </div>
           <p className="text-balance text-muted-foreground">
             Enter your information to create an account

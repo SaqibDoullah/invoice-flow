@@ -1,3 +1,4 @@
+
 import nodemailer from 'nodemailer';
 
 interface SendEmailOptions {
@@ -26,7 +27,7 @@ export async function sendEmail({ to, subject, html, attachments }: SendEmailOpt
   });
 
   const mailOptions = {
-    from: `"InvoiceFlow" <${process.env.GMAIL_EMAIL}>`,
+    from: `"CoreOps" <${process.env.GMAIL_EMAIL}>`,
     to,
     subject,
     html,
