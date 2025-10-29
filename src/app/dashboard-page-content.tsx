@@ -109,9 +109,9 @@ export default function DashboardPageContent() {
   return (
     <AuthGuard>
         <main className="flex-1 container mx-auto p-4 md:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
               
-              <div className="space-y-8">
+              <div className="space-y-8 lg:col-span-1">
                  <div>
                     <h2 className="text-2xl font-bold mb-4">Purchasing</h2>
                      <Card>
@@ -124,7 +124,7 @@ export default function DashboardPageContent() {
                  </div>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-8 lg:col-span-2">
                  <div>
                     <h2 className="text-2xl font-bold mb-4">Inventory</h2>
                     <Card>
@@ -161,7 +161,7 @@ export default function DashboardPageContent() {
                  </div>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-8 lg:col-span-1">
                 <div>
                     <h2 className="text-2xl font-bold mb-4">Selling</h2>
                     <Card>
