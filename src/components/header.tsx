@@ -11,7 +11,6 @@ export default function Header() {
         <div className="mr-8 hidden md:flex items-center gap-2">
            <Link href="/" className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg hidden lg:inline-block">InvoiceFlow</span>
            </Link>
         </div>
 

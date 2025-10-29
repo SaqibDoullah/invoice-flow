@@ -32,24 +32,26 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const purchasingFeatures = [
   { title: 'Suppliers', description: 'View all suppliers.', icon: <Users className="w-6 h-6" />, href: '/suppliers', color: 'red' },
-  { title: 'Purchases', description: 'View all purchase orders.', icon: <ShoppingCart className="w-6 h-6" />, href: '/purchases', color: 'red' },
-  { title: 'Bills', description: 'View all bills.', icon: <Receipt className="w-6 h-6" />, href: '/bills', color: 'red' },
+  { title: 'Purchases', description: 'View all purchase orders.', icon: <ShoppingCart className="w-6 h-6" />, href: '/purchases', color: 'orange' },
+  { title: 'Bills', description: 'View all bills.', icon: <Receipt className="w-6 h-6" />, href: '/bills', color: 'orange' },
   { title: 'Bill payments', description: 'View all bill payments.', icon: <CreditCard className="w-6 h-6" />, href: '/bill-payments', color: 'orange' },
-  { title: 'Reorder', description: 'Create a purchase order from reorder quantities.', icon: <RefreshCw className="w-6 h-6" />, href: '/purchases/reorder', color: 'orange' },
-  { title: 'Reorder (legacy)', description: 'Legacy reordering screen.', icon: <RefreshCw className="w-6 h-6" />, href: '#', color: 'orange' },
+  { title: 'Reorder', description: 'Create a purchase order from reorder quantities.', icon: <RefreshCw className="w-6 h-6" />, href: '/purchases/reorder', color: 'yellow' },
+  { title: 'Reorder (legacy)', description: 'Legacy reordering screen.', icon: <RefreshCw className="w-6 h-6" />, href: '#', color: 'yellow' },
 ];
 
 const inventoryFeatures = [
   { title: 'Stock', description: 'View product stock levels.', icon: <Factory className="w-6 h-6" />, href: '/inventory/stock', color: 'blue' },
-  { title: 'Stock history', description: 'View stock and transaction history.', icon: <History className="w-6 h-6" />, href: '/inventory/stock-history', color: 'blue' },
   { title: 'Products', description: 'View all products.', icon: <Boxes className="w-6 h-6" />, href: '/inventory/products', color: 'blue' },
-  { title: 'Product lookups', description: 'View all product lookups & alias SKUs.', icon: <Search className="w-6 h-6" />, href: '/inventory/product-lookup', color: 'blue' },
-  { title: 'Product groups', description: 'Manage groups of related products.', icon: <Boxes className="w-6 h-6" />, href: '/inventory/product-groups/new', color: 'blue' },
   { title: 'Stock takes', description: 'Enter physical count of stock.', icon: <ClipboardList className="w-6 h-6" />, href: '#', color: 'purple' },
-  { title: 'Stock changes', description: 'Adjust the stock levels.', icon: <ArrowUp className="w-6 h-6" />, href: '#', color: 'purple' },
   { title: 'Replenishment', description: 'Create a transfer order from replenishment calculations.', icon: <RefreshCcw className="w-6 h-6" />, href: '#', color: 'purple' },
-  { title: 'Transfers', description: 'Move stock between locations.', icon: <ArrowLeftRight className="w-6 h-6" />, href: '#', color: 'purple' },
 ];
+
+const inventoryFeaturesCol2 = [
+    { title: 'Stock history', description: 'View stock and transaction history.', icon: <History className="w-6 h-6" />, href: '/inventory/stock-history', color: 'blue' },
+    { title: 'Product lookups', description: 'View all product lookups & alias SKUs.', icon: <Search className="w-6 h-6" />, href: '/inventory/product-lookup', color: 'blue' },
+    { title: 'Stock changes', description: 'Adjust the stock levels.', icon: <ArrowUp className="w-6 h-6" />, href: '#', color: 'purple' },
+    { title: 'Transfers', description: 'Move stock between locations.', icon: <ArrowLeftRight className="w-6 h-6" />, href: '#', color: 'purple' },
+]
 
 const sellingFeatures = [
   { title: 'Customers', description: 'View all customers.', icon: <Users className="w-6 h-6" />, href: '/customers', color: 'green' },
@@ -62,19 +64,23 @@ const sellingFeatures = [
 
 const accountingFeatures = [
     { title: 'Average cost changes', description: 'Update product\'s average cost.', icon: <Calculator className="w-6 h-6" />, href: '#', color: 'teal' },
-    { title: 'Journal entries', description: 'View all journal entries.', icon: <BookCopy className="w-6 h-6" />, href: '#', color: 'teal' },
     { title: 'Consolidations', description: 'View all consolidations.', icon: <Library className="w-6 h-6" />, href: '#', color: 'teal' },
-    { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy className="w-6 h-6" />, href: '#', color: 'teal' },
     { title: 'QuickBooks Online sync status', description: 'View transactions\' sync status.', icon: <RefreshCcw className="w-6 h-6" />, href: '#', color: 'teal' },
 ];
 
+const accountingFeaturesCol2 = [
+    { title: 'Journal entries', description: 'View all journal entries.', icon: <BookCopy className="w-6 h-6" />, href: '#', color: 'teal' },
+    { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy className="w-6 h-6" />, href: '#', color: 'teal' },
+]
+
 const colorVariants = {
-  red: { bg: 'bg-red-100 dark:bg-red-900/50', text: 'text-red-600 dark:text-red-400', icon: 'text-red-500' },
-  orange: { bg: 'bg-orange-100 dark:bg-orange-900/50', text: 'text-orange-600 dark:text-orange-400', icon: 'text-orange-500' },
-  blue: { bg: 'bg-blue-100 dark:bg-blue-900/50', text: 'text-blue-600 dark:text-blue-400', icon: 'text-blue-500' },
-  purple: { bg: 'bg-purple-100 dark:bg-purple-900/50', text: 'text-purple-600 dark:text-purple-400', icon: 'text-purple-500' },
-  green: { bg: 'bg-green-100 dark:bg-green-900/50', text: 'text-green-600 dark:text-green-400', icon: 'text-green-500' },
-  teal: { bg: 'bg-teal-100 dark:bg-teal-900/50', text: 'text-teal-600 dark:text-teal-400', icon: 'text-teal-500' },
+  red: { bg: 'bg-red-500', text: 'text-red-500', icon: 'text-white' },
+  orange: { bg: 'bg-orange-400', text: 'text-orange-400', icon: 'text-white' },
+  yellow: { bg: 'bg-yellow-400', text: 'text-yellow-400', icon: 'text-white' },
+  blue: { bg: 'bg-blue-500', text: 'text-blue-500', icon: 'text-white' },
+  purple: { bg: 'bg-purple-500', text: 'text-purple-500', icon: 'text-white' },
+  green: { bg: 'bg-green-500', text: 'text-green-500', icon: 'text-white' },
+  teal: { bg: 'bg-teal-500', text: 'text-teal-500', icon: 'text-white' },
 };
 
 const FeatureCard = ({ title, description, icon, href, color }: { title: string, description: string, icon: React.ReactNode, href: string, color: keyof typeof colorVariants }) => {
@@ -82,12 +88,12 @@ const FeatureCard = ({ title, description, icon, href, color }: { title: string,
   const colors = colorVariants[color];
 
   const cardContent = (
-    <div className={`flex items-center gap-4 p-4 rounded-lg transition-all duration-200 ${isImplemented ? 'hover:bg-accent/50' : 'cursor-not-allowed opacity-60'}`}>
-        <div className={`p-3 rounded-lg ${colors.bg}`}>
+    <div className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${isImplemented ? 'hover:bg-accent' : 'cursor-not-allowed opacity-60'}`}>
+        <div className={`p-2 rounded-md ${colors.bg}`}>
             {React.cloneElement(icon as React.ReactElement, { className: `w-6 h-6 ${colors.icon}` })}
         </div>
         <div>
-            <h3 className={`font-semibold ${isImplemented ? colors.text : 'text-muted-foreground'}`}>{title}</h3>
+            <h3 className={`font-semibold text-blue-600`}>{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
         </div>
     </div>
@@ -100,28 +106,75 @@ const FeatureCard = ({ title, description, icon, href, color }: { title: string,
   return <Link href={href}>{cardContent}</Link>;
 };
 
-const FeatureSection = ({ title, features }: { title: string, features: Array<(typeof purchasingFeatures)[0]> }) => (
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-2xl font-bold">{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="flex flex-col gap-2">
-      {features.map((feature) => (
-        <FeatureCard key={feature.title} {...feature} />
-      ))}
-    </CardContent>
-  </Card>
-);
 
 export default function DashboardPageContent() {
   return (
     <AuthGuard>
         <main className="flex-1 container mx-auto p-4 md:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 items-start">
-              <FeatureSection title="Purchasing" features={purchasingFeatures} />
-              <FeatureSection title="Inventory" features={inventoryFeatures} />
-              <FeatureSection title="Selling" features={sellingFeatures} />
-              <FeatureSection title="Accounting" features={accountingFeatures} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+              
+              {/* Purchasing Section */}
+              <div className="col-span-1">
+                 <h2 className="text-2xl font-bold mb-4">Purchasing</h2>
+                 <Card>
+                    <CardContent className="p-2 flex flex-col gap-1">
+                        {purchasingFeatures.map((feature) => (
+                            <FeatureCard key={feature.title} {...feature} />
+                        ))}
+                    </CardContent>
+                 </Card>
+              </div>
+
+              {/* Inventory and Accounting Section */}
+              <div className="col-span-1 space-y-8">
+                 <div>
+                    <h2 className="text-2xl font-bold mb-4">Inventory</h2>
+                    <Card>
+                        <CardContent className="p-2 grid grid-cols-2 gap-1">
+                            <div>
+                                {inventoryFeatures.map((feature) => (
+                                    <FeatureCard key={feature.title} {...feature} />
+                                ))}
+                            </div>
+                             <div>
+                                {inventoryFeaturesCol2.map((feature) => (
+                                    <FeatureCard key={feature.title} {...feature} />
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                 </div>
+                 <div>
+                    <h2 className="text-2xl font-bold mb-4">Accounting</h2>
+                     <Card>
+                        <CardContent className="p-2 grid grid-cols-2 gap-1">
+                             <div>
+                                {accountingFeatures.map((feature) => (
+                                    <FeatureCard key={feature.title} {...feature} />
+                                ))}
+                            </div>
+                             <div>
+                                {accountingFeaturesCol2.map((feature) => (
+                                    <FeatureCard key={feature.title} {...feature} />
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                 </div>
+              </div>
+
+              {/* Selling Section */}
+              <div className="col-span-1">
+                <h2 className="text-2xl font-bold mb-4">Selling</h2>
+                <Card>
+                    <CardContent className="p-2 flex flex-col gap-1">
+                        {sellingFeatures.map((feature) => (
+                            <FeatureCard key={feature.title} {...feature} />
+                        ))}
+                    </CardContent>
+                </Card>
+              </div>
+
             </div>
         </main>
     </AuthGuard>
