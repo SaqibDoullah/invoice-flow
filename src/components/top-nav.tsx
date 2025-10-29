@@ -29,14 +29,15 @@ export default function TopNav() {
             href={item.href}
             data-active={active}
             className="relative rounded-lg px-3 py-2 text-sm font-medium text-foreground/80
-                       hover:bg-muted data-[active=true]:text-primary data-[active=true]:font-semibold"
+                       hover:bg-muted/60 transition
+                       data-[active=true]:text-primary data-[active=true]:font-semibold"
           >
             {item.label}
-            {active && (
-                 <span
-                    className="pointer-events-none absolute inset-x-2 -bottom-[9px] h-0.5 rounded bg-primary"
-                 />
-            )}
+            <span
+              data-active={active}
+              className="pointer-events-none absolute inset-x-2 -bottom-[9px] hidden h-0.5 rounded bg-primary
+                         data-[active=true]:block"
+            />
           </Link>
         );
       })}

@@ -26,7 +26,7 @@ export default function Header() {
           </nav>
 
           {/* user */}
-          <div className="shrink-0">
+          <div className="shrink-0 pr-2 sm:pr-0">
             <UserNav />
           </div>
         </div>
