@@ -131,12 +131,12 @@ export default function DashboardPageContent() {
                     <h2 className="text-2xl font-bold mb-4">Inventory</h2>
                     <Card>
                         <CardContent className="p-2 grid grid-cols-2 gap-1">
-                            <div>
+                            <div className="flex flex-col gap-1">
                                 {inventoryFeatures.map((feature) => (
                                     <FeatureCard key={feature.title} {...feature} />
                                 ))}
                             </div>
-                             <div>
+                             <div className="flex flex-col gap-1">
                                 {inventoryFeaturesCol2.map((feature) => (
                                     <FeatureCard key={feature.title} {...feature} />
                                 ))}
@@ -148,12 +148,12 @@ export default function DashboardPageContent() {
                     <h2 className="text-2xl font-bold mb-4">Accounting</h2>
                      <Card>
                         <CardContent className="p-2 grid grid-cols-2 gap-1">
-                             <div>
+                             <div className="flex flex-col gap-1">
                                 {accountingFeatures.map((feature) => (
                                     <FeatureCard key={feature.title} {...feature} />
                                 ))}
                             </div>
-                             <div>
+                             <div className="flex flex-col gap-1">
                                 {accountingFeaturesCol2.map((feature) => (
                                     <FeatureCard key={feature.title} {...feature} />
                                 ))}
