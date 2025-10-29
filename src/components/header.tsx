@@ -1,7 +1,7 @@
 
 import { UserNav } from "./auth/user-nav";
 import Link from 'next/link';
-import { FileText } from 'lucide-react';
+import { Workflow } from 'lucide-react';
 import TopNav from './top-nav';
 
 export default function Header() {
@@ -10,7 +10,7 @@ export default function Header() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-8">
            <Link href="/" className="flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
+            <Workflow className="h-6 w-6 text-primary" />
             <span className="font-bold text-lg">CoreOps</span>
            </Link>
            <TopNav />
