@@ -8,12 +8,11 @@ import {
   Boxes,
   Search,
   ClipboardList,
-  ArrowUpRightSquare,
-  RefreshCw,
+  ArrowLeftRight,
+  RefreshCcw,
   Truck,
-  ArrowUp,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import AuthGuard from '@/components/auth/auth-guard';
 
 const inventoryFeatures = [
@@ -24,7 +23,7 @@ const inventoryFeatures = [
     href: '/inventory/stock',
     color: 'blue',
   },
-  {
+   {
     title: 'Stock history',
     description: 'View stock and transaction history.',
     icon: <History className="w-8 h-8 text-blue-500" />,
@@ -52,17 +51,17 @@ const inventoryFeatures = [
     href: '#',
     color: 'purple',
   },
-  {
+    {
     title: 'Stock changes',
     description: 'Adjust the stock levels.',
-    icon: <ArrowUp className="w-8 h-8 text-purple-500" />,
+    icon: <ArrowLeftRight className="w-8 h-8 text-purple-500" />,
     href: '#',
     color: 'purple',
   },
   {
     title: 'Replenishment',
     description: 'Create a transfer order from calculations.',
-    icon: <RefreshCw className="w-8 h-8 text-purple-500" />,
+    icon: <RefreshCcw className="w-8 h-8 text-purple-500" />,
     href: '#',
     color: 'purple',
   },
@@ -79,21 +78,19 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
   const isImplemented = href !== '#';
 
   const content = (
-      <Card className="h-full transition-all duration-200 hover:shadow-md hover:-translate-y-1">
-          <CardHeader className="flex flex-row items-center gap-4">
-              <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50`}>
-                  {icon}
-              </div>
-              <div>
-                  <CardTitle className={`text-lg font-semibold text-${color}-600 dark:text-${color}-400`}>{title}</CardTitle>
-                  <CardDescription className="text-sm">{description}</CardDescription>
-              </div>
-          </CardHeader>
-      </Card>
+    <div className="flex items-center gap-4 p-4 rounded-lg transition-all duration-200 hover:bg-accent">
+        <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50`}>
+            {icon}
+        </div>
+        <div>
+            <h3 className={`font-semibold text-blue-600`}>{title}</h3>
+            <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+    </div>
   );
 
   if (!isImplemented) {
-      return <div title="Coming soon!">{content}</div>;
+      return <div title="Coming soon!" className="cursor-not-allowed opacity-70">{content}</div>;
   }
 
   return (
@@ -111,13 +108,15 @@ export default function InventoryDashboard() {
         <main className="flex-1 container mx-auto p-4 md:p-8">
           <h1 className="text-3xl font-bold tracking-tight mb-8">Inventory</h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
-              <div className="space-y-6">
-                {inventoryFeatures.map((feature) => (
-                    <FeatureCard key={feature.title} {...feature} />
-                ))}
+          <Card>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {inventoryFeatures.map((feature) => (
+                      <FeatureCard key={feature.title} {...feature} />
+                  ))}
               </div>
-          </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
     </AuthGuard>
