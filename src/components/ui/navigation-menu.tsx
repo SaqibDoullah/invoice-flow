@@ -33,7 +33,7 @@ const NavigationMenuList = React.forwardRef<
   <NavigationMenuPrimitive.List
     ref={ref}
     className={cn(
-      "group flex list-none items-center justify-center space-x-1",
+      "group flex flex-1 list-none items-center justify-center space-x-1",
       className
     )}
     {...props}
@@ -50,22 +50,7 @@ const navigationMenuTriggerStyle = cva(
 const NavigationMenuTrigger = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Trigger>
->(({ className, children, ...props }, ref) => {
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  
-  const handleMouseEnter = () => {
-    if (triggerRef.current) {
-      triggerRef.current.click();
-    }
-  };
-  
-  const handleMouseLeave = () => {
-    if (triggerRef.current && triggerRef.current.getAttribute('data-state') === 'open') {
-       triggerRef.current.click();
-    }
-  }
-
-  return (
+>(({ className, children, ...props }, ref) => (
     <NavigationMenuPrimitive.Trigger
       ref={ref}
       className={cn(navigationMenuTriggerStyle(), "group", className)}
@@ -78,7 +63,7 @@ const NavigationMenuTrigger = React.forwardRef<
       />
     </NavigationMenuPrimitive.Trigger>
   )
-})
+)
 NavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName
 
 const NavigationMenuContent = React.forwardRef<
