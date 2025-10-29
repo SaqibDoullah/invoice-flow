@@ -1,4 +1,5 @@
-import { PlusCircle } from 'lucide-react';
+
+import { PlusCircle, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,12 @@ export default function Page({ searchParams }: PageProps) {
   return (
        <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <FileText className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+            </div>
             <Button asChild>
               <Link href="/invoices/new">
                 <PlusCircle className="mr-2 h-4 w-4" />

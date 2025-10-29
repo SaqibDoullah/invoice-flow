@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -148,7 +149,12 @@ export default function CustomersPageContent() {
       <div className="flex flex-col">
         <main className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">Customers</h1>
+            </div>
               <Button onClick={() => setIsAddCustomerOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Customer
