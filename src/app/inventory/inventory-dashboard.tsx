@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import AuthGuard from '@/components/auth/auth-guard';
+import { cn } from '@/lib/utils';
 
 const inventoryFeatures = [
   {
@@ -74,27 +75,39 @@ const inventoryFeatures = [
   },
 ];
 
+const colorVariants = {
+    blue: "bg-blue-100 dark:bg-blue-900/50",
+    purple: "bg-purple-100 dark:bg-purple-900/50"
+}
+
 const FeatureCard = ({ title, description, icon, href, color }: (typeof inventoryFeatures)[0]) => {
   const isImplemented = href !== '#';
 
   const content = (
-    <div className="flex items-start gap-4 p-2">
-      <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50 flex-shrink-0`}>
-          {icon}
+      <div className="flex items-start gap-4">
+        <div className={cn("flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg", colorVariants[color])}>
+            {icon}
+        </div>
+        <div className="flex-1">
+            <h3 className="text-[15px] font-semibold text-blue-600">{title}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+        </div>
       </div>
-      <div>
-          <h3 className={`font-semibold text-blue-600`}>{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-    </div>
   );
 
   if (!isImplemented) {
-      return <div title="Coming soon!" className="cursor-not-allowed opacity-70 rounded-lg transition-all duration-200 hover:bg-accent">{content}</div>;
+      return (
+        <div title="Coming soon!" className="min-h-20 cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent">
+            {content}
+        </div>
+      );
   }
 
   return (
-      <Link href={href} className="block rounded-lg transition-all duration-200 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary">
+      <Link 
+        href={href} 
+        className="block min-h-20 rounded-lg p-2 transition-colors duration-200 hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
         {content}
       </Link>
   );
