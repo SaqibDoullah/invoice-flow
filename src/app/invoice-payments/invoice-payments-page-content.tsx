@@ -32,12 +32,14 @@ import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import CreateInvoicePaymentDialog from '@/components/invoice-payments/create-invoice-payment-dialog';
 
 export default function InvoicePaymentsPageContent() {
   const [invoicePayments, setInvoicePayments] = useState<InvoicePayment[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -101,7 +103,7 @@ export default function InvoicePaymentsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-               <Button>
+               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 Create invoice payment from invoice
               </Button>
               <DropdownMenu>
@@ -188,6 +190,10 @@ export default function InvoicePaymentsPageContent() {
             </CardContent>
           </Card>
         </main>
+        <CreateInvoicePaymentDialog 
+            isOpen={isCreateDialogOpen}
+            setIsOpen={setIsCreateDialogOpen}
+        />
       </div>
     </AuthGuard>
   );
