@@ -94,13 +94,13 @@ const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
   const isImplemented = href !== '#';
 
   const content = (
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 h-full">
         <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg", colorVariants[color])}>
             {icon}
         </div>
-        <div className="flex-1">
-            <h3 className="text-[15px] font-semibold text-blue-600 truncate">{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
+        <div className="flex-1 overflow-hidden">
+            <h3 className="text-[15px] leading-tight font-semibold text-blue-600 truncate">{title}</h3>
+            <p className="text-sm text-muted-foreground overflow-hidden text-ellipsis">{description}</p>
         </div>
       </div>
   );
@@ -110,7 +110,7 @@ const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
         <div 
             title="Coming soon!" 
             aria-disabled="true"
-            className="h-20 cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent"
+            className="h-full cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent"
         >
             {content}
         </div>
@@ -120,7 +120,7 @@ const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
   return (
       <Link 
         href={href} 
-        className="block h-20 rounded-lg p-2 transition-colors duration-200 hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="block h-full rounded-lg p-2 transition-colors duration-200 hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         {content}
       </Link>
@@ -137,7 +137,7 @@ export default function InventoryDashboard() {
           
           <Card>
             <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-[88px]">
                   {inventoryFeatures.map((feature) => (
                       <FeatureCard key={feature.title} {...feature} />
                   ))}
