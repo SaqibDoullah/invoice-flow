@@ -15,7 +15,8 @@ import {
     ImageIcon
 } from 'lucide-react';
 import Link from 'next/link';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, where } from 'firebase/firestore';
+import { subDays } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type InventoryItem, type Supplier } from '@/types';
+import { type InventoryItem, type Supplier, type SalesOrder, type LineItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ReorderPageContent() {
@@ -48,6 +49,7 @@ export default function ReorderPageContent() {
 
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [sales, setSales] = useState<SalesOrder[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +57,8 @@ export default function ReorderPageContent() {
     const [supplierFilter, setSupplierFilter] = useState('all');
     const [quantityFilter, setQuantityFilter] = useState('gt-zero');
     const [categoryFilter, setCategoryFilter] = useState('all');
+
+    const [quantitiesToOrder, setQuantitiesToOrder] = useState<Record<string, number>>({});
 
     useEffect(() => {
         const db = getFirestoreDb();
@@ -64,11 +68,21 @@ export default function ReorderPageContent() {
         }
 
         setLoading(true);
+        let inventoryLoaded = false;
+        let suppliersLoaded = false;
+        let salesLoaded = false;
+
+        const checkAllLoaded = () => {
+            if (inventoryLoaded && suppliersLoaded && salesLoaded) {
+                setLoading(false);
+            }
+        }
 
         const inventoryUnsub = onSnapshot(collection(db, 'users', user.uid, 'inventory'), (snapshot) => {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
             setInventoryItems(items);
-            if (loading) setLoading(false);
+            inventoryLoaded = true;
+            checkAllLoaded();
         }, (error) => {
             console.error("Error fetching inventory:", error);
             toast({ variant: "destructive", title: "Error", description: "Could not fetch inventory data." });
@@ -78,24 +92,62 @@ export default function ReorderPageContent() {
         const suppliersUnsub = onSnapshot(collection(db, 'users', user.uid, 'suppliers'), (snapshot) => {
             const supplierList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
             setSuppliers(supplierList);
+            suppliersLoaded = true;
+            checkAllLoaded();
         }, (error) => {
             console.error("Error fetching suppliers:", error);
             toast({ variant: "destructive", title: "Error", description: "Could not fetch supplier data." });
         });
 
+        const thirtyDaysAgo = subDays(new Date(), 30);
+        const salesQuery = query(collection(db, 'users', user.uid, 'sales'), where('orderDate', '>=', thirtyDaysAgo));
+        const salesUnsub = onSnapshot(salesQuery, (snapshot) => {
+            const salesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder));
+            setSales(salesData);
+            salesLoaded = true;
+            checkAllLoaded();
+        }, (error) => {
+            console.error("Error fetching sales data:", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not fetch recent sales data." });
+        });
+
         return () => {
             inventoryUnsub();
             suppliersUnsub();
+            salesUnsub();
         };
     }, [user, authLoading, toast]);
     
     const uniqueCategories = useMemo(() => {
         const categories = new Set(inventoryItems.map(item => item.category).filter(Boolean));
-        return Array.from(categories);
+        return Array.from(categories as string[]);
     }, [inventoryItems]);
 
+    const salesVelocityMap = useMemo(() => {
+        const velocityMap: Record<string, number> = {};
+        inventoryItems.forEach(item => {
+            const sku = item.sku || item.id;
+            const totalSold = sales.reduce((acc, order) => {
+                return acc + (order.items || []).reduce((itemAcc: number, lineItem: LineItem) => {
+                    if (lineItem.specification === sku) {
+                        return itemAcc + lineItem.quantity;
+                    }
+                    return itemAcc;
+                }, 0);
+            }, 0);
+            velocityMap[sku] = totalSold / 30; // Units per day
+        });
+        return velocityMap;
+    }, [sales, inventoryItems]);
+
     const filteredItems = useMemo(() => {
-        return inventoryItems.filter(item => {
+        return inventoryItems.map(item => {
+            const reorderPoint = item.stdReorderPoint || 0;
+            const available = item.quantityAvailable || 0;
+            const reorderVariance = available - reorderPoint;
+            const recommendedQty = reorderVariance < 0 ? Math.abs(reorderVariance) : 0;
+            return { ...item, reorderVariance, recommendedQty };
+        }).filter(item => {
             const searchTermLower = searchTerm.toLowerCase();
             const matchesSearch = searchTerm ? 
                 (item.name.toLowerCase().includes(searchTermLower) || item.sku?.toLowerCase().includes(searchTermLower))
@@ -105,15 +157,20 @@ export default function ReorderPageContent() {
             
             const matchesCategory = categoryFilter !== 'all' ? item.category === categoryFilter : true;
             
-            // Placeholder logic for quantity filter - will be enhanced when reorder logic is implemented
-            const matchesQuantity = quantityFilter === 'gt-zero' ? true : true;
+            const matchesQuantity = quantityFilter === 'gt-zero' ? item.recommendedQty > 0 : true;
             
-            // Placeholder for location filter
-            const matchesLocation = locationFilter !== 'all' ? true : true;
+            const matchesLocation = locationFilter !== 'all' ? true : true; // Placeholder
 
             return matchesSearch && matchesSupplier && matchesCategory && matchesQuantity && matchesLocation;
         });
     }, [inventoryItems, searchTerm, locationFilter, supplierFilter, quantityFilter, categoryFilter]);
+
+    const handleQuantityChange = (itemId: string, quantity: string) => {
+        setQuantitiesToOrder(prev => ({
+            ...prev,
+            [itemId]: Number(quantity) || 0
+        }));
+    };
 
     const isLoading = loading || authLoading;
 
@@ -163,7 +220,7 @@ export default function ReorderPageContent() {
                         </DropdownMenu>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                                <Button variant="outline">Actions <ChevronDown className="w-4 h-4 ml-2" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Action 1</DropdownMenuItem>
@@ -234,17 +291,17 @@ export default function ReorderPageContent() {
                          <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="bg-muted/50">
-                                        <TableHead className="w-16 text-center"><ImageIcon className="w-4 h-4 mx-auto"/></TableHead>
-                                        <TableHead>Product ID Description</TableHead>
-                                        <TableHead>Supplier 1 Supplier 1 Price</TableHead>
-                                        <TableHead>Supplier 2 Supplier 2 price</TableHead>
-                                        <TableHead>Sales velocity</TableHead>
-                                        <TableHead>Sales</TableHead>
-                                        <TableHead>On order On hand Reservations Available</TableHead>
-                                        <TableHead>Stockout Reorder point ↓ Reorder variance Reorder point max</TableHead>
-                                        <TableHead>Recommended quantity</TableHead>
-                                        <TableHead>Quantity to order</TableHead>
+                                    <TableRow className="bg-muted/50 text-xs whitespace-nowrap">
+                                        <TableHead className="w-16 p-2 text-center">Image</TableHead>
+                                        <TableHead className="p-2">Product ID Description</TableHead>
+                                        <TableHead className="p-2">Supplier 1 Price</TableHead>
+                                        <TableHead className="p-2">Supplier 2 Price</TableHead>
+                                        <TableHead className="p-2">Sales velocity</TableHead>
+                                        <TableHead className="p-2">Sales</TableHead>
+                                        <TableHead className="p-2">On order / On hand / Reservations / Available</TableHead>
+                                        <TableHead className="p-2">Stockout / Reorder point / Reorder variance / Reorder point max</TableHead>
+                                        <TableHead className="p-2">Recommended quantity</TableHead>
+                                        <TableHead className="p-2">Quantity to order</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -253,11 +310,13 @@ export default function ReorderPageContent() {
                                     ) : filteredItems.length > 0 ? (
                                         filteredItems.map(item => {
                                             const supplier = suppliers.find(s => s.id === item.supplierId);
+                                            const sku = item.sku || item.id;
+                                            const velocity = salesVelocityMap[sku] || 0;
                                             return (
-                                                <TableRow key={item.id}>
+                                                <TableRow key={item.id} className="text-sm">
                                                     <TableCell><ImageIcon className="w-4 h-4 mx-auto text-muted-foreground"/></TableCell>
                                                     <TableCell>
-                                                        <p className="font-bold text-primary">{item.sku || item.id}</p>
+                                                        <p className="font-bold text-primary">{sku}</p>
                                                         <p className="text-xs text-muted-foreground">{item.name}</p>
                                                     </TableCell>
                                                     <TableCell>
@@ -265,14 +324,25 @@ export default function ReorderPageContent() {
                                                         <p className="text-xs text-muted-foreground">{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.price || 0)}</p>
                                                     </TableCell>
                                                     <TableCell></TableCell>
-                                                    <TableCell>0.00</TableCell>
+                                                    <TableCell>{velocity.toFixed(2)}</TableCell>
                                                     <TableCell></TableCell>
                                                     <TableCell>
                                                         <p>{item.quantityOnOrder || 0} / {item.quantity || 0} / {item.quantityReserved || 0} / {item.quantityAvailable || 0}</p>
                                                     </TableCell>
-                                                    <TableCell></TableCell>
-                                                    <TableCell>0</TableCell>
-                                                    <TableCell><Input className="w-24 text-right" defaultValue="0" /></TableCell>
+                                                     <TableCell>
+                                                        <p>
+                                                            - / {item.stdReorderPoint || 0} / <span className={item.reorderVariance < 0 ? 'text-red-500' : ''}>{item.reorderVariance}</span> / {item.stdReorderPointMax || 0}
+                                                        </p>
+                                                    </TableCell>
+                                                    <TableCell>{item.recommendedQty}</TableCell>
+                                                    <TableCell>
+                                                        <Input 
+                                                            type="number"
+                                                            className="w-24 text-right" 
+                                                            value={quantitiesToOrder[item.id] || ''}
+                                                            onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                                                        />
+                                                    </TableCell>
                                                 </TableRow>
                                             )
                                         })
@@ -297,4 +367,3 @@ export default function ReorderPageContent() {
         </AuthGuard>
     );
 }
-
