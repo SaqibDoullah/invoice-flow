@@ -16,6 +16,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import AuthGuard from '@/components/auth/auth-guard';
 import { cn } from '@/lib/utils';
 
+const colorVariants = {
+    blue: "bg-blue-100 dark:bg-blue-900/50",
+    purple: "bg-purple-100 dark:bg-purple-900/50"
+}
+
 type Feature = {
   title: string;
   description: string;
@@ -83,10 +88,6 @@ const inventoryFeatures: Feature[] = [
   },
 ];
 
-const colorVariants = {
-    blue: "bg-blue-100 dark:bg-blue-900/50",
-    purple: "bg-purple-100 dark:bg-purple-900/50"
-}
 
 const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
   const isImplemented = href !== '#';
@@ -98,7 +99,7 @@ const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
         </div>
         <div className="flex-1">
             <h3 className="text-[15px] font-semibold text-blue-600">{title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+            <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
   );
