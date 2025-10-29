@@ -16,7 +16,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import AuthGuard from '@/components/auth/auth-guard';
 import { cn } from '@/lib/utils';
 
-const inventoryFeatures = [
+type Feature = {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  href: string;
+  color: keyof typeof colorVariants;
+};
+
+const inventoryFeatures: Feature[] = [
   {
     title: 'Stock',
     description: 'View product stock levels.',
@@ -80,12 +88,12 @@ const colorVariants = {
     purple: "bg-purple-100 dark:bg-purple-900/50"
 }
 
-const FeatureCard = ({ title, description, icon, href, color }: (typeof inventoryFeatures)[0]) => {
+const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
   const isImplemented = href !== '#';
 
   const content = (
       <div className="flex items-start gap-4">
-        <div className={cn("flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg", colorVariants[color])}>
+        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg", colorVariants[color])}>
             {icon}
         </div>
         <div className="flex-1">
@@ -97,7 +105,7 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
 
   if (!isImplemented) {
       return (
-        <div title="Coming soon!" className="min-h-20 cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent">
+        <div title="Coming soon!" className="h-20 cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent">
             {content}
         </div>
       );
@@ -106,7 +114,7 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
   return (
       <Link 
         href={href} 
-        className="block min-h-20 rounded-lg p-2 transition-colors duration-200 hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="block h-20 rounded-lg p-2 transition-colors duration-200 hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         {content}
       </Link>
