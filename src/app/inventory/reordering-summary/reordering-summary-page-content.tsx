@@ -75,7 +75,7 @@ const initialColumns: Column[] = [
     { id: 'remaining', label: 'Remaining + BOM units' },
     { id: 'loc1', label: 'Location: Drop Ship', subColumns: [{id: 'loc1Avail', label: 'Avail'}, {id: 'loc1Reorder', label: 'Reorder level'}, {id: 'loc1Variance', label: 'Variance'}] },
     { id: 'loc2', label: 'Location: Marhaba', subColumns: [{id: 'loc2Avail', label: 'Avail'}, {id: 'loc2Reorder', label: 'Reorder level'}, {id: 'loc2Variance', label: 'Variance'}] },
-    { id: 'loc3', label: 'Location: Tawakkal Warehouse', subColumns: [{id: 'loc3Avail', label: 'Avail'}, {id: 'loc3Reorder', label: 'Reorder level'}, {id: 'loc3Variance', label: 'Variance'}] },
+    { id: 'loc3', label: 'Location: Tawakkal Warehouse', subColumns: [{id: 'loc3Avail', label: 'Avail'}, {id: 'loc2Reorder', label: 'Reorder level'}, {id: 'loc3Variance', label: 'Variance'}] },
 ];
 
 export default function ReorderingSummaryPageContent() {
