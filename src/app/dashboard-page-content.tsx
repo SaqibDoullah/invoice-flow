@@ -56,7 +56,7 @@ const sellingFeatures = [
   { title: 'Quotes', description: 'Send quotes to potential customers.', icon: <MessageSquareQuote />, href: '/quotes', color: 'green' },
   { title: 'Sales', description: 'View all sales orders.', icon: <DollarSign />, href: '/sales', color: 'green' },
   { title: 'Invoices', description: 'View all invoices.', icon: <FileText />, href: '/invoices', color: 'green' },
-  { title: 'Invoice payments', description: 'View all invoice payments.', icon: <CreditCard />, href: '#', color: 'green' },
+  { title: 'Invoice payments', description: 'View all invoice payments.', icon: <CreditCard />, href: '/invoice-payments', color: 'green' },
   { title: 'Returns', description: 'View all returns.', icon: <Undo2 />, href: '#', color: 'green' },
 ];
 

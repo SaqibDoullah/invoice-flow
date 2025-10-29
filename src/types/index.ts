@@ -258,6 +258,18 @@ export interface BillPayment {
     recordLastUpdated: Date;
 }
 
+export interface InvoicePayment {
+    id: string;
+    status: 'Posted' | 'Draft';
+    date: Date;
+    paymentId: string;
+    customer: string;
+    amount: number;
+    method: string | null;
+    recordCreated: Date;
+    recordLastUpdated: Date;
+}
+
 export interface StockHistoryEntry {
     id: string;
     recordDate: Timestamp;
