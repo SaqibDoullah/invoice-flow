@@ -1,3 +1,4 @@
+
 'use client';
 
 import { signOut } from 'firebase/auth';
@@ -35,9 +36,12 @@ export function UserNav() {
     
     // If it's a name with spaces
     if (nameOrEmail.includes(' ')) {
-      const parts = nameOrEmail.split(' ');
+      const parts = nameOrEmail.split(' ').filter(p => p.length > 0);
       if (parts.length > 1) {
         return (parts[0][0] + (parts[1][0] || '')).toUpperCase();
+      }
+      if (parts.length === 1) {
+          return parts[0].substring(0, 2).toUpperCase();
       }
     }
     
@@ -60,9 +64,9 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
-             <AvatarFallback>
+             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {getInitials(user.displayName || user.email)}
             </AvatarFallback>
           </Avatar>
