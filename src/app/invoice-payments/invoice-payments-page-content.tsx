@@ -33,6 +33,25 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import CreateInvoicePaymentDialog from '@/components/invoice-payments/create-invoice-payment-dialog';
+import CustomizeColumnsDialog from '@/components/invoice-payments/customize-columns-dialog';
+
+
+type Column = {
+  id: keyof InvoicePayment | 'id';
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'status', label: 'Status' },
+    { id: 'date', label: 'Date' },
+    { id: 'paymentId', label: 'Payment ID' },
+    { id: 'customer', label: 'Customer' },
+    { id: 'amount', label: 'Amount' },
+    { id: 'method', label: 'Method' },
+    { id: 'recordCreated', label: 'Record created' },
+    { id: 'recordLastUpdated', label: 'Record last updated' },
+];
+
 
 export default function InvoicePaymentsPageContent() {
   const [invoicePayments, setInvoicePayments] = useState<InvoicePayment[]>([]);
@@ -40,6 +59,8 @@ export default function InvoicePaymentsPageContent() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCustomizeColumnsOpen, setIsCustomizeColumnsOpen] = useState(false);
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -72,6 +93,33 @@ export default function InvoicePaymentsPageContent() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+  
+  const toDate = (v: any): Date => {
+    if (v instanceof Date) return v;
+    if (v?.toDate) return v.toDate();
+    return new Date();
+  };
+
+  const renderCell = (payment: InvoicePayment, columnId: keyof InvoicePayment | 'id') => {
+      if (columnId === 'id') return null;
+      const value = payment[columnId];
+      
+      switch(columnId) {
+          case 'status':
+              return <Badge variant="secondary">{payment.status}</Badge>;
+          case 'date':
+          case 'recordCreated':
+          case 'recordLastUpdated':
+              return format(toDate(value), 'M/d/yyyy');
+          case 'paymentId':
+              return <span className="font-medium text-blue-600">{payment.paymentId}</span>;
+          case 'amount':
+              return formatCurrency(payment.amount);
+          default:
+              return value as string | null;
+      }
+  }
+
 
   return (
     <AuthGuard>
@@ -121,7 +169,7 @@ export default function InvoicePaymentsPageContent() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>Customize columns</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setIsCustomizeColumnsOpen(true)}>Customize columns</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -149,14 +197,7 @@ export default function InvoicePaymentsPageContent() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]"><Checkbox /></TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Payment ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Record created</TableHead>
-                      <TableHead>Record last updated</TableHead>
+                      {columns.map(col => <TableHead key={col.id} className={col.id === 'amount' ? 'text-right' : ''}>{col.label}</TableHead>)}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -164,21 +205,16 @@ export default function InvoicePaymentsPageContent() {
                       invoicePayments.map((payment) => (
                         <TableRow key={payment.id}>
                           <TableCell><Checkbox /></TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{payment.status}</Badge>
-                          </TableCell>
-                          <TableCell>{format(payment.date, 'M/d/yyyy')}</TableCell>
-                          <TableCell className="font-medium text-blue-600">{payment.paymentId}</TableCell>
-                          <TableCell>{payment.customer}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(payment.amount)}</TableCell>
-                          <TableCell>{payment.method}</TableCell>
-                          <TableCell>{format(payment.recordCreated, "MMM d yyyy h:mm:ss a")}</TableCell>
-                          <TableCell>{format(payment.recordLastUpdated, "MMM d yyyy h:mm:ss a")}</TableCell>
+                           {columns.map(col => (
+                              <TableCell key={col.id} className={col.id === 'amount' ? 'text-right' : ''}>
+                                  {renderCell(payment, col.id)}
+                              </TableCell>
+                          ))}
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="h-24 text-center">
+                        <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                           No invoice payments found.
                         </TableCell>
                       </TableRow>
@@ -193,6 +229,12 @@ export default function InvoicePaymentsPageContent() {
         <CreateInvoicePaymentDialog 
             isOpen={isCreateDialogOpen}
             setIsOpen={setIsCreateDialogOpen}
+        />
+        <CustomizeColumnsDialog
+            isOpen={isCustomizeColumnsOpen}
+            setIsOpen={setIsCustomizeColumnsOpen}
+            columns={columns}
+            setColumns={setColumns}
         />
       </div>
     </AuthGuard>
