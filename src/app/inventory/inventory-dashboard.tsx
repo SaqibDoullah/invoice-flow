@@ -12,63 +12,63 @@ import {
   RefreshCcw,
   Truck,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import AuthGuard from '@/components/auth/auth-guard';
 
 const inventoryFeatures = [
   {
     title: 'Stock',
     description: 'View product stock levels.',
-    icon: <Factory className="w-8 h-8 text-blue-500" />,
+    icon: <Factory className="w-6 h-6 text-blue-500" />,
     href: '/inventory/stock',
     color: 'blue',
   },
    {
     title: 'Stock history',
     description: 'View stock and transaction history.',
-    icon: <History className="w-8 h-8 text-blue-500" />,
+    icon: <History className="w-6 h-6 text-blue-500" />,
     href: '/inventory/stock-history',
     color: 'blue',
   },
   {
     title: 'Products',
     description: 'View all products.',
-    icon: <Boxes className="w-8 h-8 text-blue-500" />,
+    icon: <Boxes className="w-6 h-6 text-blue-500" />,
     href: '/inventory/products',
     color: 'blue',
   },
   {
     title: 'Product lookups',
     description: 'View all product lookups & alias SKUs.',
-    icon: <Search className="w-8 h-8 text-purple-500" />,
+    icon: <Search className="w-6 h-6 text-blue-500" />,
     href: '/inventory/product-lookup',
-    color: 'purple',
+    color: 'blue',
   },
   {
     title: 'Stock takes',
     description: 'Enter physical count of stock.',
-    icon: <ClipboardList className="w-8 h-8 text-purple-500" />,
+    icon: <ClipboardList className="w-6 h-6 text-purple-500" />,
     href: '#',
     color: 'purple',
   },
     {
     title: 'Stock changes',
     description: 'Adjust the stock levels.',
-    icon: <ArrowLeftRight className="w-8 h-8 text-purple-500" />,
+    icon: <ArrowLeftRight className="w-6 h-6 text-purple-500" />,
     href: '#',
     color: 'purple',
   },
   {
     title: 'Replenishment',
     description: 'Create a transfer order from calculations.',
-    icon: <RefreshCcw className="w-8 h-8 text-purple-500" />,
+    icon: <RefreshCcw className="w-6 h-6 text-purple-500" />,
     href: '#',
     color: 'purple',
   },
   {
     title: 'Transfers',
     description: 'Move stock between locations.',
-    icon: <Truck className="w-8 h-8 text-purple-500" />,
+    icon: <Truck className="w-6 h-6 text-purple-500" />,
     href: '#',
     color: 'purple',
   },
@@ -78,23 +78,23 @@ const FeatureCard = ({ title, description, icon, href, color }: (typeof inventor
   const isImplemented = href !== '#';
 
   const content = (
-    <div className="flex items-center gap-4 p-4 rounded-lg transition-all duration-200 hover:bg-accent">
-        <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50`}>
-            {icon}
-        </div>
-        <div>
-            <h3 className={`font-semibold text-blue-600`}>{title}</h3>
-            <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
+    <div className="flex items-start gap-4 p-2">
+      <div className={`p-3 rounded-lg bg-${color}-100 dark:bg-${color}-900/50 flex-shrink-0`}>
+          {icon}
+      </div>
+      <div>
+          <h3 className={`font-semibold text-blue-600`}>{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
     </div>
   );
 
   if (!isImplemented) {
-      return <div title="Coming soon!" className="cursor-not-allowed opacity-70">{content}</div>;
+      return <div title="Coming soon!" className="cursor-not-allowed opacity-70 rounded-lg transition-all duration-200 hover:bg-accent">{content}</div>;
   }
 
   return (
-      <Link href={href} className="focus:outline-none focus:ring-2 focus:ring-primary rounded-lg">
+      <Link href={href} className="block rounded-lg transition-all duration-200 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary">
         {content}
       </Link>
   );
@@ -110,7 +110,7 @@ export default function InventoryDashboard() {
           
           <Card>
             <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                   {inventoryFeatures.map((feature) => (
                       <FeatureCard key={feature.title} {...feature} />
                   ))}
