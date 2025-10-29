@@ -198,7 +198,7 @@ export default function ReorderingSummaryPageContent() {
           </TabsList>
         </Tabs>
         
-        <p className="text-sm text-muted-foreground my-4">This screen shows quantity on hand and reorder points for each location and product. Use the <Link href="#" className="text-primary hover:underline">reorder screen</Link> to create a purchase order based on reorder points.</p>
+        <p className="text-sm text-muted-foreground my-4">This screen shows quantity on hand and reorder points for each location and product. Use the <Link href="/purchases/reorder" className="text-primary hover:underline">reorder screen</Link> to create a purchase order based on reorder points.</p>
 
         <div className="mt-4 mb-4 flex flex-wrap items-center gap-4">
             <div className='relative w-48'>
