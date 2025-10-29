@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import {
   Factory,
   History,
@@ -19,12 +20,12 @@ import { cn } from '@/lib/utils';
 const colorVariants = {
     blue: "bg-blue-100 dark:bg-blue-900/50",
     purple: "bg-purple-100 dark:bg-purple-900/50"
-}
+};
 
 type Feature = {
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   href: string;
   color: keyof typeof colorVariants;
 };
@@ -98,7 +99,7 @@ const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
             {icon}
         </div>
         <div className="flex-1">
-            <h3 className="text-[15px] font-semibold text-blue-600">{title}</h3>
+            <h3 className="text-[15px] font-semibold text-blue-600 truncate">{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
@@ -106,7 +107,11 @@ const FeatureCard = ({ title, description, icon, href, color }: Feature) => {
 
   if (!isImplemented) {
       return (
-        <div title="Coming soon!" className="h-20 cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent">
+        <div 
+            title="Coming soon!" 
+            aria-disabled="true"
+            className="h-20 cursor-not-allowed rounded-lg p-2 opacity-70 transition-colors duration-200 hover:bg-accent"
+        >
             {content}
         </div>
       );
