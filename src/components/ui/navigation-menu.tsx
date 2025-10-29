@@ -50,19 +50,35 @@ const navigationMenuTriggerStyle = cva(
 const NavigationMenuTrigger = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <NavigationMenuPrimitive.Trigger
-    ref={ref}
-    className={cn(navigationMenuTriggerStyle(), "group", className)}
-    {...props}
-  >
-    {children}{" "}
-    <ChevronDown
-      className="relative top-[1px] ml-1 h-4 w-4 transition duration-200 group-data-[state=open]:rotate-180"
-      aria-hidden="true"
-    />
-  </NavigationMenuPrimitive.Trigger>
-))
+>(({ className, children, ...props }, ref) => {
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  
+  const handleMouseEnter = () => {
+    if (triggerRef.current) {
+      triggerRef.current.click();
+    }
+  };
+  
+  const handleMouseLeave = () => {
+    if (triggerRef.current && triggerRef.current.getAttribute('data-state') === 'open') {
+       triggerRef.current.click();
+    }
+  }
+
+  return (
+    <NavigationMenuPrimitive.Trigger
+      ref={ref}
+      className={cn(navigationMenuTriggerStyle(), "group", className)}
+      {...props}
+    >
+      {children}{" "}
+      <ChevronDown
+        className="relative top-[1px] ml-1 h-4 w-4 transition duration-200 group-data-[state=open]:rotate-180"
+        aria-hidden="true"
+      />
+    </NavigationMenuPrimitive.Trigger>
+  )
+})
 NavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName
 
 const NavigationMenuContent = React.forwardRef<

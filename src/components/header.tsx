@@ -15,7 +15,7 @@ export default function Header() {
           {/* brand */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/90 text-primary-foreground">
-              <Workflow className="h-4 w-4" />
+              <Workflow className="h-5 w-5" />
             </span>
             <span className="text-sm font-semibold tracking-tight">CoreOps</span>
           </Link>
