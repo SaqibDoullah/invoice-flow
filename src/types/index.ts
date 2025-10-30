@@ -329,3 +329,15 @@ export interface SalesOrder {
     publicNotes: string;
     internalNotes: string;
 }
+
+export interface Return {
+    id: string;
+    status: 'Draft' | 'Completed';
+    returnId: string;
+    customer: string;
+    returnDate: Date | Timestamp;
+    shipmentReceiveDates?: string;
+    shipmentTrackingCodes?: string;
+    orderId?: string;
+    shipToName?: string;
+}
