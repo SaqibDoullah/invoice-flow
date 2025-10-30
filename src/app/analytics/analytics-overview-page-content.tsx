@@ -557,24 +557,26 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <ResponsiveContainer width="100%" height={250}>
-                                <ComposableMap projection="geoAlbersUsa">
-                                <Geographies geography={geoUrl}>
-                                    {({ geographies }) =>
-                                    geographies.map((geo) => {
-                                        const cur = mapData.find((s) => s.id === geo.id);
-                                        return (
-                                        <Geography
-                                            key={geo.rsmKey}
-                                            geography={geo}
-                                            fill={cur ? finalColorScale(cur.value) : "#EEE"}
-                                        />
-                                        );
-                                    })
-                                    }
-                                </Geographies>
-                                </ComposableMap>
-                            </ResponsiveContainer>
+                            <div style={{ width: '100%', height: '250px' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ComposableMap projection="geoAlbersUsa" projectionConfig={{ scale: 800 }} style={{width: "100%", height: "auto"}}>
+                                    <Geographies geography={geoUrl}>
+                                        {({ geographies }) =>
+                                        geographies.map((geo) => {
+                                            const cur = mapData.find((s) => s.id === geo.id);
+                                            return (
+                                            <Geography
+                                                key={geo.rsmKey}
+                                                geography={geo}
+                                                fill={cur ? finalColorScale(cur.value) : "#EEE"}
+                                            />
+                                            );
+                                        })
+                                        }
+                                    </Geographies>
+                                    </ComposableMap>
+                                </ResponsiveContainer>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -604,7 +606,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                                 dataKey={metric.dataKey}
                                 isLoading={isLoading}
                              />
-                        ))}
+                         ))}
                     </div>
                 </div>
             </TabsContent>
