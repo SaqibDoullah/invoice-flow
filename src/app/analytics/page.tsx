@@ -7,7 +7,10 @@ import AnalyticsOverviewPageContent from './analytics-overview-page-content';
 function AnalyticsPage() {
     const searchParams = useSearchParams();
     const tab = searchParams.get('tab') || 'overview';
-    return <AnalyticsOverviewPageContent defaultTab={tab} />;
+    const validTabs = ['overview', 'sales', 'product-sales', 'product-stock', 'purchases'];
+    const defaultTab = validTabs.includes(tab) ? tab : 'overview';
+
+    return <AnalyticsOverviewPageContent defaultTab={defaultTab} />;
 }
 
 export default function AnalyticsOverviewPage() {

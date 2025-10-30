@@ -1,28 +1,29 @@
 
 'use client';
 
-import { useState, useEffect }
+import { useState, useEffect, useMemo }
 from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, BarChart3, TrendingUp, TrendingDown, Ban, MessageCircle, Search } from 'lucide-react';
-import { Area, AreaChart, Bar, Pie, PieChart, Cell, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart } from 'recharts';
+import { Area, AreaChart, Bar, Pie, PieChart, Cell, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, BarChart } from 'recharts';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { scaleQuantile } from 'd3-scale';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { subDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
+import { subDays, format, eachDayOfInterval, startOfDay, isValid } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ChartTooltipContent, ChartTooltip, ChartContainer } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type SalesOrder } from '@/types';
+import { type SalesOrder, type PurchaseOrder } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
@@ -144,6 +145,7 @@ const SalesChartCard = ({ title, value, change, chartData, isLoading }: { title:
 export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }: { defaultTab?: string }) {
   const { user, loading: authLoading } = useAuth();
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [grossSales, setGrossSales] = useState(0);
@@ -167,11 +169,10 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
         where('orderDate', '>=', thirtyDaysAgo)
     );
 
-    const unsubscribe = onSnapshot(salesQuery, (snapshot) => {
+    const unsubSales = onSnapshot(salesQuery, (snapshot) => {
         const orders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as SalesOrder));
         setSalesOrders(orders);
         
-        // Process data
         const gross = orders.reduce((acc, order) => acc + order.total, 0);
         setGrossSales(gross);
 
@@ -205,14 +206,41 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
         });
         setSalesTotalByDay(dailyTotals);
 
-        setLoading(false);
     }, (error) => {
         console.error("Error fetching sales data: ", error);
         setLoading(false);
     });
 
-    return () => unsubscribe();
+    const poQuery = query(collection(db, 'users', user.uid, 'purchaseOrders'));
+    const unsubPOs = onSnapshot(poQuery, (snapshot) => {
+        const orders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as PurchaseOrder));
+        setPurchaseOrders(orders);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching purchase orders:", error);
+    });
+
+    return () => {
+        unsubSales();
+        unsubPOs();
+    };
   }, [user, authLoading]);
+
+  const committedPurchaseOrders = useMemo(() => {
+    return purchaseOrders.filter(po => po.status === 'committed');
+  }, [purchaseOrders]);
+
+  const purchasesBySupplier = useMemo(() => {
+      const supplierData: Record<string, { count: number, total: number }> = {};
+      committedPurchaseOrders.forEach(po => {
+          if (!supplierData[po.supplierName]) {
+              supplierData[po.supplierName] = { count: 0, total: 0 };
+          }
+          supplierData[po.supplierName].count += 1;
+          supplierData[po.supplierName].total += po.total;
+      });
+      return Object.entries(supplierData).map(([name, data]) => ({ name, ...data }));
+  }, [committedPurchaseOrders]);
   
   const mapData = geoSalesData; // Still mock
   const colorScale = scaleQuantile<string>()
@@ -249,7 +277,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                         <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
                             <BarChart3 className="w-6 h-6 text-red-500" />
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight">Analytics sales</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
                     </div>
                 </div>
           </div>
@@ -258,6 +286,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="sales">Sales</TabsTrigger>
+              <TabsTrigger value="purchases">Purchases</TabsTrigger>
               <TabsTrigger value="product-sales">Product sales</TabsTrigger>
               <TabsTrigger value="product-stock">Product stock</TabsTrigger>
             </TabsList>
@@ -460,7 +489,75 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                         </CardContent>
                     </Card>
                 </div>
-
+            </TabsContent>
+            <TabsContent value="purchases" className="mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card className="lg:col-span-1">
+                        <CardHeader>
+                            <CardTitle>Committed purchase orders</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Order ID</TableHead>
+                                        <TableHead>Supplier</TableHead>
+                                        <TableHead>Order date</TableHead>
+                                        <TableHead>Est. receive date</TableHead>
+                                        <TableHead className="text-right">Total</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {committedPurchaseOrders.map(po => (
+                                        <TableRow key={po.id}>
+                                            <TableCell className="font-medium text-primary">{po.orderId}</TableCell>
+                                            <TableCell>{po.supplierName}</TableCell>
+                                            <TableCell>{format(po.orderDate, 'M/d/yyyy')}</TableCell>
+                                            <TableCell>{po.estimatedReceiveDate ? format(po.estimatedReceiveDate, 'M/d/yyyy') : 'N/A'}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(po.total)}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Number of purchases by supplier</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 100 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" allowDecimals={false} />
+                                        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="count" fill="#8884d8" name="Purchases" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Purchases total by supplier ($)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                 <ResponsiveContainer width="100%" height={200}>
+                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 100 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" tickFormatter={(val) => `${val/1000}k`}/>
+                                        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                        <Legend />
+                                        <Bar dataKey="total" fill="#82ca9d" name="Total Value" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
             </TabsContent>
           </Tabs>
            <div className="fixed bottom-8 right-8">

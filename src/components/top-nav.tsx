@@ -27,6 +27,11 @@ const analyticsLinks: { title: string; href: string; description: string }[] = [
         href: "/analytics?tab=sales",
         description: "Dive deep into your sales data and trends.",
     },
+     {
+        title: "Purchases",
+        href: "/analytics?tab=purchases",
+        description: "Analyze your purchase orders and supplier performance.",
+    },
     {
         title: "Product sales",
         href: "/analytics?tab=product-sales",
