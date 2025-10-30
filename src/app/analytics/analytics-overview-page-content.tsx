@@ -605,9 +605,6 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                                 isLoading={isLoading}
                              />
                         ))}
-                        {/* Empty placeholders to match layout */}
-                        <Card className="h-[124px]"></Card>
-                        <Card className="h-[124px]"></Card>
                     </div>
                 </div>
             </TabsContent>
