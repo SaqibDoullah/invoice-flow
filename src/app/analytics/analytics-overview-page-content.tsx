@@ -491,8 +491,8 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                 </div>
             </TabsContent>
             <TabsContent value="purchases" className="mt-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className="lg:col-span-1">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2">
                         <CardHeader>
                             <CardTitle>Committed purchase orders</CardTitle>
                         </CardHeader>
@@ -512,8 +512,8 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                                         <TableRow key={po.id}>
                                             <TableCell className="font-medium text-primary">{po.orderId}</TableCell>
                                             <TableCell>{po.supplierName}</TableCell>
-                                            <TableCell>{format(po.orderDate, 'M/d/yyyy')}</TableCell>
-                                            <TableCell>{po.estimatedReceiveDate ? format(po.estimatedReceiveDate, 'M/d/yyyy') : 'N/A'}</TableCell>
+                                            <TableCell>{format(toDate(po.orderDate)!, 'M/d/yyyy')}</TableCell>
+                                            <TableCell>{po.estimatedReceiveDate ? format(toDate(po.estimatedReceiveDate)!, 'M/d/yyyy') : 'N/A'}</TableCell>
                                             <TableCell className="text-right">{formatCurrency(po.total)}</TableCell>
                                         </TableRow>
                                     ))}
@@ -528,10 +528,10 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                             </CardHeader>
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={200}>
-                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 100 }}>
+                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 120 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                                         <XAxis type="number" allowDecimals={false} />
-                                        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                                        <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
                                         <Tooltip />
                                         <Legend />
                                         <Bar dataKey="count" fill="#8884d8" name="Purchases" />
@@ -545,10 +545,10 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                             </CardHeader>
                             <CardContent>
                                  <ResponsiveContainer width="100%" height={200}>
-                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 100 }}>
+                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 120 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                                         <XAxis type="number" tickFormatter={(val) => `${val/1000}k`}/>
-                                        <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                                        <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
                                         <Tooltip formatter={(value: number) => formatCurrency(value)} />
                                         <Legend />
                                         <Bar dataKey="total" fill="#82ca9d" name="Total Value" />
