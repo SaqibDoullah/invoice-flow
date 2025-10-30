@@ -70,16 +70,6 @@ export default function ReturnsPageContent() {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
 
   useEffect(() => {
-    // Mock data for initial display
-    const mockData: Return[] = [
-        { id: '1', status: 'Draft', returnId: 'R-100206-1', customer: 'Unique Wholesale', returnDate: new Date('2025-05-12'), orderId: '100206', shipToName: 'Unique Wholesale' },
-        { id: '2', status: 'Draft', returnId: 'R-100009', customer: 'Unique Wholesale', returnDate: new Date('2025-01-28') },
-    ];
-    setReturns(mockData);
-    setLoading(false);
-    
-    // In a real app, you would fetch from Firestore like this:
-    /*
     const db = getFirestoreDb();
     if (!user || authLoading || !db) {
       if (!authLoading) setLoading(false);
@@ -101,7 +91,6 @@ export default function ReturnsPageContent() {
     });
 
     return () => unsubscribe();
-    */
   }, [user, authLoading, toast]);
 
   const renderCell = (item: Return, columnId: keyof Return | 'id') => {
