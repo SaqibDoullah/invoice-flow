@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, Search, MessageCircle, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
