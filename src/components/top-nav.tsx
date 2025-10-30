@@ -70,6 +70,11 @@ const inventoryLinks: { title: string; href: string; description: string }[] = [
         href: "/inventory/reordering-summary",
         description: "View what needs to be reordered.",
     },
+    {
+        title: "Stock takes",
+        href: "/inventory/stock-takes",
+        description: "Enter physical count of stock.",
+    },
 ];
 
 const sellingLinks: { title: string; href: string; description: string }[] = [

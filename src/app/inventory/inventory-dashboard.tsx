@@ -63,7 +63,7 @@ const inventoryFeatures: Feature[] = [
     title: 'Stock takes',
     description: 'Enter physical count of stock.',
     icon: <ClipboardList className="w-6 h-6 text-purple-500" />,
-    href: '#',
+    href: '/inventory/stock-takes',
     color: 'purple',
   },
     {

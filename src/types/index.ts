@@ -341,3 +341,14 @@ export interface Return {
     orderId?: string;
     shipToName?: string;
 }
+
+export interface StockTake {
+    id: string;
+    status: 'Committed' | 'Draft';
+    stockTakeId: string;
+    date: Date | Timestamp;
+    sublocation: string;
+    note?: string;
+    commitTimestamp: Date | Timestamp;
+    commitUser: string;
+}
