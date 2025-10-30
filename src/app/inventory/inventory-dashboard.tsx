@@ -83,7 +83,7 @@ const inventoryFeatures: Feature[] = [
     title: 'Transfers',
     description: 'Move stock between locations.',
     icon: <Truck className="w-6 h-6 text-purple-500" />,
-    href: '#',
+    href: '/inventory/transfers',
     color: 'purple',
   },
 ];
