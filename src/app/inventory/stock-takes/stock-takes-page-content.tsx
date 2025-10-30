@@ -110,7 +110,9 @@ export default function StockTakesPageContent() {
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-2">
-            <Button>Create stock take</Button>
+            <Button asChild>
+                <Link href="/inventory/stock-takes/new">Create stock take</Link>
+            </Button>
             <Button variant="outline">Import stock take</Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
