@@ -3,9 +3,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Truck, Undo2, RefreshCw } from 'lucide-react';
+import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Truck, Undo2, RefreshCw, Filter, ArrowUpDown, ShieldAlert, Upload, Download, Settings2, Checkbox, ArrowDown } from 'lucide-react';
 import { collection, query, onSnapshot, orderBy, limit, where } from 'firebase/firestore';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,35 @@ import { useToast } from '@/hooks/use-toast';
 import { type StockHistoryEntry } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const mockShipments = [
+    { id: '100845', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
+    { id: '100844', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
+    { id: '100843', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
+    { id: '100842', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
+    { id: '100841', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: '', shipDate: '10/28/2025', shipUser: 'Juan', receiveDate: '10/28/2025', receiveUser: 'Juan' },
+    { id: '100840', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: '', shipDate: '10/28/2025', shipUser: 'Juan', receiveDate: '10/28/2025', receiveUser: 'Juan' },
+    { id: '100839', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/24/2025', shipUser: 'Juan', receiveDate: '10/24/2025', receiveUser: 'Juan' },
+    { id: '100838', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: '', shipDate: '10/24/2025', shipUser: 'Juan', receiveDate: '10/24/2025', receiveUser: 'Juan' },
+    { id: '100837', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/24/2025', shipUser: 'Juan', receiveDate: '10/24/2025', receiveUser: 'Juan' },
+    { id: '100836', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/22/2025', shipUser: 'Juan', receiveDate: '10/22/2025', receiveUser: 'Juan' },
+    { id: '100835', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
+    { id: '100834', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
+    { id: '100833', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
+    { id: '100832', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
+    { id: '100831', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/17/2025', shipUser: 'Juan', receiveDate: '10/17/2025', receiveUser: 'Juan' },
+    { id: '100830', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/16/2025', shipUser: 'Juan', receiveDate: '10/16/2025', receiveUser: 'Juan' },
+];
+
 
 export default function TransfersPageContent() {
     const [recentTransfers, setRecentTransfers] = useState<StockHistoryEntry[]>([]);
@@ -234,8 +263,113 @@ export default function TransfersPageContent() {
                         </div>
 
                     </TabsContent>
-                     <TabsContent value="shipments">
-                        <p>Transfer shipments will be shown here.</p>
+                    <TabsContent value="shipments" className="mt-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+                                    <Truck className="w-6 h-6 text-purple-500" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Link href="/" className="hover:text-foreground">Home</Link>
+                                    </div>
+                                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                                        Transfer Shipments:
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="text-2xl font-bold p-1">
+                                                    Default <ChevronDown className="w-5 h-5 ml-1" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem>Default</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </h1>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button>Create transfer shipment</Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuContent><DropdownMenuItem>Export CSV</DropdownMenuItem></DropdownMenuContent>
+                                </DropdownMenu>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuContent><DropdownMenuItem>Action 1</DropdownMenuItem></DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+
+                        <div className="mb-4 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                                <Input placeholder="Search..." />
+                                <Input placeholder="Status: Editable, Packed, Received, Shipped, Unpacked" />
+                                <Select>
+                                    <SelectTrigger><SelectValue placeholder="Ship date actual: All dates" /></SelectTrigger>
+                                </Select>
+                                <Select>
+                                    <SelectTrigger><SelectValue placeholder="Receive date actual: All dates" /></SelectTrigger>
+                                </Select>
+                                <div className="relative">
+                                    <Input placeholder="Product" />
+                                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <Button variant="outline"><Filter className="mr-2 h-4 w-4" /> More filters...</Button>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
+                                    <ShieldAlert className='w-4 h-4 text-orange-500' />
+                                    <span>Filtered: You do not have authorization to view this summary.</span>
+                                    <span className='ml-4'>Selected: You do not have authorization to view this summary.</span>
+                                </div>
+                                <Button variant="ghost" size="icon"><ArrowUpDown className="h-4 w-4" /></Button>
+                            </div>
+                        </div>
+
+                        <Card>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-12"><Checkbox /></TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead><div className="flex items-center gap-1"><ArrowUp className="w-4 h-4"/> Shipment ID</div></TableHead>
+                                            <TableHead>Order ID</TableHead>
+                                            <TableHead>Carrier</TableHead>
+                                            <TableHead>Tracking code</TableHead>
+                                            <TableHead>Origin</TableHead>
+                                            <TableHead>Destination</TableHead>
+                                            <TableHead>Ship date</TableHead>
+                                            <TableHead>Ship user</TableHead>
+                                            <TableHead>Receive date</TableHead>
+                                            <TableHead>Receive user</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {mockShipments.map((shipment) => (
+                                            <TableRow key={shipment.id}>
+                                                <TableCell><Checkbox /></TableCell>
+                                                <TableCell>{shipment.status}</TableCell>
+                                                <TableCell className="text-primary font-medium">{shipment.id}</TableCell>
+                                                <TableCell>{shipment.orderId}</TableCell>
+                                                <TableCell>{shipment.carrier}</TableCell>
+                                                <TableCell>{shipment.trackingCode}</TableCell>
+                                                <TableCell>{shipment.origin}</TableCell>
+                                                <TableCell>{shipment.destination}</TableCell>
+                                                <TableCell>{shipment.shipDate}</TableCell>
+                                                <TableCell>{shipment.shipUser}</TableCell>
+                                                <TableCell>{shipment.receiveDate}</TableCell>
+                                                <TableCell>{shipment.receiveUser}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                     </TabsContent>
                 </Tabs>
                 <div className="fixed bottom-8 right-8">
@@ -247,3 +381,8 @@ export default function TransfersPageContent() {
         </AuthGuard>
     );
 }
+
+const ArrowUp = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+)
+
