@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Truck, Undo2 } from 'lucide-react';
+import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Truck, Undo2, RefreshCw } from 'lucide-react';
 import { collection, query, onSnapshot, orderBy, limit, where } from 'firebase/firestore';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type StockHistoryEntry } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function TransfersPageContent() {
     const [recentTransfers, setRecentTransfers] = useState<StockHistoryEntry[]>([]);
@@ -64,7 +66,7 @@ export default function TransfersPageContent() {
     return (
         <AuthGuard>
             <main className="container mx-auto p-4 md:p-8">
-                <Tabs defaultValue="quick">
+                <Tabs defaultValue="orders">
                     <TabsList>
                         <TabsTrigger value="quick">Quick stock transfers</TabsTrigger>
                         <TabsTrigger value="orders">Transfer orders</TabsTrigger>
@@ -159,8 +161,73 @@ export default function TransfersPageContent() {
                             </div>
                         </div>
                     </TabsContent>
-                    <TabsContent value="orders">
-                        <p>Transfer orders will be shown here.</p>
+                    <TabsContent value="orders" className="mt-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/50">
+                                    <RefreshCw className="w-6 h-6 text-purple-500" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Link href="/" className="hover:text-foreground">Home</Link>
+                                    </div>
+                                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                                        Transfer Orders:
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="text-2xl font-bold p-1">
+                                                    Default <ChevronDown className="w-5 h-5 ml-1" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem>Default</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </h1>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button>Create transfer order</Button>
+                                <Button variant="outline">Import transfer orders</Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuContent><DropdownMenuItem>Export CSV</DropdownMenuItem></DropdownMenuContent>
+                                </DropdownMenu>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuContent><DropdownMenuItem>Action 1</DropdownMenuItem></DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        </div>
+
+                        <div className="text-center py-10">
+                            <h2 className="text-xl font-semibold">Let's add transfer orders to your account</h2>
+                            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Transfer orders can be found here. They are manually created, used to plan transfer shipments between locations.</p>
+                        </div>
+                        
+                        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+                            <Card>
+                                <CardHeader className="items-center">
+                                    <Image src="https://picsum.photos/seed/spreadsheet/150/100" alt="Spreadsheet icon" width={150} height={100} className="rounded-md" />
+                                </CardHeader>
+                                <CardContent className="text-center">
+                                    <h3 className="font-semibold mb-2">Import transfer orders from spreadsheet</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">Finale Inventory has a powerful import from spreadsheet feature that is a fast method to have all your transfer orders imported with all their data.</p>
+                                    <Button>Import from spreadsheet</Button>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="items-center">
+                                     <Image src="https://picsum.photos/seed/form/150/100" alt="Form icon" width={150} height={100} className="rounded-md"/>
+                                </CardHeader>
+                                <CardContent className="text-center">
+                                    <h3 className="font-semibold mb-2">Add transfer orders manually</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">Finally, you have the option to enter transfer orders manually into Finale Inventory. You just need to fill the info about each transfer order in the input form.</p>
+                                    <Button>Create transfer order manually</Button>
+                                </CardContent>
+                            </Card>
+                        </div>
+
                     </TabsContent>
                      <TabsContent value="shipments">
                         <p>Transfer shipments will be shown here.</p>
