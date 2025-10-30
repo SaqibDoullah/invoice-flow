@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, ChevronRight, RefreshCw } from 'lucide-react';
+import { Home, ChevronRight, RefreshCw, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ export default function CreateTransferOrderPageContent() {
 
     const handleCreateWithSystemId = () => {
         // In a real app, you'd fetch this from a backend service.
-        const systemOrderId = '100505';
+        const systemOrderId = '12345';
         router.push(`/inventory/transfers/${systemOrderId}`);
     }
 
