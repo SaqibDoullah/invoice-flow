@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -14,6 +15,29 @@ import {
 import { cn } from '@/lib/utils';
 import React from 'react';
 
+
+const analyticsLinks: { title: string; href: string; description: string }[] = [
+    {
+        title: "Overview",
+        href: "/analytics?tab=overview",
+        description: "Get a high-level overview of your sales performance.",
+    },
+    {
+        title: "Sales",
+        href: "/analytics?tab=sales",
+        description: "Dive deep into your sales data and trends.",
+    },
+    {
+        title: "Product sales",
+        href: "/analytics?tab=product-sales",
+        description: "Analyze the performance of individual products.",
+    },
+    {
+        title: "Product stock",
+        href: "/analytics?tab=product-stock",
+        description: "Review your current stock levels and history.",
+    },
+];
 
 const purchasingLinks: { title: string; href: string; description: string }[] = [
     {
@@ -125,12 +149,21 @@ export default function TopNav() {
   return (
     <NavigationMenu>
         <NavigationMenuList>
-            <NavigationMenuItem>
-                <Link href="/analytics" legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Analytics
-                    </NavigationMenuLink>
-                </Link>
+             <NavigationMenuItem>
+                <NavigationMenuTrigger>Analytics</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {analyticsLinks.map((component) => (
+                    <ListItem
+                        key={component.title}
+                        title={component.title}
+                        href={component.href}
+                    >
+                        {component.description}
+                    </ListItem>
+                    ))}
+                </ul>
+                </NavigationMenuContent>
             </NavigationMenuItem>
 
             <NavigationMenuItem>

@@ -4,7 +4,7 @@
 import { useState, useEffect }
 from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, BarChart3, TrendingUp, TrendingDown, Ban, MessageCircle } from 'lucide-react';
+import { Home, ChevronRight, BarChart3, TrendingUp, TrendingDown, Ban, MessageCircle, Search } from 'lucide-react';
 import { Area, AreaChart, Bar, Pie, PieChart, Cell, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart } from 'recharts';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { scaleQuantile } from 'd3-scale';
@@ -141,7 +141,7 @@ const SalesChartCard = ({ title, value, change, chartData, isLoading }: { title:
     </Card>
 );
 
-export default function AnalyticsOverviewPageContent() {
+export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }: { defaultTab?: string }) {
   const { user, loading: authLoading } = useAuth();
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -254,7 +254,7 @@ export default function AnalyticsOverviewPageContent() {
                 </div>
           </div>
         
-          <Tabs defaultValue="overview">
+          <Tabs defaultValue={defaultTab}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="sales">Sales</TabsTrigger>
