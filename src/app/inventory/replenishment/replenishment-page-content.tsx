@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, RefreshCw, ChevronDown, Filter, ArrowUpDown, ShieldAlert, MessageCircle, ImageIcon, Checkbox } from 'lucide-react';
+import { Home, ChevronRight, RefreshCw, ChevronDown, Filter, ArrowUpDown, ShieldAlert, MessageCircle, ImageIcon } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import CustomizeColumnsDialog from '@/components/inventory/stock-takes/customize-columns-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import CustomizeColumnsDialog from '@/components/purchases/reorder-legacy-customize-columns-dialog';
 
 
 type Column = {
