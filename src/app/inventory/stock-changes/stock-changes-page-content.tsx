@@ -1,25 +1,63 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, Search, MessageCircle, ChevronDown } from 'lucide-react';
+import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Triangle } from 'lucide-react';
+import { collection, query, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { format } from 'date-fns';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import AuthGuard from '@/components/auth/auth-guard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const recentChanges = [
-    { id: '34536187-6', name: 'Geekvape Aegis Legend lll Kit-Silver', date: '10/24/2025', location: 'A1-01-A', change: 'Add 1 units', reason: 'Found', committed: 'Oct 24 2025 11:28:15 am by ali' },
-    { id: '630987110-1', name: 'Vaporesso Xros 3ML Replacement Pods Corex 3.0 (Pack of 4)=0.6 Ohms', date: '10/17/2025', location: 'Main', change: 'Add 50 units', committed: 'Oct 17 2025 10:44:28 am by all' },
-    { id: '630887110-1', name: 'Vaporesso Xros 3ML Replacement Pods Corex 3.0 (Pack of 4)=0.6 Ohms', date: '10/17/2025', location: 'C1-01-A', change: 'Add 50 units', committed: 'Oct 17 2025 10:44:54 am by all' },
-    { id: '587028855-5', name: 'Vaporesso XROS Replacement Pod 2.0 Corex 3ML (4 Pack) Type-Mes...', date: '10/16/2025', location: 'C1-01-A', change: 'Add 700 units', committed: 'Oct 16 2025 12:14:32 pm by ali' },
-    { id: '116042166-5', name: 'SMOK Novo GT Starter Kit (Single Unit) Color-Pale Gold', date: '10/7/2025', location: 'C6-01-A', change: 'Add 41 units', committed: 'Oct 7 2025 3:03:45 pm by Wara' },
-]
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type StockHistoryEntry } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function StockChangesPageContent() {
+    const [recentChanges, setRecentChanges] = useState<StockHistoryEntry[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
+    
+    useEffect(() => {
+        const db = getFirestoreDb();
+        if (!user || authLoading || !db) {
+            if (!authLoading) setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        const historyCollectionRef = collection(db, 'users', user.uid, 'stockHistory');
+        const q = query(historyCollectionRef, orderBy('timestamp', 'desc'), limit(5));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StockHistoryEntry));
+            setRecentChanges(data);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching recent stock changes:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch recent stock changes.' });
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading, toast]);
+    
+    const toDate = (v: any): Date | null => {
+        if (!v) return null;
+        if (v instanceof Date) return v;
+        if (typeof v.toDate === 'function') return v.toDate();
+        const d = new Date(v);
+        return isNaN(d.getTime()) ? null : d;
+    };
+
+
     return (
         <AuthGuard>
             <main className="container mx-auto p-4 md:p-8">
@@ -125,16 +163,24 @@ export default function StockChangesPageContent() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        {recentChanges.map(change => (
-                                            <div key={change.id} className="text-sm border-b pb-2">
-                                                <div className="flex justify-between items-start">
-                                                    <p className="font-medium text-primary max-w-[80%]">{change.id} - {change.name}</p>
-                                                    <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0"/>
-                                                </div>
-                                                <p>{change.date} &bull; {change.location} &bull; {change.change} &bull; {change.reason}</p>
-                                                <p className="text-xs text-muted-foreground">{change.committed}</p>
+                                        {loading ? (
+                                            <div className="space-y-4">
+                                                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full"/>)}
                                             </div>
-                                        ))}
+                                        ) : recentChanges.length > 0 ? (
+                                            recentChanges.map(change => (
+                                                <div key={change.id} className="text-sm border-b pb-2">
+                                                    <div className="flex justify-between items-start">
+                                                        <p className="font-medium text-primary max-w-[80%]">{change.productId} - {change.description}</p>
+                                                        <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0"/>
+                                                    </div>
+                                                    <p>{format(toDate(change.timestamp)!, 'M/d/yyyy')} &bull; {change.sublocation} &bull; {change.transaction} &bull; {change.details}</p>
+                                                    <p className="text-xs text-muted-foreground">{format(toDate(change.timestamp)!, 'MMM d yyyy h:mm:ss a')} by {change.user}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p className="text-muted-foreground text-sm text-center py-4">No recent stock changes.</p>
+                                        )}
                                         <div className="text-center">
                                             <Button variant="link">View full stock change history</Button>
                                         </div>
