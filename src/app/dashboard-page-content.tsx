@@ -34,7 +34,7 @@ const purchasingFeatures = [
   { title: 'Bills', description: 'View all bills.', icon: <Receipt />, href: '/bills', color: 'orange' },
   { title: 'Bill payments', description: 'View all bill payments.', icon: <CreditCard />, href: '/bill-payments', color: 'orange' },
   { title: 'Reorder', description: 'Create a purchase order from reorder quantities.', icon: <RefreshCw />, href: '/purchases/reorder', color: 'yellow' },
-  { title: 'Reorder (legacy)', description: 'Legacy reordering screen.', icon: <RefreshCw />, href: '#', color: 'yellow' },
+  { title: 'Reorder (legacy)', description: 'Legacy reordering screen.', icon: <RefreshCw />, href: '/purchases/reorder-legacy', color: 'yellow' },
 ];
 
 const inventoryFeatures = [
