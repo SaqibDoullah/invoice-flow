@@ -541,12 +541,13 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                 </div>
             </TabsContent>
             <TabsContent value="sales" className="mt-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                     <SalesChartCard title="Number of sales" value={numberOfSales.toString()} chartData={salesByDay} isLoading={isLoading} dataKey="sales"/>
                     <SalesChartCard title="Total units" value="--" chartData={[]} isLoading={isLoading}/>
                     <SalesChartCard title="Avg. units per sale" value="--" chartData={[]} isLoading={isLoading}/>
-                    
-                    <Card className="col-span-1 md:col-span-2 lg:col-span-1">
+                 </div>
+                 <div className="grid grid-cols-1">
+                    <Card>
                         <CardHeader>
                             <div className="flex justify-between items-center">
                                 <CardTitle>Number of sales by geography</CardTitle>
@@ -560,7 +561,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                         <CardContent>
                             <div style={{ width: '100%', height: '250px' }}>
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <ComposableMap projection="geoAlbersUsa">
+                                    <ComposableMap projection="geoAlbersUsa" projectionConfig={{ scale: 800 }} style={{ width: "100%", height: "auto" }}>
                                     <Geographies geography={geoUrl}>
                                         {({ geographies }) =>
                                         geographies.map((geo) => {
@@ -582,7 +583,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                         </CardContent>
                     </Card>
                 </div>
-                <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">FINANCIALS</h2>
+                <h2 className="text-xs font-semibold uppercase text-muted-foreground mt-6 mb-2">FINANCIALS</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-4">
                         {financialMetrics.map(metric => (
