@@ -73,6 +73,10 @@ export default function TransferOrderPageContent({ orderId }: TransferOrderPageC
                                         <ChevronDown className="ml-2" />
                                     </Button>
                                 </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onSelect={showComingSoon}>Print transfer order</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon}>Print transfer order with barcode</DropdownMenuItem>
+                                </DropdownMenuContent>
                             </DropdownMenu>
                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
