@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Triangle, ShieldAlert, ArrowUpDown } from 'lucide-react';
 import { collection, query, onSnapshot, orderBy, limit } from 'firebase/firestore';
@@ -29,12 +29,29 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import CustomizeColumnsDialog from '@/components/inventory/stock-takes/customize-columns-dialog';
+
+
+const batchStockChangesColumns = [
+    { id: 'status', label: 'Status' },
+    { id: 'stockChangeId', label: 'Stock change ID' },
+    { id: 'orderId', label: 'Order ID' },
+    { id: 'date', label: 'Date' },
+    { id: 'sublocation', label: 'Sublocation' },
+    { id: 'note', label: 'Note' },
+    { id: 'commitTimestamp', label: 'Commit timestamp' },
+    { id: 'commitUser', label: 'Commit user' },
+];
+
 
 export default function StockChangesPageContent() {
     const [recentChanges, setRecentChanges] = useState<StockHistoryEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
+    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+    const [columns, setColumns] = useState(batchStockChangesColumns);
     
     useEffect(() => {
         const db = getFirestoreDb();
@@ -228,7 +245,14 @@ export default function StockChangesPageContent() {
                                     <Link href="/inventory/stock-changes/new">Create batch stock change</Link>
                                 </Button>
                                 <Button variant="outline">Import batch stock change</Button>
-                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
                         
@@ -262,19 +286,20 @@ export default function StockChangesPageContent() {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead className="w-12"><Checkbox/></TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Stock change ID</TableHead>
-                                            <TableHead>Order ID</TableHead>
-                                            <TableHead><div className="flex items-center gap-1"><ArrowUpDown className="w-3 h-3"/> Date</div></TableHead>
-                                            <TableHead>Sublocation</TableHead>
-                                            <TableHead>Note</TableHead>
-                                            <TableHead>Commit timestamp</TableHead>
-                                            <TableHead>Commit user</TableHead>
+                                            {columns.map(col => (
+                                                <TableHead key={col.id}>
+                                                     {col.id === 'date' ? (
+                                                        <div className="flex items-center gap-1">
+                                                            <ArrowUpDown className="w-3 h-3"/> {col.label}
+                                                        </div>
+                                                     ) : col.label}
+                                                </TableHead>
+                                            ))}
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         <TableRow>
-                                            <TableCell colSpan={9} className="h-24 text-center">
+                                            <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                                             No batch stock changes found.
                                             </TableCell>
                                         </TableRow>
@@ -290,6 +315,12 @@ export default function StockChangesPageContent() {
                         <MessageCircle className="w-8 h-8" />
                     </Button>
                 </div>
+                 <CustomizeColumnsDialog
+                    isOpen={isCustomizeOpen}
+                    setIsOpen={setIsCustomizeOpen}
+                    columns={columns}
+                    setColumns={setColumns}
+                />
             </main>
         </AuthGuard>
     );
