@@ -156,6 +156,9 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
   const [salesTotalByDay, setSalesTotalByDay] = useState<{date: string, total: number}[]>([]);
   const [avgPerSaleByDay, setAvgPerSaleByDay] = useState<{date: string, avg: number}[]>([]);
   
+  const purchaseTotal = useMemo(() => purchaseOrders.reduce((sum, po) => sum + po.total, 0), [purchaseOrders]);
+  const pendingPurchaseTotal = useMemo(() => purchaseOrders.filter(po => po.status === 'draft').reduce((sum, po) => sum + po.total, 0), [purchaseOrders]);
+
   useEffect(() => {
     const db = getFirestoreDb();
     if (!user || authLoading || !db) {
@@ -322,7 +325,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                     <KpiCard title="Number of sales" value={numberOfSales.toString()} subTitle="COGS" subValue="--" isLoading={isLoading} />
                     <KpiCard title="Avg. per sale" value={formatCurrency(avgPerSale)} subTitle="Gross income" subValue="--" isLoading={isLoading} />
                     <KpiCard title="Avg. units per sale" value="--" subTitle="Gross margin" subValue="--" isLoading={isLoading} />
-                    <KpiCard title="Purchases total" value={formatCurrency(283245)} subTitle="Pending purchases" subValue="--" isLoading={isLoading} />
+                    <KpiCard title="Purchases total" value={formatCurrency(purchaseTotal)} subTitle="Pending purchases" subValue={formatCurrency(pendingPurchaseTotal)} isLoading={isLoading} />
                     <KpiCard title="Inventory value (10/16/2025)" value={formatCurrency(1037424)} subTitle="Value of variances" subValue="--" isLoading={isLoading} />
                 </div>
 
