@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -132,7 +133,9 @@ export default function ReturnsPageContent() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>Action 1</DropdownMenuItem>
+                  <DropdownMenuItem>Print details for selected returns</DropdownMenuItem>
+                  <DropdownMenuItem>Customize action menu items</DropdownMenuItem>
+                  <DropdownMenuItem>Customize columns</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
