@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Triangle, Check } from 'lucide-react';
+import { Triangle, Check, ChevronDown } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,37 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import CustomizeColumnsDialog from '@/components/inventory/stock-takes/customize-columns-dialog';
+import { useToast } from '@/hooks/use-toast';
+
+type Column = {
+  id: string;
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'productId', label: 'Product ID' },
+    { id: 'description', label: 'Description' },
+    { id: 'lotId', label: 'Lot ID' },
+    { id: 'qoh', label: 'QoH' },
+    { id: 'qtyChange', label: 'Qty change' },
+    { id: 'newQty', label: 'New qty' },
+    { id: 'reason', label: 'Reason' },
+    { id: 'comments', label: 'Comments' },
+];
 
 export default function CreateBatchStockChangePageContent() {
     const today = new Date();
+    const { toast } = useToast();
+    const [columns, setColumns] = useState<Column[]>(initialColumns);
+    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
+    const showComingSoon = () => {
+        toast({
+            title: 'Coming Soon',
+            description: 'This feature is not yet implemented.',
+        });
+    };
     
     return (
         <AuthGuard>
@@ -39,8 +67,14 @@ export default function CreateBatchStockChangePageContent() {
                      <div className="flex items-center gap-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions</Button>
+                                <Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
+                             <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={showComingSoon}>Stock change to PDF</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={showComingSoon}>Stock change to Excel</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={showComingSoon}>Customize stock variance reasons</DropdownMenuItem>
+                            </DropdownMenuContent>
                         </DropdownMenu>
                         <Button><Check className="mr-2 h-4 w-4" /> Save changes</Button>
                     </div>
@@ -85,19 +119,16 @@ export default function CreateBatchStockChangePageContent() {
                     <Table>
                         <TableHeader className="bg-muted/50">
                             <TableRow>
-                                <TableHead className="p-2">Product ID</TableHead>
-                                <TableHead className="p-2">Description</TableHead>
-                                <TableHead className="p-2">Lot ID</TableHead>
-                                <TableHead className="p-2 text-right">QoH</TableHead>
-                                <TableHead className="p-2 text-right">Qty change</TableHead>
-                                <TableHead className="p-2 text-right">New qty</TableHead>
-                                <TableHead className="p-2">Reason</TableHead>
-                                <TableHead className="p-2">Comments</TableHead>
+                                {columns.map(col => (
+                                    <TableHead key={col.id} className="p-2">
+                                        {col.label}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             <TableRow>
-                                <TableCell colSpan={8} className="p-4 text-center text-muted-foreground">
+                                <TableCell colSpan={columns.length} className="p-4 text-center text-muted-foreground">
                                     Type on the last line to add an item. Additional lines are automatically added.
                                 </TableCell>
                             </TableRow>
@@ -110,6 +141,13 @@ export default function CreateBatchStockChangePageContent() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>
                     </Button>
                 </div>
+
+                <CustomizeColumnsDialog 
+                    isOpen={isCustomizeOpen}
+                    setIsOpen={setIsCustomizeOpen}
+                    columns={columns}
+                    setColumns={setColumns}
+                />
             </main>
         </AuthGuard>
     );
