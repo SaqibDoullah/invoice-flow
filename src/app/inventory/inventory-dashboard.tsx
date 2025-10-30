@@ -70,7 +70,7 @@ const inventoryFeatures: Feature[] = [
     title: 'Stock changes',
     description: 'Adjust the stock levels.',
     icon: <ArrowLeftRight className="w-6 h-6 text-purple-500" />,
-    href: '#',
+    href: '/inventory/stock-changes',
     color: 'purple',
   },
   {
