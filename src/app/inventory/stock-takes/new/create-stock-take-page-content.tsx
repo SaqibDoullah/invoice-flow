@@ -42,7 +42,29 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { type InventoryItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import CustomizeColumnsDialog from '@/components/inventory/stock-takes/customize-columns-dialog';
 
+type Column = {
+  id: string;
+  label: string;
+  isCase?: boolean;
+};
+
+const initialColumns: Column[] = [
+    { id: 'productId', label: 'Product ID' },
+    { id: 'description', label: 'Description' },
+    { id: 'qoh', label: 'QoH' },
+    { id: 'count', label: 'Count' },
+    { id: 'variance', label: 'Variance' },
+    { id: 'uom', label: 'UOM' },
+    { id: 'reason', label: 'Reason' },
+    { id: 'caseQoh', label: 'QoH', isCase: true },
+    { id: 'caseCount', label: 'Count', isCase: true },
+    { id: 'caseVariance', label: 'Variance', isCase: true },
+    { id: 'packing', label: 'Packing', isCase: true },
+    { id: 'caseReason', label: 'Reason', isCase: true },
+];
 
 export default function CreateStockTakePageContent() {
     const [isSublocationDialogOpen, setIsSublocationDialogOpen] = useState(true);
@@ -50,6 +72,8 @@ export default function CreateStockTakePageContent() {
     const [inventory, setInventory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
+    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+    const [columns, setColumns] = useState<Column[]>(initialColumns);
     
     useEffect(() => {
         const db = getFirestoreDb();
@@ -82,6 +106,41 @@ export default function CreateStockTakePageContent() {
         });
         setInventory(newInventory);
     }
+    
+    const renderCell = (item: any, columnId: string) => {
+        switch (columnId) {
+            case 'productId':
+                return <span className="font-medium text-primary">{item.sku || item.id}</span>;
+            case 'description':
+                return item.name;
+            case 'qoh':
+                return <div className="text-right">{item.qoh}</div>;
+            case 'count':
+                return (
+                    <Input 
+                        type="number" 
+                        className="w-20 text-right h-8"
+                        value={item.count ?? ''}
+                        onChange={(e) => handleCountChange(item.id, e.target.value)}
+                    />
+                );
+            case 'variance':
+                return <div className={`text-right ${item.variance < 0 ? 'text-red-500' : ''}`}>{item.variance}</div>;
+            case 'uom':
+                return item.uom;
+            case 'caseQoh':
+                 return <div className="text-right">0</div>;
+            case 'caseCount':
+                return <Input type="number" className="w-20 text-right h-8"/>;
+            case 'caseVariance':
+                return <div className="text-right">0</div>;
+            case 'caseReason':
+                 return <ChevronDown className="w-4 h-4" />;
+            default:
+                return null;
+        }
+    }
+
 
     if (!isSublocationDialogOpen && (loading || authLoading)) {
         return (
@@ -136,7 +195,17 @@ export default function CreateStockTakePageContent() {
                         </div>
                     </div>
                      <div className="flex items-center gap-2">
-                        <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4"/></Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4"/></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem>Stock take to PDF</DropdownMenuItem>
+                                <DropdownMenuItem>Stock take to Excel</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
+                                <DropdownMenuItem>Customize stock variance reasons</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <Button>Save changes</Button>
                     </div>
                 </div>
@@ -172,44 +241,31 @@ export default function CreateStockTakePageContent() {
                                 <TableHead colSpan={5} className="text-center font-bold border-l">Case Stock</TableHead>
                             </TableRow>
                             <TableRow className="bg-muted/50">
-                                <TableHead className="w-10 p-2 text-center"></TableHead>
-                                <TableHead className="p-2 min-w-[150px]"><div className="flex items-center gap-1"><ArrowDown className="w-3 h-3"/>Product ID</div></TableHead>
-                                <TableHead className="p-2 min-w-[250px]">Description</TableHead>
-                                <TableHead className="p-2 text-right">QoH</TableHead>
-                                <TableHead className="p-2 text-right">Count</TableHead>
-                                <TableHead className="p-2 text-right">Variance</TableHead>
-                                <TableHead className="p-2">UOM</TableHead>
-                                <TableHead className="p-2 text-right border-l">QoH</TableHead>
-                                <TableHead className="p-2 text-right">Count</TableHead>
-                                <TableHead className="p-2 text-right">Variance</TableHead>
-                                <TableHead className="p-2">Packing</TableHead>
-                                <TableHead className="p-2">Reason</TableHead>
+                                {columns.filter(c => !c.isCase).map(col => (
+                                    <TableHead key={col.id} className={`p-2 min-w-[150px] ${['qoh', 'count', 'variance'].includes(col.id) ? 'text-right' : ''}`}>
+                                        {col.id === 'productId' ? <div className="flex items-center gap-1"><ArrowDown className="w-3 h-3"/>{col.label}</div> : col.label}
+                                    </TableHead>
+                                ))}
+                                {columns.filter(c => c.isCase).map(col => (
+                                     <TableHead key={col.id} className={`p-2 min-w-[100px] border-l ${['caseQoh', 'caseCount', 'caseVariance'].includes(col.id) ? 'text-right' : ''}`}>
+                                        {col.label}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {inventory.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell></TableCell>
-                                    <TableCell className="font-medium text-primary">{item.sku || item.id}</TableCell>
-                                    <TableCell>{item.name}</TableCell>
-                                    <TableCell className="text-right">{item.qoh}</TableCell>
-                                    <TableCell className="p-1">
-                                        <Input 
-                                            type="number" 
-                                            className="w-20 text-right h-8"
-                                            value={item.count ?? ''}
-                                            onChange={(e) => handleCountChange(item.id, e.target.value)}
-                                        />
-                                    </TableCell>
-                                    <TableCell className={`text-right ${item.variance < 0 ? 'text-red-500' : ''}`}>{item.variance}</TableCell>
-                                    <TableCell>{item.uom}</TableCell>
-                                    <TableCell className="border-l text-right">0</TableCell>
-                                    <TableCell className="p-1"><Input type="number" className="w-20 text-right h-8"/></TableCell>
-                                    <TableCell className="text-right">0</TableCell>
-                                    <TableCell></TableCell>
-                                    <TableCell>
-                                        <ChevronDown className="w-4 h-4" />
-                                    </TableCell>
+                                     {columns.filter(c => !c.isCase).map(col => (
+                                         <TableCell key={col.id} className="p-1">
+                                             {renderCell(item, col.id)}
+                                         </TableCell>
+                                     ))}
+                                     {columns.filter(c => c.isCase).map(col => (
+                                         <TableCell key={col.id} className="p-1 border-l">
+                                             {renderCell(item, col.id)}
+                                         </TableCell>
+                                     ))}
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -222,6 +278,12 @@ export default function CreateStockTakePageContent() {
                 </div>
              </main>
         )}
+        <CustomizeColumnsDialog 
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+        />
     </AuthGuard>
   );
 }
