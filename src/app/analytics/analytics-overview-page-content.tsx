@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChartTooltipContent, ChartTooltip, ChartContainer } from '@/components/ui/chart';
+import { ChartTooltipContent, ChartTooltip, ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/auth-context';
@@ -142,6 +142,20 @@ const SalesChartCard = ({ title, value, change, chartData, isLoading, dataKey = 
     </Card>
 );
 
+const chartConfig = {
+  views: {
+    label: "Page Views",
+  },
+  total: {
+    label: "Total",
+    color: "hsl(var(--chart-1))",
+  },
+  avg: {
+      label: "Average",
+      color: "hsl(var(--chart-2))",
+  }
+} satisfies ChartConfig
+
 const FinancialChartCard = ({ title, value, change, chartData, dataKey, isLoading }: { title: string, value: string, change?: string, chartData: any[], dataKey: string, isLoading: boolean }) => (
     <Card className="flex items-center p-4">
         <div className="w-1/3">
@@ -156,15 +170,15 @@ const FinancialChartCard = ({ title, value, change, chartData, dataKey, isLoadin
         </div>
         <div className="w-2/3 h-24">
             {isLoading ? <Skeleton className="w-full h-full" /> :
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig} className="w-full h-full">
                     <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                          <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                          <YAxis tick={{ fontSize: 10 }} tickFormatter={(val) => typeof val === 'number' && val > 1000 ? `${val/1000}k` : val.toString() }/>
-                         <Tooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey={dataKey} stroke="#8884d8" strokeWidth={2} dot={false} />
+                         <Tooltip content={<ChartTooltipContent indicator="line" />} />
+                        <Line type="monotone" dataKey={dataKey} stroke="var(--color-total)" strokeWidth={2} dot={false} />
                     </LineChart>
-                </ResponsiveContainer>
+                </ChartContainer>
             }
         </div>
     </Card>
@@ -530,6 +544,40 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                 </div>
             </TabsContent>
             <TabsContent value="sales" className="mt-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <SalesChartCard title="Number of sales" value={numberOfSales.toString()} chartData={salesByDay} isLoading={isLoading} dataKey="sales"/>
+                    <SalesChartCard title="Total units" value="--" chartData={[]} isLoading={isLoading}/>
+                    <SalesChartCard title="Avg. units per sale" value="--" chartData={[]} isLoading={isLoading}/>
+                    
+                    <Card className="col-span-1 md:col-span-2 lg:col-span-1">
+                        <CardHeader>
+                            <CardTitle>Number of sales by geography</CardTitle>
+                            <CardDescription>
+                                Unspecified sales (22)
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <ResponsiveContainer width="100%" height={250}>
+                                <ComposableMap projection="geoAlbersUsa">
+                                <Geographies geography={geoUrl}>
+                                    {({ geographies }) =>
+                                    geographies.map((geo) => {
+                                        const cur = mapData.find((s) => s.id === geo.id);
+                                        return (
+                                        <Geography
+                                            key={geo.rsmKey}
+                                            geography={geo}
+                                            fill={cur ? finalColorScale(cur.value) : "#EEE"}
+                                        />
+                                        );
+                                    })
+                                    }
+                                </Geographies>
+                                </ComposableMap>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
                 <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">FINANCIALS</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-4">
