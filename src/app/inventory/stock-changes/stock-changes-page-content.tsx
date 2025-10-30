@@ -224,7 +224,9 @@ export default function StockChangesPageContent() {
                                 </Select>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button>Create batch stock change</Button>
+                                <Button asChild>
+                                    <Link href="/inventory/stock-changes/new">Create batch stock change</Link>
+                                </Button>
                                 <Button variant="outline">Import batch stock change</Button>
                                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
                             </div>
