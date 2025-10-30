@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { Home, ChevronRight, Undo2, ChevronDown, Filter, Search, ArrowUpDown, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { format, isValid } from 'date-fns';
@@ -80,7 +80,7 @@ export default function ReturnsPageContent() {
 
     setLoading(true);
     const returnsCollectionRef = collection(db, 'users', user.uid, 'returns');
-    const q = query(returnsCollectionRef);
+    const q = query(returnsCollectionRef, orderBy('returnDate', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const returnsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Return));

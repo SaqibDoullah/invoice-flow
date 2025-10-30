@@ -177,10 +177,10 @@ export default function StockTakesPageContent() {
                         <TableCell><Checkbox /></TableCell>
                         <TableCell><Badge variant="secondary">{st.status}</Badge></TableCell>
                         <TableCell className="font-medium text-primary">{st.stockTakeId}</TableCell>
-                        <TableCell>{format(toDate(st.date)!, 'M/d/yyyy')}</TableCell>
+                        <TableCell>{st.date ? format(toDate(st.date)!, 'M/d/yyyy') : ''}</TableCell>
                         <TableCell>{st.sublocation}</TableCell>
                         <TableCell>{st.note}</TableCell>
-                        <TableCell>{format(toDate(st.commitTimestamp)!, 'MMM d yyyy h:mm:ss a')}</TableCell>
+                        <TableCell>{st.commitTimestamp ? format(toDate(st.commitTimestamp)!, 'MMM d yyyy h:mm:ss a') : ''}</TableCell>
                         <TableCell>{st.commitUser}</TableCell>
                       </TableRow>
                     ))

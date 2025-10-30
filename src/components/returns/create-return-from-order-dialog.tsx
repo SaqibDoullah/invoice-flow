@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { Search } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 import {
   Dialog,
@@ -19,6 +19,8 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { type SalesOrder } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 interface CreateReturnFromOrderDialogProps {
     isOpen: boolean;
@@ -30,7 +32,7 @@ const toDate = (v: any): Date | null => {
     if (v instanceof Date) return v;
     if (typeof v.toDate === 'function') return v.toDate();
     const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
+    return isValid(d) ? d : null;
 };
 
 
@@ -53,15 +55,22 @@ export default function CreateReturnFromOrderDialog({ isOpen, setIsOpen }: Creat
 
         setLoading(true);
         const ordersCollectionRef = collection(db, 'users', user.uid, 'sales');
-        const q = query(ordersCollectionRef);
+        const q = query(ordersCollectionRef, orderBy('orderDate', 'desc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder));
             setOrders(ordersData);
             setLoading(false);
-        }, (error) => {
-            console.error("Error fetching sales orders:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.' });
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: ordersCollectionRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+
+            if (serverError.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.' });
+            }
             setLoading(false);
         });
 
@@ -73,7 +82,7 @@ export default function CreateReturnFromOrderDialog({ isOpen, setIsOpen }: Creat
         const lowercasedFilter = searchTerm.toLowerCase();
         return orders.filter(order =>
             order.orderId.toLowerCase().includes(lowercasedFilter) ||
-            (order.customerName && order.customerName.toLowerCase().includes(lowercasedFilter))
+            (order.customer && order.customer.name.toLowerCase().includes(lowercasedFilter))
         );
     }, [orders, searchTerm]);
 
@@ -117,7 +126,7 @@ export default function CreateReturnFromOrderDialog({ isOpen, setIsOpen }: Creat
                                         className="p-2 -mx-2 rounded-md hover:bg-accent cursor-pointer flex justify-between items-center text-sm"
                                     >
                                         <span className="font-mono text-primary">{order.orderId}</span>
-                                        <span>{order.customerName || 'N/A'}</span>
+                                        <span>{order.customer?.name || 'N/A'}</span>
                                         <span className="text-muted-foreground">{format(toDate(order.orderDate)!, 'M/d/yyyy')}</span>
                                     </div>
                                 ))
