@@ -66,10 +66,12 @@ export default function TransfersPageContent() {
         setLoading(true);
         const historyCollectionRef = collection(db, 'users', user.uid, 'stockHistory');
         // Assuming 'Transfer' is a possible value in the 'transaction' field
-        const q = query(historyCollectionRef, where('transaction', '==', 'Transfer'), orderBy('timestamp', 'desc'), limit(5));
+        const q = query(historyCollectionRef, where('transaction', '==', 'Transfer'), limit(5));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StockHistoryEntry));
+            // Sort client-side since we removed orderBy
+            data.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
             setRecentTransfers(data);
             setLoading(false);
         }, (error) => {
