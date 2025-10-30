@@ -110,7 +110,7 @@ const KpiCard = ({ title, value, change, changeType, subValue, subTitle, isLoadi
     </Card>
 );
 
-const SalesChartCard = ({ title, value, change, chartData, isLoading }: { title: string, value: string, change?: string, chartData: any[], isLoading: boolean }) => (
+const SalesChartCard = ({ title, value, change, chartData, isLoading, dataKey = "sales" }: { title: string, value: string, change?: string, chartData: any[], isLoading: boolean, dataKey?: string }) => (
     <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div className="space-y-1">
@@ -132,13 +132,41 @@ const SalesChartCard = ({ title, value, change, chartData, isLoading }: { title:
              {isLoading ? <Skeleton className="h-full w-full" /> : (
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
-                        <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey={dataKey} stroke="#3b82f6" strokeWidth={2} dot={false} />
                         <XAxis dataKey="date" hide />
-                        <YAxis domain={[0, 'dataMax']} hide/>
+                        <YAxis domain={['auto', 'auto']} hide/>
                     </LineChart>
                 </ResponsiveContainer>
              )}
         </CardContent>
+    </Card>
+);
+
+const FinancialChartCard = ({ title, value, change, chartData, dataKey, isLoading }: { title: string, value: string, change?: string, chartData: any[], dataKey: string, isLoading: boolean }) => (
+    <Card className="flex items-center p-4">
+        <div className="w-1/3">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+            {change && (
+                <Badge variant='default' className="bg-green-100 text-green-800">
+                    <TrendingUp className="mr-1 h-4 w-4" />
+                    {change}
+                </Badge>
+            )}
+        </div>
+        <div className="w-2/3 h-24">
+            {isLoading ? <Skeleton className="w-full h-full" /> :
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                         <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                         <YAxis tick={{ fontSize: 10 }} tickFormatter={(val) => typeof val === 'number' && val > 1000 ? `${val/1000}k` : val.toString() }/>
+                         <Tooltip content={<ChartTooltipContent />} />
+                        <Line type="monotone" dataKey={dataKey} stroke="#8884d8" strokeWidth={2} dot={false} />
+                    </LineChart>
+                </ResponsiveContainer>
+            }
+        </div>
     </Card>
 );
 
@@ -263,6 +291,21 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
   }
 
   const isLoading = loading || authLoading;
+  
+  const financialMetrics = [
+      { title: 'Gross sales', value: formatCurrency(grossSales), change: '78.9%', dataKey: 'total', data: salesTotalByDay },
+      { title: 'Net sales', value: '--', dataKey: 'net', data: [] },
+      { title: 'COGS', value: '--', dataKey: 'cogs', data: [] },
+      { title: 'Gross Income', value: '--', dataKey: 'income', data: [] },
+      { title: 'Gross margin', value: '--', dataKey: 'margin', data: [] },
+  ];
+
+  const perSaleMetrics = [
+      { title: 'Gross per sale', value: formatCurrency(avgPerSale), change: '13.4%', dataKey: 'avg', data: avgPerSaleByDay },
+      { title: 'Net per sale', value: '--', dataKey: 'net', data: [] },
+      { title: 'COGS per sale', value: '--', dataKey: 'cogs', data: [] },
+      { title: 'Gross Income per sale', value: '--', dataKey: 'income', data: [] },
+  ];
 
   return (
     <AuthGuard>
@@ -487,96 +530,37 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                 </div>
             </TabsContent>
             <TabsContent value="sales" className="mt-6">
-                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="w-48">
-                             <Select defaultValue="last-30">
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="last-30">Last 30 days</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="relative">
-                            <Input placeholder="Source" className="w-40 pl-8"/>
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
-                        </div>
-                        <div className="relative">
-                            <Input placeholder="Origin" className="w-40 pl-8"/>
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
-                        </div>
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline">More: 1</Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem>Filter 1</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">FINANCIALS</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                        {financialMetrics.map(metric => (
+                             <FinancialChartCard
+                                key={metric.title}
+                                title={metric.title}
+                                value={metric.value}
+                                change={metric.change}
+                                chartData={metric.data}
+                                dataKey={metric.dataKey}
+                                isLoading={isLoading}
+                             />
+                        ))}
                     </div>
-                     <div className="flex items-center gap-4">
-                        <div className="relative">
-                            <Input placeholder="Break down by" className="w-48 pl-8"/>
-                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
-                        </div>
-                        <div className="w-32">
-                             <Select defaultValue="day">
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="day">Day</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="space-y-4">
+                         {perSaleMetrics.map(metric => (
+                             <FinancialChartCard
+                                key={metric.title}
+                                title={metric.title}
+                                value={metric.value}
+                                change={metric.change}
+                                chartData={metric.data}
+                                dataKey={metric.dataKey}
+                                isLoading={isLoading}
+                             />
+                        ))}
+                        {/* Empty placeholders to match layout */}
+                        <Card className="h-[124px]"></Card>
+                        <Card className="h-[124px]"></Card>
                     </div>
-                </div>
-
-                <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Sales</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-6">
-                        <SalesChartCard title="Number of sales" value={numberOfSales.toString()} chartData={salesByDay} isLoading={isLoading}/>
-                        <SalesChartCard title="Total units" value="--" chartData={[]} isLoading={isLoading} />
-                        <SalesChartCard title="Avg. units per sale" value="--" chartData={[]} isLoading={isLoading} />
-                    </div>
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Number of sales by geography</CardTitle>
-                            <Tabs defaultValue="usa" className="w-auto">
-                                <TabsList>
-                                    <TabsTrigger value="usa">USA</TabsTrigger>
-                                    <TabsTrigger value="europe">Europe</TabsTrigger>
-                                    <TabsTrigger value="world">World</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
-                        </CardHeader>
-                        <CardContent className="relative aspect-video">
-                            <ComposableMap projection="geoAlbersUsa">
-                                <Geographies geography={geoUrl}>
-                                    {({ geographies }) =>
-                                    geographies.map(geo => {
-                                        const cur = mapData.find(s => s.id === geo.id);
-                                        return (
-                                            <Geography
-                                            key={geo.rsmKey}
-                                            geography={geo}
-                                            fill={cur ? finalColorScale(cur.value) : "#EEE"}
-                                            />
-                                        );
-                                    })
-                                    }
-                                </Geographies>
-                            </ComposableMap>
-                             <div className="absolute bottom-4 right-4 bg-background/80 p-2 rounded-md border text-xs space-y-1">
-                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#ef4444'}}></div><span>20</span></div>
-                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#238b45'}}></div><span>15</span></div>
-                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#74c476'}}></div><span>10</span></div>
-                                <div className="flex items-center gap-2"><div className="w-3 h-3" style={{backgroundColor: '#c7e9c0'}}></div><span>5</span></div>
-                             </div>
-                        </CardContent>
-                    </Card>
                 </div>
             </TabsContent>
             <TabsContent value="purchases" className="mt-6">
@@ -659,5 +643,3 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
     </AuthGuard>
   );
 }
-
-    
