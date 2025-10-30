@@ -49,6 +49,25 @@ import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import CustomizeColumnsDialog from '@/components/inventory/products/customize-columns-dialog';
+
+type Column = {
+  id: keyof InventoryItem | 'id' | 'image';
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'productStatus', label: 'Product Status' },
+    { id: 'image', label: 'Image' },
+    { id: 'sku', label: 'Product ID' },
+    { id: 'name', label: 'Description' },
+    { id: 'category', label: 'Category' },
+    { id: 'manufacturer', label: 'Manufacturer' },
+    { id: 'stdBuyPrice', label: 'Std buy price' },
+    { id: 'price', label: 'Item price' },
+    { id: 'sublocation', label: 'Sublocations (configurable)' },
+];
+
 
 export default function ProductsPageContent() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -56,6 +75,9 @@ export default function ProductsPageContent() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -106,6 +128,27 @@ export default function ProductsPageContent() {
       maximumFractionDigits: 2,
     }).format(amount || 0);
 
+  const renderCell = (item: InventoryItem, columnId: Column['id']) => {
+    switch (columnId) {
+      case 'productStatus':
+        return (
+           <Badge variant={item.productStatus === 'Active' ? 'default' : 'secondary'} className={item.productStatus === 'Active' ? 'bg-green-100 text-green-800' : ''}>
+              {item.productStatus || 'Active'}
+          </Badge>
+        );
+      case 'image':
+        return <ImageIcon className="w-4 h-4 text-muted-foreground" />;
+      case 'sku':
+        return <span className="font-medium text-primary">{item.sku || item.id}</span>;
+      case 'stdBuyPrice':
+      case 'price':
+        return <div className="text-right">{formatCurrency(item[columnId] as number)}</div>;
+      default:
+        return item[columnId as keyof InventoryItem] as string | number | null || 'N/A';
+    }
+  };
+
+
   return (
     <AuthGuard>
       <div className="flex-1 container mx-auto p-4 md:p-8">
@@ -149,10 +192,10 @@ export default function ProductsPageContent() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Actions</Button>
+                <Button variant="outline">Actions <ChevronDown className="w-4 h-4 ml-2"/></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Action 1</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -214,26 +257,22 @@ export default function ProductsPageContent() {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="w-10 p-2 text-center"><Checkbox/></TableHead>
-                    <TableHead className="p-2 text-left">Product Status</TableHead>
-                    <TableHead className="w-10 p-2 text-center">Image</TableHead>
-                    <TableHead className="p-2 text-left">
-                      <div className="flex items-center gap-1">
-                        <ArrowUpDown className="w-3 h-3" /> Product ID
-                      </div>
-                    </TableHead>
-                    <TableHead className="p-2 text-left">Description</TableHead>
-                    <TableHead className="p-2 text-left">Category</TableHead>
-                    <TableHead className="p-2 text-left">Manufacturer</TableHead>
-                    <TableHead className="p-2 text-right">Std buy price</TableHead>
-                    <TableHead className="p-2 text-right">Item price</TableHead>
-                    <TableHead className="p-2 text-left">Sublocations (configurable)</TableHead>
+                    {columns.map(col => (
+                      <TableHead key={col.id} className={`p-2 text-left ${col.id === 'stdBuyPrice' || col.id === 'price' ? 'text-right' : ''}`}>
+                         {col.id === 'sku' ? (
+                          <div className="flex items-center gap-1">
+                            <ArrowUpDown className="w-3 h-3" /> {col.label}
+                          </div>
+                        ) : col.label}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     [...Array(10)].map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={10}>
+                        <TableCell colSpan={columns.length + 1}>
                           <Skeleton className="h-8 w-full" />
                         </TableCell>
                       </TableRow>
@@ -242,26 +281,16 @@ export default function ProductsPageContent() {
                     inventoryItems.map((item) => (
                       <TableRow key={item.id} className="cursor-pointer" onClick={() => router.push(`/inventory/products/${item.sku || item.id}`)}>
                         <TableCell className="p-2 text-center"><Checkbox /></TableCell>
-                        <TableCell className="p-2 text-left">
-                           <Badge variant={item.productStatus === 'Active' ? 'default' : 'secondary'} className={item.productStatus === 'Active' ? 'bg-green-100 text-green-800' : ''}>
-                                {item.productStatus || 'Active'}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="p-2 text-center">
-                           <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                        </TableCell>
-                        <TableCell className="p-2 text-left font-medium text-primary">{item.sku || item.id}</TableCell>
-                        <TableCell className="p-2 text-left">{item.name}</TableCell>
-                        <TableCell className="p-2 text-left">{item.category || 'N/A'}</TableCell>
-                        <TableCell className="p-2 text-left">{item.manufacturer || 'N/A'}</TableCell>
-                        <TableCell className="p-2 text-right">{formatCurrency(item.stdBuyPrice)}</TableCell>
-                        <TableCell className="p-2 text-right">{formatCurrency(item.price)}</TableCell>
-                        <TableCell className="p-2 text-left">{item.sublocation || ''}</TableCell>
+                        {columns.map(col => (
+                          <TableCell key={col.id} className="p-2">
+                            {renderCell(item, col.id)}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={10} className="h-24 text-center">
+                      <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                         No products found.
                       </TableCell>
                     </TableRow>
@@ -277,6 +306,12 @@ export default function ProductsPageContent() {
                   <MessageCircle className="w-8 h-8" />
               </Button>
           </div>
+          <CustomizeColumnsDialog
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+          />
       </div>
     </AuthGuard>
   );

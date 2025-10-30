@@ -44,6 +44,29 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
+import CustomizeColumnsDialog from '@/components/inventory/stock/customize-columns-dialog';
+
+type Column = {
+  id: keyof InventoryItem | 'id' | 'image' | 'totalValue' | 'actions';
+  label: string;
+}
+
+const initialColumns: Column[] = [
+    { id: 'actions', label: '' },
+    { id: 'image', label: 'Img' },
+    { id: 'sku', label: 'Product ID (SKU)' },
+    { id: 'quantity', label: 'Quantity on hand' },
+    { id: 'quantityReserved', label: 'Quantity reserved' },
+    { id: 'quantityOnOrder', label: 'Quantity on order' },
+    { id: 'quantityAvailable', label: 'Quantity available' },
+    { id: 'salesVelocity', label: 'Sales velocity' },
+    { id: 'averageCost', label: 'Average cost' },
+    { id: 'totalValue', label: 'Total value' },
+    { id: 'casesOnHand', label: 'Cases on hand' },
+    { id: 'casesOnOrder', label: 'Cases on order' },
+    { id: 'casesAvailable', label: 'Cases available' },
+    { id: 'sublocation', label: 'Sublocation(s)' },
+];
 
 export default function StockPageContent() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -51,6 +74,8 @@ export default function StockPageContent() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -102,6 +127,44 @@ export default function StockPageContent() {
     }).format(amount || 0);
     
     const formatNumber = (num: number | undefined) => (num || 0).toFixed(2);
+    
+    const renderCell = (item: InventoryItem, columnId: Column['id']) => {
+        switch (columnId) {
+            case 'actions':
+                return (
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Plus className="w-4 h-4" />
+                    </Button>
+                );
+            case 'image':
+                return <ImageIcon className="w-4 h-4 text-muted-foreground" />;
+            case 'sku':
+                return (
+                    <div>
+                        <p className="font-medium text-primary">{item.sku || item.id}</p>
+                        <p className="text-xs text-muted-foreground">{item.name}</p>
+                    </div>
+                );
+            case 'totalValue':
+                return formatCurrency((item.averageCost || 0) * (item.quantity || 0));
+            case 'averageCost':
+                return formatCurrency(item.averageCost);
+            case 'salesVelocity':
+                return formatNumber(item.salesVelocity);
+            case 'quantity':
+            case 'quantityReserved':
+            case 'quantityOnOrder':
+            case 'quantityAvailable':
+            case 'casesOnHand':
+            case 'casesOnOrder':
+            case 'casesAvailable':
+                return item[columnId] || 0;
+            case 'sublocation':
+                 return item.sublocation || '';
+            default:
+                return null;
+        }
+    };
 
 
   return (
@@ -141,10 +204,10 @@ export default function StockPageContent() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Actions</Button>
+                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Action 1</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -195,31 +258,22 @@ export default function StockPageContent() {
               <Table className="whitespace-nowrap">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="w-10 p-2"></TableHead>
-                    <TableHead className="w-10 p-2 text-center">Img</TableHead>
-                    <TableHead className="p-2 text-left">
-                      <div className="flex items-center gap-1">
-                        <ArrowUpDown className="w-3 h-3" /> Product ID (SKU)
-                      </div>
-                    </TableHead>
-                    <TableHead className="p-2 text-right border-l">Quantity on hand</TableHead>
-                    <TableHead className="p-2 text-right">Quantity reserved</TableHead>
-                    <TableHead className="p-2 text-right">Quantity on order</TableHead>
-                    <TableHead className="p-2 text-right">Quantity available</TableHead>
-                    <TableHead className="p-2 text-right border-l">Sales velocity</TableHead>
-                    <TableHead className="p-2 text-right border-l">Average cost</TableHead>
-                    <TableHead className="p-2 text-right">Total value</TableHead>
-                    <TableHead className="p-2 text-right border-l">Cases on hand</TableHead>
-                    <TableHead className="p-2 text-right">Cases on order</TableHead>
-                    <TableHead className="p-2 text-right">Cases available</TableHead>
-                    <TableHead className="p-2 text-left border-l">Sublocation(s)</TableHead>
+                    {columns.map(col => (
+                      <TableHead key={col.id} className={`p-2 text-left ${['quantity', 'quantityReserved', 'quantityOnOrder', 'quantityAvailable', 'salesVelocity', 'averageCost', 'totalValue', 'casesOnHand', 'casesOnOrder', 'casesAvailable'].includes(col.id) ? 'text-right' : ''}`}>
+                        {col.id === 'sku' ? (
+                           <div className="flex items-center gap-1">
+                             <ArrowUpDown className="w-3 h-3" /> {col.label}
+                           </div>
+                        ) : col.label}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     [...Array(5)].map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={15}>
+                        <TableCell colSpan={columns.length}>
                           <Skeleton className="h-8 w-full" />
                         </TableCell>
                       </TableRow>
@@ -227,34 +281,16 @@ export default function StockPageContent() {
                   ) : inventoryItems.length > 0 ? (
                     inventoryItems.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="p-2 text-center">
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                        <TableCell className="p-2 text-center">
-                           <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                        </TableCell>
-                        <TableCell className="p-2 text-left">
-                            <p className="font-medium text-primary">{item.sku || item.id}</p>
-                            <p className="text-xs text-muted-foreground">{item.name}</p>
-                        </TableCell>
-                        <TableCell className="p-2 text-right border-l">{item.quantity || 0}</TableCell>
-                        <TableCell className="p-2 text-right">{item.quantityReserved || 0}</TableCell>
-                        <TableCell className="p-2 text-right">{item.quantityOnOrder || 0}</TableCell>
-                        <TableCell className="p-2 text-right">{item.quantityAvailable || 0}</TableCell>
-                        <TableCell className="p-2 text-right border-l">{formatNumber(item.salesVelocity)}</TableCell>
-                        <TableCell className="p-2 text-right border-l">{formatCurrency(item.averageCost)}</TableCell>
-                        <TableCell className="p-2 text-right">{formatCurrency((item.averageCost || 0) * (item.quantity || 0))}</TableCell>
-                        <TableCell className="p-2 text-right border-l">{item.casesOnHand || 0}</TableCell>
-                        <TableCell className="p-2 text-right">{item.casesOnOrder || 0}</TableCell>
-                        <TableCell className="p-2 text-right">{item.casesAvailable || 0}</TableCell>
-                        <TableCell className="p-2 text-left border-l">{item.sublocation || ''}</TableCell>
+                        {columns.map(col => (
+                            <TableCell key={col.id} className={`p-2 ${['quantity', 'quantityReserved', 'quantityOnOrder', 'quantityAvailable', 'salesVelocity', 'averageCost', 'totalValue', 'casesOnHand', 'casesOnOrder', 'casesAvailable'].includes(col.id) ? 'text-right' : ''} ${['averageCost', 'totalValue', 'sublocation'].includes(col.id) ? 'border-l' : ''}`}>
+                                {renderCell(item, col.id)}
+                            </TableCell>
+                        ))}
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={15} className="h-24 text-center">
+                      <TableCell colSpan={columns.length} className="h-24 text-center">
                         No inventory items found.
                       </TableCell>
                     </TableRow>
@@ -264,6 +300,12 @@ export default function StockPageContent() {
             </div>
           </CardContent>
         </Card>
+         <CustomizeColumnsDialog
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+        />
       </div>
     </AuthGuard>
   );
