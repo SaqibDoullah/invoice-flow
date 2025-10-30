@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Triangle } from 'lucide-react';
+import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Triangle, ShieldAlert, ArrowUpDown } from 'lucide-react';
 import { collection, query, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { format } from 'date-fns';
 
@@ -18,6 +18,17 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type StockHistoryEntry } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function StockChangesPageContent() {
     const [recentChanges, setRecentChanges] = useState<StockHistoryEntry[]>([]);
@@ -61,27 +72,25 @@ export default function StockChangesPageContent() {
     return (
         <AuthGuard>
             <main className="container mx-auto p-4 md:p-8">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                    <Link href="/" className="flex items-center gap-1 hover:text-foreground">
-                        <Home className="w-4 h-4" />
-                        Home
-                    </Link>
-                    <ChevronRight className="w-4 h-4" />
-                    <Link href="/inventory" className="hover:text-foreground">
-                        Inventory
-                    </Link>
-                    <ChevronRight className="w-4 h-4" />
-                    <span>Quick stock change</span>
-                </div>
-                
-                <h1 className="text-2xl font-bold tracking-tight mb-4">Quick stock change</h1>
-
                 <Tabs defaultValue="quick">
                     <TabsList>
                         <TabsTrigger value="quick">Quick stock changes</TabsTrigger>
                         <TabsTrigger value="batch">Batch stock changes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="quick" className="mt-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                            <Link href="/" className="flex items-center gap-1 hover:text-foreground">
+                                <Home className="w-4 h-4" />
+                                Home
+                            </Link>
+                            <ChevronRight className="w-4 h-4" />
+                            <Link href="/inventory" className="hover:text-foreground">
+                                Inventory
+                            </Link>
+                            <ChevronRight className="w-4 h-4" />
+                            <span>Quick stock change</span>
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight mb-4">Quick stock change</h1>
                         <div className="grid lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2">
                                 <Card>
@@ -189,6 +198,90 @@ export default function StockChangesPageContent() {
                             </div>
                         </div>
                     </TabsContent>
+                    <TabsContent value="batch" className="mt-6">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                            <Link href="/" className="flex items-center gap-1 hover:text-foreground">
+                                <Home className="w-4 h-4" />
+                                Home
+                            </Link>
+                            <ChevronRight className="w-4 h-4" />
+                            <span>Batch stock changes</span>
+                        </div>
+
+                         <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <div className="p-3 rounded-lg bg-teal-100 dark:bg-teal-900/50">
+                                    <TriangleIcon className="w-6 h-6 text-teal-500" />
+                                </div>
+                                <h1 className="text-3xl font-bold tracking-tight">Batch stock changes:</h1>
+                                <Select defaultValue="default">
+                                    <SelectTrigger className="w-auto text-3xl font-bold border-none shadow-none focus:ring-0 bg-transparent p-0 h-auto">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="default">Default</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button>Create batch stock change</Button>
+                                <Button variant="outline">Import batch stock change</Button>
+                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                            </div>
+                        </div>
+                        
+                         <div className="mb-4 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                                <Input placeholder="Search..." />
+                                <Input placeholder="Status" />
+                                <Select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All dates"/>
+                                    </SelectTrigger>
+                                </Select>
+                                 <div className="relative"><Input placeholder="Sublocation" /><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/></div>
+                                 <div className="relative"><Input placeholder="Product" /><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/></div>
+                                 <div className="relative"><Input placeholder="Reason" /><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/></div>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <div><Button variant="ghost" size="icon"><ArrowUpDown className="w-4 h-4"/></Button></div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
+                                    <ShieldAlert className='w-4 h-4 text-orange-500' />
+                                    <span>Filtered: You do not have authorization to view this summary.</span>
+                                    <span className='ml-4'>Selected: You do not have authorization to view this summary.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Card>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-12"><Checkbox/></TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Stock change ID</TableHead>
+                                            <TableHead>Order ID</TableHead>
+                                            <TableHead><div className="flex items-center gap-1"><ArrowUpDown className="w-3 h-3"/> Date</div></TableHead>
+                                            <TableHead>Sublocation</TableHead>
+                                            <TableHead>Note</TableHead>
+                                            <TableHead>Commit timestamp</TableHead>
+                                            <TableHead>Commit user</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow>
+                                            <TableCell colSpan={9} className="h-24 text-center">
+                                            No batch stock changes found.
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 </Tabs>
                 <div className="fixed bottom-8 right-8">
                     <Button size="icon" className="rounded-full w-14 h-14 shadow-lg">
@@ -207,7 +300,7 @@ function TriangleIcon(props: React.ComponentProps<"svg">) {
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
-      viewBox="0 0 24 24"
+      viewBox="0 0 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
