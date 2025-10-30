@@ -43,6 +43,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
+import CustomizeColumnsDialog from '@/components/inventory/product-lookup/customize-columns-dialog';
+
+type Column = {
+  id: keyof ProductLookup | 'id';
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'productLookup', label: 'Product lookup' },
+    { id: 'notes', label: 'Notes' },
+    { id: 'productId', label: 'Product ID' },
+    { id: 'description', label: 'Description' },
+    { id: 'status', label: 'Status' },
+    { id: 'packing', label: 'Packing' },
+    { id: 'lotId', label: 'Lot ID' },
+    { id: 'stores', label: 'Stores' },
+];
 
 
 export default function ProductLookupsPageContent() {
@@ -53,6 +70,8 @@ export default function ProductLookupsPageContent() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Active');
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
 
   useEffect(() => {
     const db = getFirestoreDb();
@@ -102,6 +121,27 @@ export default function ProductLookupsPageContent() {
     return () => unsubscribe();
   }, [user, authLoading, toast, searchTerm, statusFilter]);
 
+  const renderCell = (lookup: ProductLookup, columnId: keyof ProductLookup | 'id') => {
+      if (columnId === 'id') return null;
+      const value = lookup[columnId as keyof ProductLookup];
+
+      switch(columnId) {
+          case 'productLookup':
+              return <span className="font-medium text-primary">{lookup.productLookup}</span>;
+          case 'productId':
+              return <span className="text-primary">{lookup.productId}</span>;
+          case 'status':
+              return (
+                <Badge variant="outline" className="border-none">
+                    {lookup.status} <ChevronDown className="w-3 h-3 ml-1" />
+                </Badge>
+              );
+          default:
+              return value as string | null;
+      }
+  };
+
+
   return (
     <AuthGuard>
       <div className="flex-1 container mx-auto p-4 md:p-8">
@@ -126,7 +166,7 @@ export default function ProductLookupsPageContent() {
                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4"/></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Customize this screen</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <span className="text-sm text-muted-foreground">All changes saved</span>
@@ -191,43 +231,31 @@ export default function ProductLookupsPageContent() {
               <Table className="whitespace-nowrap">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="p-2 text-left">Product lookup</TableHead>
-                    <TableHead className="p-2 text-left">Notes</TableHead>
-                    <TableHead className="p-2 text-left">Product ID</TableHead>
-                    <TableHead className="p-2 text-left">Description</TableHead>
-                    <TableHead className="p-2 text-left">Status</TableHead>
-                    <TableHead className="p-2 text-left">Packing</TableHead>
-                    <TableHead className="p-2 text-left">Lot ID</TableHead>
-                    <TableHead className="p-2 text-left">Stores</TableHead>
+                    {columns.map(col => (
+                        <TableHead key={col.id} className="p-2 text-left">{col.label}</TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                      [...Array(5)].map((_, i) => (
                         <TableRow key={i}>
-                            <TableCell colSpan={8}><Skeleton className="h-8 w-full" /></TableCell>
+                            <TableCell colSpan={columns.length}><Skeleton className="h-8 w-full" /></TableCell>
                         </TableRow>
                      ))
                   ) : lookups.length > 0 ? (
                     lookups.map((lookup) => (
                       <TableRow key={lookup.id}>
-                        <TableCell className="p-2 font-medium text-primary">{lookup.productLookup}</TableCell>
-                        <TableCell className="p-2">{lookup.notes}</TableCell>
-                        <TableCell className="p-2 text-primary">{lookup.productId}</TableCell>
-                        <TableCell className="p-2">{lookup.description}</TableCell>
-                        <TableCell className="p-2">
-                            <Badge variant="outline" className="border-none">
-                                {lookup.status} <ChevronDown className="w-3 h-3 ml-1" />
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="p-2">{lookup.packing}</TableCell>
-                        <TableCell className="p-2">{lookup.lotId}</TableCell>
-                        <TableCell className="p-2">{lookup.stores}</TableCell>
+                        {columns.map(col => (
+                            <TableCell key={col.id} className="p-2">
+                                {renderCell(lookup, col.id)}
+                            </TableCell>
+                        ))}
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-24 text-center">
+                      <TableCell colSpan={columns.length} className="h-24 text-center">
                         No product lookups found.
                       </TableCell>
                     </TableRow>
@@ -243,6 +271,12 @@ export default function ProductLookupsPageContent() {
                   <MessageCircle className="w-8 h-8" />
               </Button>
           </div>
+          <CustomizeColumnsDialog 
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+          />
       </div>
     </AuthGuard>
   );
