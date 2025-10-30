@@ -34,6 +34,7 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import CreateReturnFromOrderDialog from '@/components/returns/create-return-from-order-dialog';
+import CustomizeColumnsDialog from '@/components/returns/customize-columns-dialog';
 
 const toDate = (v: any): Date | null => {
     if (!v) return null;
@@ -43,12 +44,30 @@ const toDate = (v: any): Date | null => {
     return isNaN(d.getTime()) ? null : d;
 };
 
+type Column = {
+  id: keyof Return | 'id';
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'status', label: 'Status' },
+    { id: 'returnId', label: 'Return ID' },
+    { id: 'customer', label: 'Customer' },
+    { id: 'returnDate', label: 'Return date' },
+    { id: 'shipmentReceiveDates', label: 'Shipment receive dates' },
+    { id: 'shipmentTrackingCodes', label: 'Shipment tracking codes' },
+    { id: 'orderId', label: 'Order ID' },
+    { id: 'shipToName', label: 'Ship to name' },
+];
+
 export default function ReturnsPageContent() {
   const [returns, setReturns] = useState<Return[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [isCreateFromOrderDialogOpen, setIsCreateFromOrderDialogOpen] = useState(false);
+  const [isCustomizeColumnsOpen, setIsCustomizeColumnsOpen] = useState(false);
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
 
   useEffect(() => {
     // Mock data for initial display
@@ -84,6 +103,27 @@ export default function ReturnsPageContent() {
     return () => unsubscribe();
     */
   }, [user, authLoading, toast]);
+
+  const renderCell = (item: Return, columnId: keyof Return | 'id') => {
+      if (columnId === 'id') return null;
+
+      const value = item[columnId as keyof Return];
+      
+      switch(columnId) {
+          case 'status':
+              return <Badge variant="secondary">{item.status}</Badge>;
+          case 'returnId':
+          case 'orderId':
+              return <span className="font-medium text-blue-600">{value as string}</span>;
+          case 'customer':
+               return <span className="font-medium text-blue-600">{item.customer}</span>;
+          case 'returnDate':
+              const date = toDate(value);
+              return date ? format(date, 'M/d/yyyy') : '';
+          default:
+              return value as string | null;
+      }
+  };
 
 
   return (
@@ -135,7 +175,7 @@ export default function ReturnsPageContent() {
                 <DropdownMenuContent>
                   <DropdownMenuItem>Print details for selected returns</DropdownMenuItem>
                   <DropdownMenuItem>Customize action menu items</DropdownMenuItem>
-                  <DropdownMenuItem>Customize columns</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setIsCustomizeColumnsOpen(true)}>Customize columns</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -179,14 +219,13 @@ export default function ReturnsPageContent() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]"><Checkbox /></TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Return ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead><div className="flex items-center gap-1"><ArrowUpDown className="w-3 h-3"/> Return date</div></TableHead>
-                      <TableHead>Shipment receive dates</TableHead>
-                      <TableHead>Shipment tracking codes</TableHead>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Ship to name</TableHead>
+                       {columns.map(col => (
+                           <TableHead key={col.id}>
+                               {col.id === 'returnDate' ? (
+                                   <div className="flex items-center gap-1"><ArrowUpDown className="w-3 h-3"/> {col.label}</div>
+                               ) : col.label}
+                           </TableHead>
+                       ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -194,21 +233,16 @@ export default function ReturnsPageContent() {
                       returns.map((item) => (
                         <TableRow key={item.id}>
                           <TableCell><Checkbox /></TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{item.status}</Badge>
-                          </TableCell>
-                           <TableCell className="font-medium text-blue-600">{item.returnId}</TableCell>
-                           <TableCell className="font-medium text-blue-600">{item.customer}</TableCell>
-                           <TableCell>{format(toDate(item.returnDate)!, 'M/d/yyyy')}</TableCell>
-                           <TableCell>{item.shipmentReceiveDates}</TableCell>
-                           <TableCell>{item.shipmentTrackingCodes}</TableCell>
-                           <TableCell className="font-medium text-blue-600">{item.orderId}</TableCell>
-                           <TableCell>{item.shipToName}</TableCell>
+                           {columns.map(col => (
+                               <TableCell key={col.id}>
+                                   {renderCell(item, col.id)}
+                               </TableCell>
+                           ))}
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="h-24 text-center">
+                        <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                           No returns found.
                         </TableCell>
                       </TableRow>
@@ -223,6 +257,12 @@ export default function ReturnsPageContent() {
         <CreateReturnFromOrderDialog 
             isOpen={isCreateFromOrderDialogOpen}
             setIsOpen={setIsCreateFromOrderDialogOpen}
+        />
+         <CustomizeColumnsDialog
+            isOpen={isCustomizeColumnsOpen}
+            setIsOpen={setIsCustomizeColumnsOpen}
+            columns={columns}
+            setColumns={setColumns}
         />
       </div>
     </AuthGuard>
