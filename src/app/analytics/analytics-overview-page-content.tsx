@@ -29,19 +29,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
 const sourceData = [
-  { name: 'Source 1', value: 20, fill: '#f97316' },
-  { name: 'Source 2', value: 3, fill: '#3b82f6' },
-  { name: 'Source 3', value: 5, fill: '#ef4444' },
+  { name: 'In-person', value: 20, fill: '#f97316' },
+  { name: 'Website', value: 30, fill: '#3b82f6' },
+  { name: 'unsolicited', value: 5, fill: '#ef4444' },
 ];
 
 const fulfillmentData = [
     { status: 'Backordered', value: 0 },
-    { status: 'Eligible', value: 0 },
-    { status: 'Fully packed', value: 1.6 },
-    { status: 'Fully shipped', value: 3.0 },
-    { status: 'Incomplete', value: 2.0 },
-    { status: 'No origin', value: 1.8 },
-    { status: 'Other error', value: 2.0 },
+    { status: 'Eligible', value: 1.0 },
+    { status: 'Fully packed', value: 1.0 },
+    { status: 'Fully shipped', value: 2.0 },
+    { status: 'Incomplete', value: 1.0 },
+    { status: 'No origin', value: 0 },
+    { status: 'Other error', value: 0 },
 ];
 const fulfillmentColors = {
     'Backordered': '#60a5fa',
@@ -154,6 +154,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
   const [avgPerSale, setAvgPerSale] = useState(0);
   const [salesByDay, setSalesByDay] = useState<{date: string, sales: number}[]>([]);
   const [salesTotalByDay, setSalesTotalByDay] = useState<{date: string, total: number}[]>([]);
+  const [avgPerSaleByDay, setAvgPerSaleByDay] = useState<{date: string, avg: number}[]>([]);
   
   useEffect(() => {
     const db = getFirestoreDb();
@@ -184,27 +185,28 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
         setAvgPerSale(numSales > 0 ? gross / numSales : 0);
 
         const interval = eachDayOfInterval({ start: thirtyDaysAgo, end: new Date() });
-        const dailySales = interval.map(day => {
-            const formattedDate = format(day, 'MMM dd');
+        const dailySalesData = interval.map(day => {
             const dayStart = startOfDay(day);
-            const salesCount = orders.filter(order => {
+            const salesForDay = orders.filter(order => {
                 const orderDate = toDate(order.orderDate);
                 return orderDate && startOfDay(orderDate).getTime() === dayStart.getTime();
-            }).length;
-            return { date: formattedDate, sales: salesCount };
+            });
+            const salesCount = salesForDay.length;
+            const totalForDay = salesForDay.reduce((acc, order) => acc + order.total, 0);
+            const avgForDay = salesCount > 0 ? totalForDay / salesCount : 0;
+            
+            return {
+                formattedDate: format(day, 'MMM dd'),
+                salesCount,
+                totalForDay,
+                avgForDay
+            };
         });
-        setSalesByDay(dailySales);
+        
+        setSalesByDay(dailySalesData.map(d => ({ date: d.formattedDate, sales: d.salesCount })));
+        setSalesTotalByDay(dailySalesData.map(d => ({ date: d.formattedDate, total: d.totalForDay })));
+        setAvgPerSaleByDay(dailySalesData.map(d => ({ date: d.formattedDate, avg: d.avgForDay })));
 
-        const dailyTotals = interval.map(day => {
-            const formattedDate = format(day, 'MMM dd');
-            const dayStart = startOfDay(day);
-            const totalForDay = orders.filter(order => {
-                const orderDate = toDate(order.orderDate);
-                return orderDate && startOfDay(orderDate).getTime() === dayStart.getTime();
-            }).reduce((acc, order) => acc + order.total, 0);
-            return { date: formattedDate, total: totalForDay };
-        });
-        setSalesTotalByDay(dailyTotals);
 
     }, (error) => {
         console.error("Error fetching sales data: ", error);
@@ -277,7 +279,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                         <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/50">
                             <BarChart3 className="w-6 h-6 text-red-500" />
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Analytics overview</h1>
                     </div>
                 </div>
           </div>
@@ -295,7 +297,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                     <div className="w-64">
                          <Select defaultValue="last-30">
                             <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Date range" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="last-30">Last 30 days</SelectItem>
@@ -305,7 +307,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                     <div className="w-48">
                          <Select defaultValue="day">
                             <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Group by"/>
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="day">Day</SelectItem>
@@ -315,25 +317,23 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                 </div>
 
                 <h2 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Overview</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
                     <KpiCard title="Gross sales" value={formatCurrency(grossSales)} subTitle="Net sales" subValue={formatCurrency(netSales)} isLoading={isLoading} />
                     <KpiCard title="Number of sales" value={numberOfSales.toString()} subTitle="COGS" subValue="--" isLoading={isLoading} />
                     <KpiCard title="Avg. per sale" value={formatCurrency(avgPerSale)} subTitle="Gross income" subValue="--" isLoading={isLoading} />
                     <KpiCard title="Avg. units per sale" value="--" subTitle="Gross margin" subValue="--" isLoading={isLoading} />
-                </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
-                    <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Purchases total</p><div className="flex justify-between items-center"><p className="text-3xl font-bold mt-1">$115,060</p><Badge variant="destructive" className="bg-red-100 text-red-800"><TrendingDown className="mr-1"/>61.8%</Badge></div><div className="flex justify-between items-center mt-4 text-sm"><p className="text-muted-foreground">Pending purchases</p><div className="flex items-center gap-1"><Ban className="text-red-500 w-4 h-4"/>--</div></div></CardContent></Card>
-                    <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Inventory value (10/16/2025)</p><p className="text-3xl font-bold mt-1">$1,032,350</p><div className="flex justify-between items-center mt-4 text-sm"><p className="text-muted-foreground">Value of variances</p><div className="flex items-center gap-1"><Ban className="text-red-500 w-4 h-4"/>--</div></div></CardContent></Card>
+                    <KpiCard title="Purchases total" value={formatCurrency(283245)} subTitle="Pending purchases" subValue="--" isLoading={isLoading} />
+                    <KpiCard title="Inventory value (10/16/2025)" value={formatCurrency(1037424)} subTitle="Value of variances" subValue="--" isLoading={isLoading} />
                 </div>
 
 
                 <h2 className="text-xs font-semibold uppercase text-muted-foreground mt-8 mb-2">Sales</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <Card className="lg:col-span-2">
-                        <CardHeader><CardTitle>Number of sales</CardTitle></CardHeader>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2 space-y-4">
+                        <CardHeader className="pb-0"><CardTitle>Number of sales</CardTitle></CardHeader>
                         <CardContent>
-                           {isLoading ? <Skeleton className="h-[150px] w-full" /> : (
-                            <ResponsiveContainer width="100%" height={150}>
+                           {isLoading ? <Skeleton className="h-[120px] w-full" /> : (
+                            <ResponsiveContainer width="100%" height={120}>
                                 <LineChart data={salesByDay} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="date" tick={{fontSize: 12}} />
@@ -344,10 +344,10 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                             </ResponsiveContainer>
                            )}
                         </CardContent>
-                         <CardHeader><CardTitle>Sales total ($)</CardTitle></CardHeader>
+                         <CardHeader className="pb-0"><CardTitle>Sales total ($)</CardTitle></CardHeader>
                          <CardContent>
-                            {isLoading ? <Skeleton className="h-[150px] w-full" /> : (
-                            <ResponsiveContainer width="100%" height={150}>
+                            {isLoading ? <Skeleton className="h-[120px] w-full" /> : (
+                            <ResponsiveContainer width="100%" height={120}>
                                 <AreaChart data={salesTotalByDay} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false}/>
                                     <XAxis dataKey="date" tick={{fontSize: 12}} />
@@ -358,43 +358,129 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                             </ResponsiveContainer>
                             )}
                         </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader><CardTitle>Number of sales by source</CardTitle></CardHeader>
-                        <CardContent>
-                             <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie data={sourceData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={2} startAngle={90} endAngle={450}>
-                                        {sourceData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(value) => `${value} (${(Number(value) / (sourceData.reduce((s,c) => s + c.value, 0)) * 100).toFixed(1)}%)` } />
-                                </PieChart>
+                         <CardHeader className="pb-0"><CardTitle>Average per sale ($)</CardTitle></CardHeader>
+                         <CardContent>
+                            {isLoading ? <Skeleton className="h-[120px] w-full" /> : (
+                            <ResponsiveContainer width="100%" height={120}>
+                                <LineChart data={avgPerSaleByDay} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="date" tick={{fontSize: 12}} />
+                                    <YAxis tickFormatter={(val) => `${val/1000}k`} tick={{fontSize: 12}} />
+                                    <Tooltip formatter={(value: number) => formatCurrency(value)}/>
+                                    <Line type="monotone" dataKey="avg" stroke="#8884d8" strokeWidth={2} dot={{r: 3}} activeDot={{r: 5}}/>
+                                </LineChart>
                             </ResponsiveContainer>
+                            )}
                         </CardContent>
                     </Card>
-                    <Card className="lg:col-span-1">
-                        <CardHeader><CardTitle>Number of committed sales by fulfillment status</CardTitle></CardHeader>
-                        <CardContent>
-                             <ResponsiveContainer width="100%" height={300}>
-                                 <ComposedChart layout="vertical" data={fulfillmentData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                     <XAxis type="number" domain={[0, 3]} ticks={[1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0]} tick={{fontSize: 12}} />
-                                     <YAxis dataKey="status" type="category" width={100} tick={{fontSize: 12}} />
-                                     <Tooltip />
-                                     <Legend />
-                                     {Object.keys(fulfillmentColors).map(statusKey => (
-                                         <Bar key={statusKey} dataKey="value" name={statusKey} stackId="a" fill={fulfillmentColors[statusKey as keyof typeof fulfillmentColors]}>
-                                              {fulfillmentData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.status === statusKey ? fulfillmentColors[statusKey as keyof typeof fulfillmentColors] : 'transparent'} />
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader><CardTitle>Number of sales by source</CardTitle></CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie data={sourceData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={2} startAngle={90} endAngle={450}>
+                                            {sourceData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.fill} />
                                             ))}
-                                         </Bar>
-                                     ))}
-                                 </ComposedChart>
-                            </ResponsiveContainer>
+                                        </Pie>
+                                        <Tooltip formatter={(value) => `${value} (${(Number(value) / (sourceData.reduce((s,c) => s + c.value, 0)) * 100).toFixed(1)}%)` } />
+                                         <Legend wrapperStyle={{fontSize: "12px"}}/>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader><CardTitle>Number of committed sales by fulfillment status</CardTitle></CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <ComposedChart layout="vertical" data={fulfillmentData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" domain={[0, 3]} ticks={[1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0]} tick={{fontSize: 12}} />
+                                        <YAxis dataKey="status" type="category" width={100} tick={{fontSize: 12}} />
+                                        <Tooltip />
+                                        <Legend wrapperStyle={{fontSize: "12px"}}/>
+                                        {Object.keys(fulfillmentColors).map(statusKey => (
+                                            <Bar key={statusKey} dataKey="value" name={statusKey} stackId="a" fill={fulfillmentColors[statusKey as keyof typeof fulfillmentColors]}>
+                                                {fulfillmentData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.status === statusKey ? fulfillmentColors[statusKey as keyof typeof fulfillmentColors] : 'transparent'} />
+                                                ))}
+                                            </Bar>
+                                        ))}
+                                    </ComposedChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
+                <h2 className="text-xs font-semibold uppercase text-muted-foreground mt-8 mb-2">Purchases</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Card className="lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>Committed purchase orders</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Order ID</TableHead>
+                                        <TableHead>Supplier</TableHead>
+                                        <TableHead>Order date</TableHead>
+                                        <TableHead>Est. receive date</TableHead>
+                                        <TableHead className="text-right">Total</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {committedPurchaseOrders.slice(0, 5).map(po => (
+                                        <TableRow key={po.id}>
+                                            <TableCell className="font-medium text-primary">{po.orderId}</TableCell>
+                                            <TableCell>{po.supplierName}</TableCell>
+                                            <TableCell>{format(toDate(po.orderDate)!, 'M/d/yyyy')}</TableCell>
+                                            <TableCell>{po.estimatedReceiveDate ? format(toDate(po.estimatedReceiveDate)!, 'M/d/yyyy') : 'N/A'}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(po.total)}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         </CardContent>
                     </Card>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Number of purchases by supplier</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ResponsiveContainer width="100%" height={200}>
+                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 120 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" allowDecimals={false} />
+                                        <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="count" fill="#8884d8" name="Purchases" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Purchases total by supplier ($)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                 <ResponsiveContainer width="100%" height={200}>
+                                    <BarChart data={purchasesBySupplier} layout="vertical" margin={{ left: 120 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                        <XAxis type="number" tickFormatter={(val) => `${val/1000}k`}/>
+                                        <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 12 }} />
+                                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                                        <Legend />
+                                        <Bar dataKey="total" fill="#82ca9d" name="Total Value" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </TabsContent>
             <TabsContent value="sales" className="mt-6">
