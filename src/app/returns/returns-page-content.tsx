@@ -32,6 +32,7 @@ import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import CreateReturnFromOrderDialog from '@/components/returns/create-return-from-order-dialog';
 
 const toDate = (v: any): Date | null => {
     if (!v) return null;
@@ -46,6 +47,7 @@ export default function ReturnsPageContent() {
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [isCreateFromOrderDialogOpen, setIsCreateFromOrderDialogOpen] = useState(false);
 
   useEffect(() => {
     // Mock data for initial display
@@ -113,7 +115,7 @@ export default function ReturnsPageContent() {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <Button>Create return from order</Button>
+              <Button onClick={() => setIsCreateFromOrderDialogOpen(true)}>Create return from order</Button>
               <Button variant="outline">Create return</Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -215,6 +217,10 @@ export default function ReturnsPageContent() {
             </CardContent>
           </Card>
         </main>
+        <CreateReturnFromOrderDialog 
+            isOpen={isCreateFromOrderDialogOpen}
+            setIsOpen={setIsCreateFromOrderDialogOpen}
+        />
       </div>
     </AuthGuard>
   );
