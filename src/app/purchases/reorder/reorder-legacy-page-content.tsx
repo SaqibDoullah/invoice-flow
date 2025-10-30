@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, RefreshCw, ChevronDown, MessageCircle, ArrowDown } from 'lucide-react';
 import AuthGuard from '@/components/auth/auth-guard';
@@ -12,6 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CustomizeColumnsDialog from '@/components/purchases/reorder-legacy-customize-columns-dialog';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { type Supplier, type InventoryItem } from '@/types';
 
 type Column = {
   id: string;
@@ -35,6 +39,34 @@ const initialColumns: Column[] = [
 export default function ReorderLegacyPageContent() {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || !db || authLoading) {
+      if (!authLoading) setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+
+    const unsubSuppliers = onSnapshot(collection(db, 'users', user.uid, 'suppliers'), (snapshot) => {
+        setSuppliers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier)));
+        setLoading(false);
+    });
+
+    const unsubInventory = onSnapshot(collection(db, 'users', user.uid, 'inventory'), (snapshot) => {
+        setInventoryItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem)));
+    });
+
+    return () => {
+        unsubSuppliers();
+        unsubInventory();
+    }
+  }, [user, authLoading]);
 
   return (
     <AuthGuard>
@@ -91,7 +123,7 @@ export default function ReorderLegacyPageContent() {
                             <SelectValue placeholder="Select supplier" />
                         </SelectTrigger>
                         <SelectContent>
-                             {/* Supplier options would go here */}
+                             {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </CardContent>

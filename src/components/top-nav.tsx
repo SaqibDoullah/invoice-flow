@@ -98,6 +98,11 @@ const sellingLinks: { title: string; href: string; description: string }[] = [
         href: "/invoice-payments",
         description: "Record and track customer payments.",
     },
+    {
+        title: "Returns",
+        href: "/returns",
+        description: "Manage customer returns.",
+    }
 ];
 
 const accountingLinks: { title: string; href: string; description: string }[] = [

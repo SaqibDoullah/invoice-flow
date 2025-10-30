@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Home, ChevronRight, Undo2, ChevronDown, Filter, Search, ArrowUpDown, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -35,13 +35,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import CreateReturnFromOrderDialog from '@/components/returns/create-return-from-order-dialog';
 import CustomizeColumnsDialog from '@/components/returns/customize-columns-dialog';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 const toDate = (v: any): Date | null => {
     if (!v) return null;
     if (v instanceof Date) return v;
     if (typeof v.toDate === 'function') return v.toDate();
     const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
+    return isValid(d) ? d : null;
 };
 
 type Column = {
@@ -84,9 +86,16 @@ export default function ReturnsPageContent() {
         const returnsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Return));
         setReturns(returnsData);
         setLoading(false);
-    }, (error) => {
-        console.error("Error fetching returns: ", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch returns.'});
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: returnsCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch returns. Check your security rules.' });
+        }
         setLoading(false);
     });
 

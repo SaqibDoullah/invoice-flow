@@ -50,7 +50,8 @@ const navigationMenuTriggerStyle = cva(
 const NavigationMenuTrigger = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => {
+    return (
     <NavigationMenuPrimitive.Trigger
       ref={ref}
       className={cn(navigationMenuTriggerStyle(), "group", className)}
@@ -62,7 +63,7 @@ const NavigationMenuTrigger = React.forwardRef<
         aria-hidden="true"
       />
     </NavigationMenuPrimitive.Trigger>
-  )
+  )}
 )
 NavigationMenuTrigger.displayName = NavigationMenuPrimitive.Trigger.displayName
 
