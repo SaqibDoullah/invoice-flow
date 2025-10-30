@@ -220,7 +220,7 @@ export default function ReorderPageContent() {
                         </DropdownMenu>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions <ChevronDown className="w-4 h-4 ml-2" /></Button>
+                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4 ml-2" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Action 1</DropdownMenuItem>
