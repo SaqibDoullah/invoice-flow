@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -187,7 +188,9 @@ export default function TransfersPageContent() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button>Create transfer order</Button>
+                                <Button asChild>
+                                    <Link href="/inventory/transfers/new">Create transfer order</Link>
+                                </Button>
                                 <Button variant="outline">Import transfer orders</Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
@@ -223,7 +226,9 @@ export default function TransfersPageContent() {
                                 <CardContent className="text-center">
                                     <h3 className="font-semibold mb-2">Add transfer orders manually</h3>
                                     <p className="text-sm text-muted-foreground mb-4">Finally, you have the option to enter transfer orders manually into Finale Inventory. You just need to fill the info about each transfer order in the input form.</p>
-                                    <Button>Create transfer order manually</Button>
+                                     <Button asChild>
+                                        <Link href="/inventory/transfers/new">Create transfer order manually</Link>
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>
