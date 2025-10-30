@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, RefreshCw, ChevronDown } from 'lucide-react';
+import { Home, ChevronRight, RefreshCw, ChevronDown, MessageCircle, ArrowDown } from 'lucide-react';
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,8 +11,31 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import CustomizeColumnsDialog from '@/components/purchases/reorder-legacy-customize-columns-dialog';
+
+type Column = {
+  id: string;
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'productId', label: 'Product ID' },
+    { id: 'description', label: 'Description' },
+    { id: 'altSuppliers', label: 'Alternate suppliers' },
+    { id: 'locAvailable', label: 'Location available' },
+    { id: 'reorderPoint', label: 'Reorder point' },
+    { id: 'reorderVariance', label: 'Reorder variance' },
+    { id: 'reorderPointMax', label: 'Reorder point max' },
+    { id: 'reorderPointMaxCalc', label: 'Reorder point max calc' },
+    { id: 'reorderInQtyOf', label: 'Reorder in qty of' },
+    { id: 'qtyToOrder', label: 'Quantity to order' },
+];
+
 
 export default function ReorderLegacyPageContent() {
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
   return (
     <AuthGuard>
       <main className="flex-1 container mx-auto p-4 md:p-8">
@@ -30,7 +53,7 @@ export default function ReorderLegacyPageContent() {
                     <Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuItem>Action 1</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -103,21 +126,20 @@ export default function ReorderLegacyPageContent() {
             <Table>
                 <TableHeader>
                     <TableRow className="bg-muted/50">
-                        <TableHead className="w-[200px]"><div className="flex items-center gap-1"><ArrowDown className="w-3 h-3"/> Product ID</div></TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Alternate suppliers</TableHead>
-                        <TableHead>Location available</TableHead>
-                        <TableHead>Reorder point</TableHead>
-                        <TableHead>Reorder variance</TableHead>
-                        <TableHead>Reorder point max</TableHead>
-                        <TableHead>Reorder point max calc</TableHead>
-                        <TableHead>Reorder in qty of</TableHead>
-                        <TableHead>Quantity to order</TableHead>
+                        {columns.map((col) => (
+                          <TableHead key={col.id}>
+                            {col.id === 'productId' ? (
+                               <div className="flex items-center gap-1">
+                                <ArrowDown className="w-3 h-3"/> {col.label}
+                               </div>
+                            ) : col.label}
+                          </TableHead>
+                        ))}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableRow>
-                        <TableCell colSpan={10}>
+                        <TableCell colSpan={columns.length}>
                             <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-md">
                                 <p className="font-bold">No products match</p>
                                 <p>There are no products that have a reorder quantity specified and match the selected filters.</p>
@@ -129,10 +151,16 @@ export default function ReorderLegacyPageContent() {
         </div>
 
         <div className="fixed bottom-8 right-8">
-            <Button size="icon" className="rounded-full w-14 h-14 shadow-lg bg-blue-600 hover:bg-blue-700">
+            <Button size="icon" className="rounded-full w-14 h-14 shadow-lg">
                 <MessageCircle className="w-8 h-8" />
             </Button>
         </div>
+        <CustomizeColumnsDialog
+            isOpen={isCustomizeOpen}
+            setIsOpen={setIsCustomizeOpen}
+            columns={columns}
+            setColumns={setColumns}
+        />
       </main>
     </AuthGuard>
   );
