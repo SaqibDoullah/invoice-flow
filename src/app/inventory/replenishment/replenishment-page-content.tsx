@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,8 +11,34 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import CustomizeColumnsDialog from '@/components/inventory/stock-takes/customize-columns-dialog';
+
+
+type Column = {
+  id: string;
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'image', label: 'Image' },
+    { id: 'product', label: 'Product ID Description' },
+    { id: 'originSalesVelocity', label: 'Sales velocity' },
+    { id: 'originSales', label: 'Sales' },
+    { id: 'originStock', label: 'On order On hand Reservations Available' },
+    { id: 'originStockout', label: 'Stockout' },
+    { id: 'destSalesVelocity', label: 'Sales velocity' },
+    { id: 'destSales', label: 'Sales' },
+    { id: 'destStock', label: 'On order On hand Reservations Available' },
+    { id: 'destReplenishment', label: 'Stockout Replenishment point Replenishment variance Replenishment point max' },
+    { id: 'recommendedQty', label: 'Recommended quantity' },
+    { id: 'transferQty', label: 'Transfer quantity' },
+];
+
 
 export default function ReplenishmentPageContent() {
+    const [columns, setColumns] = useState<Column[]>(initialColumns);
+    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
     return (
         <AuthGuard>
             <main className="container mx-auto p-4 md:p-8">
@@ -52,7 +79,7 @@ export default function ReplenishmentPageContent() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem>Action 1</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -132,6 +159,12 @@ export default function ReplenishmentPageContent() {
                         <MessageCircle className="w-8 h-8" />
                     </Button>
                 </div>
+                 <CustomizeColumnsDialog
+                    isOpen={isCustomizeOpen}
+                    setIsOpen={setIsCustomizeOpen}
+                    columns={columns}
+                    setColumns={setColumns}
+                />
             </main>
         </AuthGuard>
     );
