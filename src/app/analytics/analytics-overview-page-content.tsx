@@ -316,9 +316,6 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
 
   const perSaleMetrics = [
       { title: 'Gross per sale', value: formatCurrency(avgPerSale), change: '13.4%', dataKey: 'avg', data: avgPerSaleByDay },
-      { title: 'Net per sale', value: '--', dataKey: 'net', data: [] },
-      { title: 'COGS per sale', value: '--', dataKey: 'cogs', data: [] },
-      { title: 'Gross Income per sale', value: '--', dataKey: 'income', data: [] },
   ];
 
   return (
@@ -551,15 +548,19 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                     
                     <Card className="col-span-1 md:col-span-2 lg:col-span-1">
                         <CardHeader>
-                            <CardTitle>Number of sales by geography</CardTitle>
-                            <CardDescription>
-                                Unspecified sales (22)
-                            </CardDescription>
+                            <div className="flex justify-between items-center">
+                                <CardTitle>Number of sales by geography</CardTitle>
+                                <div className="flex gap-1">
+                                    <Button size="sm" variant="default">USA</Button>
+                                    <Button size="sm" variant="ghost">Europe</Button>
+                                    <Button size="sm" variant="ghost">World</Button>
+                                </div>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div style={{ width: '100%', height: '250px' }}>
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <ComposableMap projection="geoAlbersUsa" projectionConfig={{ scale: 800 }} style={{width: "100%", height: "auto"}}>
+                                    <ComposableMap projection="geoAlbersUsa">
                                     <Geographies geography={geoUrl}>
                                         {({ geographies }) =>
                                         geographies.map((geo) => {
@@ -577,6 +578,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                                     </ComposableMap>
                                 </ResponsiveContainer>
                             </div>
+                             <p className="text-center text-sm text-muted-foreground mt-2">United States: 36; Unspecified: 5</p>
                         </CardContent>
                     </Card>
                 </div>
