@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -74,6 +73,11 @@ const inventoryLinks: { title: string; href: string; description: string }[] = [
         title: "Stock takes",
         href: "/inventory/stock-takes",
         description: "Enter physical count of stock.",
+    },
+    {
+        title: 'Replenishment',
+        href: '/inventory/replenishment',
+        description: 'Create a transfer order from replenishment calculations.',
     },
 ];
 

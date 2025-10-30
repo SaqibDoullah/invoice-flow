@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -41,7 +40,7 @@ const inventoryFeatures = [
   { title: 'Stock', description: 'View product stock levels.', icon: <Factory />, href: '/inventory/stock', color: 'blue' },
   { title: 'Products', description: 'View all products.', icon: <Boxes />, href: '/inventory/products', color: 'blue' },
   { title: 'Stock takes', description: 'Enter physical count of stock.', icon: <ClipboardList />, href: '/inventory/stock-takes', color: 'purple' },
-  { title: 'Replenishment', description: 'Create a transfer order from replenishment calculations.', icon: <RefreshCcw />, href: '#', color: 'purple' },
+  { title: 'Replenishment', description: 'Create a transfer order from replenishment calculations.', icon: <RefreshCcw />, href: '/inventory/replenishment', color: 'purple' },
 ];
 
 const inventoryFeaturesCol2 = [

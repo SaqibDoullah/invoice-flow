@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -77,7 +76,7 @@ const inventoryFeatures: Feature[] = [
     title: 'Replenishment',
     description: 'Create a transfer order from calculations.',
     icon: <RefreshCcw className="w-6 h-6 text-purple-500" />,
-    href: '#',
+    href: '/inventory/replenishment',
     color: 'purple',
   },
   {
