@@ -43,17 +43,6 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { type InventoryItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const mockItems = [
-    { id: '24838229-3', name: 'SMOK Novo M Replacement Pod (3 Pack) R...', qoh: 150, count: null, variance: null, uom: 'ea' },
-    { id: '34536187-4', name: 'Geekvape Aegis Legend III Kit-Purple', qoh: -5, count: null, variance: null, uom: 'ea' },
-    { id: '44980907-1', name: 'Vaporesso Xros 4 Nano Starter Kit (Single U...', qoh: 30, count: null, variance: null, uom: 'ea' },
-    { id: '116042166-6', name: 'SMOK Novo GT Starter Kit (Single Unit) Colo...', qoh: 10, count: null, variance: null, uom: 'ea' },
-    { id: '134004284-1', name: 'SMOK Morph 3 Starter Kit (Single Unit) Color...', qoh: 0, count: null, variance: null, uom: 'ea' },
-    { id: '134004284-4', name: 'SMOK Morph 3 Starter Kit (Single Unit) Color...', qoh: 2, count: null, variance: null, uom: 'ea' },
-    { id: '134004284-5', name: 'SMOK Morph 3 Starter Kit (Single Unit) Color...', qoh: 5, count: null, variance: null, uom: 'ea' },
-    { id: '134004284-6', name: 'SMOK Morph 3 Starter Kit (Single Unit) Color...', qoh: 2, count: null, variance: null, uom: 'ea' },
-];
-
 
 export default function CreateStockTakePageContent() {
     const [isSublocationDialogOpen, setIsSublocationDialogOpen] = useState(true);
@@ -164,18 +153,14 @@ export default function CreateStockTakePageContent() {
                         <strong>Sublocation:</strong> {sublocation} <Button variant="link" className="p-1 h-auto" onClick={() => setIsSublocationDialogOpen(true)}>Change sublocation</Button>
                     </div>
                 </div>
-                
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                    <div className="space-y-1"><label className="text-sm">Reason:</label><Input placeholder="Batch update reason" /></div>
-                    <div className="space-y-1"><label className="text-sm">Date of change:</label><Input type="date" defaultValue={format(new Date(), 'yyyy-MM-dd')} /></div>
-                    <div className="space-y-1"><label className="text-sm">Note:</label><Input /></div>
-                 </div>
                  
                  <div className="flex items-center gap-4 mb-4">
                      <Input placeholder="Search:" className="max-w-xs" />
                      <span className="text-sm">Filters:</span>
                      <Select defaultValue="all-locations"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all-locations">All locations</SelectItem></SelectContent></Select>
-                     <Select defaultValue="count-gt-0"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="count-gt-0">Count > 0</SelectItem></SelectContent></Select>
+                     <Select defaultValue="all-categories"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all-categories">All categories</SelectItem></SelectContent></Select>
+                     <Select defaultValue="all-manufacturers"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all-manufacturers">All manufacturers</SelectItem></SelectContent></Select>
+                     <Select defaultValue="count-gt-0"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="count-gt-0">QoH or Count > 0</SelectItem></SelectContent></Select>
                      <Input placeholder="All lot ids" className="w-auto" />
                  </div>
 
