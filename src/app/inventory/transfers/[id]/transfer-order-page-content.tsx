@@ -29,6 +29,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 interface TransferOrderPageContentProps {
     orderId: string;
@@ -36,8 +37,16 @@ interface TransferOrderPageContentProps {
 
 export default function TransferOrderPageContent({ orderId }: TransferOrderPageContentProps) {
     const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const { toast } = useToast();
 
     const handleSaveAddress = () => setIsEditingAddress(false);
+
+    const showComingSoon = () => {
+        toast({
+            title: 'Coming Soon',
+            description: 'This feature is not yet implemented.',
+        });
+    };
 
     return (
         <AuthGuard>
@@ -72,6 +81,12 @@ export default function TransferOrderPageContent({ orderId }: TransferOrderPageC
                                         <ChevronDown className="ml-2" />
                                     </Button>
                                 </DropdownMenuTrigger>
+                                 <DropdownMenuContent>
+                                    <DropdownMenuItem onSelect={showComingSoon}>Import transfer order items</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon}>Duplicate order</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon} disabled>Duplicate order with selection</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={showComingSoon}>Customize this screen</DropdownMenuItem>
+                                </DropdownMenuContent>
                             </DropdownMenu>
                             <Button><Check className="mr-2" /> Save changes</Button>
                         </div>
