@@ -288,8 +288,32 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
       });
       return Object.entries(supplierData).map(([name, data]) => ({ name, ...data }));
   }, [committedPurchaseOrders]);
-  
-  const mapData = geoSalesData; // Still mock
+
+  const mapData = useMemo(() => {
+    const dataByState: { [key: string]: number } = {};
+    salesOrders.forEach(order => {
+        const address = order.shipToAddress || '';
+        const stateMatch = address.match(/,\s*([A-Z]{2})\s*\d{5}$/);
+        const state = stateMatch ? stateMatch[1] : 'Unspecified';
+        if (state !== 'Unspecified') { // We can get state ID mapping later
+            dataByState[state] = (dataByState[state] || 0) + 1;
+        }
+    });
+    
+    // This is a simplified mapping. A full mapping would be needed for a real app.
+    const stateIdMap: { [key: string]: string } = {
+        'CA': '06', 'TX': '48', 'FL': '12', 'IL': '17', 'NY': '36', 'NJ': '34'
+    };
+    
+    return Object.entries(dataByState).map(([state, value]) => ({
+        id: stateIdMap[state] || '00', // Default to an unknown ID
+        state: state,
+        value: value,
+    }));
+  }, [salesOrders]);
+
+  const totalMapSales = useMemo(() => mapData.reduce((sum, item) => sum + item.value, 0), [mapData]);
+
   const colorScale = scaleQuantile<string>()
     .domain(mapData.map(d => d.value))
     .range([
@@ -559,9 +583,9 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div style={{ width: '100%', height: '250px' }}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <ComposableMap projection="geoAlbersUsa" projectionConfig={{ scale: 800 }} style={{ width: "100%", height: "auto" }}>
+                            <div style={{ width: '100%', height: 'auto' }}>
+                                <ResponsiveContainer width="100%" height={400}>
+                                    <ComposableMap projection="geoAlbersUsa">
                                     <Geographies geography={geoUrl}>
                                         {({ geographies }) =>
                                         geographies.map((geo) => {
@@ -579,7 +603,7 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
                                     </ComposableMap>
                                 </ResponsiveContainer>
                             </div>
-                             <p className="text-center text-sm text-muted-foreground mt-2">United States: 36; Unspecified: 5</p>
+                             <p className="text-center text-sm text-muted-foreground mt-2">United States: {totalMapSales}; Unspecified: {salesOrders.length - totalMapSales}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -693,3 +717,4 @@ export default function AnalyticsOverviewPageContent({ defaultTab = 'overview' }
     </AuthGuard>
   );
 }
+
