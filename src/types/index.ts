@@ -5,6 +5,7 @@ import type { Timestamp } from 'firebase/firestore';
 export const userProfileSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
   companyName: z.string().optional(),
+  companyLogoUrl: z.string().optional(),
   systemOfMeasure: z.string().optional(),
   notes: z.string().optional(),
   timezone: z.string().optional(),

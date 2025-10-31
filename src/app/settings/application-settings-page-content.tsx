@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Home, Settings, ChevronDown, MessageCircle, Loader2 } from 'lucide-react';
+import { Home, Settings, ChevronDown, MessageCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -21,7 +22,7 @@ import Image from 'next/image';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/auth-context';
-import { getFirestoreDb } from '@/lib/firebase-client';
+import { getFirestoreDb, getFirebaseStorage } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { userProfileSchema, type UserProfileFormData } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -32,11 +33,14 @@ export default function ApplicationSettingsPageContent() {
     const { user, profile, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     const form = useForm<UserProfileFormData>({
         resolver: zodResolver(userProfileSchema),
         defaultValues: {
             companyName: '',
+            companyLogoUrl: '',
             systemOfMeasure: 'us',
             notes: '',
             timezone: 'cst',
@@ -49,6 +53,7 @@ export default function ApplicationSettingsPageContent() {
             form.reset({
                 ...profile,
                 companyName: profile.companyName || '',
+                companyLogoUrl: profile.companyLogoUrl || '',
                 systemOfMeasure: profile.systemOfMeasure || 'us',
                 notes: profile.notes || '',
                 timezone: profile.timezone || 'cst',
@@ -57,32 +62,79 @@ export default function ApplicationSettingsPageContent() {
         }
     }, [profile, form]);
 
-    const onSubmit = async (data: UserProfileFormData) => {
+    const saveProfileUpdate = async (data: Partial<UserProfileFormData>) => {
         const db = getFirestoreDb();
         if (!user || !db) return;
-        setIsSubmitting(true);
         
         const userDocRef = doc(db, 'users', user.uid);
         
-        updateDoc(userDocRef, data)
-            .then(() => {
-                toast({ title: 'Success', description: 'Settings updated successfully.' });
-            })
-            .catch((serverError: any) => {
-                const permissionError = new FirestorePermissionError({
-                    path: userDocRef.path,
-                    operation: 'update',
-                    requestResourceData: data,
-                });
-                errorEmitter.emit('permission-error', permissionError);
-
-                if (serverError.code !== 'permission-denied') {
-                     toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
-                }
-            })
-            .finally(() => {
-                setIsSubmitting(false);
+        try {
+            await updateDoc(userDocRef, data);
+            toast({ title: 'Success', description: 'Settings updated successfully.' });
+        } catch (serverError: any) {
+            const permissionError = new FirestorePermissionError({
+                path: userDocRef.path,
+                operation: 'update',
+                requestResourceData: data,
             });
+            errorEmitter.emit('permission-error', permissionError);
+
+            if (serverError.code !== 'permission-denied') {
+                 toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
+            }
+        }
+    };
+
+    const onSubmit = async (data: UserProfileFormData) => {
+        setIsSubmitting(true);
+        await saveProfileUpdate(data);
+        setIsSubmitting(false);
+    };
+
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        const storage = getFirebaseStorage();
+        if (!file || !user || !storage) return;
+
+        setIsUploading(true);
+        try {
+            const filePath = `logos/${user.uid}/${file.name}`;
+            const storageRef = ref(storage, filePath);
+            await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(storageRef);
+            
+            form.setValue('companyLogoUrl', downloadURL);
+            await saveProfileUpdate({ companyLogoUrl: downloadURL });
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not upload the new logo.' });
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleRemoveImage = async () => {
+        const storage = getFirebaseStorage();
+        if (!user || !profile?.companyLogoUrl || !storage) return;
+        
+        setIsUploading(true);
+        try {
+            const storageRef = ref(storage, profile.companyLogoUrl);
+            await deleteObject(storageRef);
+            form.setValue('companyLogoUrl', '');
+            await saveProfileUpdate({ companyLogoUrl: '' });
+        } catch (error: any) {
+            // If file doesn't exist, we can still clear the URL from profile
+            if (error.code === 'storage/object-not-found') {
+                form.setValue('companyLogoUrl', '');
+                await saveProfileUpdate({ companyLogoUrl: '' });
+            } else {
+                console.error("Error removing image:", error);
+                toast({ variant: 'destructive', title: 'Removal Failed', description: 'Could not remove the company logo.' });
+            }
+        } finally {
+            setIsUploading(false);
+        }
     };
 
 
@@ -122,8 +174,8 @@ export default function ApplicationSettingsPageContent() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button type="submit" disabled={isSubmitting}>
-                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                <Button type="submit" disabled={isSubmitting || isUploading}>
+                                    {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Save Changes
                                 </Button>
                             </div>
@@ -228,12 +280,19 @@ export default function ApplicationSettingsPageContent() {
                                     <div className="lg:col-span-1 space-y-6">
                                         <Card>
                                             <CardContent className="p-6 text-center">
-                                                <div className="w-48 mx-auto bg-gray-100 dark:bg-gray-800 p-4 rounded-md flex items-center justify-center">
-                                                    <Image src="https://assets.stickpng.com/images/5847f975cef1014c0b5e489c.png" alt="Heartland Logo" width={150} height={40} data-ai-hint="logo Heartland" />
+                                                <div className="w-48 h-24 mx-auto bg-gray-100 dark:bg-gray-800 p-4 rounded-md flex items-center justify-center relative">
+                                                    {isUploading ? (
+                                                        <Loader2 className="w-8 h-8 animate-spin" />
+                                                    ) : form.watch('companyLogoUrl') ? (
+                                                        <Image src={form.watch('companyLogoUrl')} alt="Company Logo" layout="fill" objectFit="contain" />
+                                                    ) : (
+                                                        <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                                                    )}
                                                 </div>
                                                 <div className="mt-4">
-                                                    <Button variant="link">Change image</Button>
-                                                    <Button variant="link" className="text-destructive">Remove image</Button>
+                                                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
+                                                    <Button type="button" variant="link" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>Change image</Button>
+                                                    <Button type="button" variant="link" className="text-destructive" onClick={handleRemoveImage} disabled={isUploading || !form.watch('companyLogoUrl')}>Remove image</Button>
                                                 </div>
                                                 <p className="text-xs text-muted-foreground mt-2">Supported formats: JPG, PNG. For best results, we recommend resizing your image to 150 x 540 pixels.</p>
                                             </CardContent>
