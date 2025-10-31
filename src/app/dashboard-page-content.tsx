@@ -60,7 +60,7 @@ const sellingFeatures = [
 ];
 
 const accountingFeatures = [
-    { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '#', color: 'teal' },
+    { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '/accounting/average-cost-changes', color: 'teal' },
     { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '#', color: 'teal' },
     { title: 'QuickBooks Online sync status', description: "View transactions' sync status.", icon: <RefreshCcw />, href: '#', color: 'teal' },
 ];
