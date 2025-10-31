@@ -13,15 +13,11 @@ import { Loader2 } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { getFirebaseAuth, getFirestoreDb } from '@/lib/firebase-client';
-
-interface UserProfile {
-    companyName?: string;
-    // Add other profile fields here if needed in the future
-}
+import type { UserProfileFormData } from '@/types';
 
 interface AuthContextType {
   user: User | null;
-  profile: UserProfile | null;
+  profile: UserProfileFormData | null;
   loading: boolean;
 }
 
@@ -33,7 +29,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfileFormData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userDocRef = doc(db, 'users', user.uid);
             const unsubProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
-                    setProfile(docSnap.data() as UserProfile);
+                    setProfile(docSnap.data() as UserProfileFormData);
                 } else {
                     setProfile(null);
                 }

@@ -2,6 +2,20 @@
 import { z } from 'zod';
 import type { Timestamp } from 'firebase/firestore';
 
+export const userProfileSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required.'),
+  companyName: z.string().optional(),
+  systemOfMeasure: z.string().optional(),
+  notes: z.string().optional(),
+  timezone: z.string().optional(),
+  companyColor: z.string().optional(),
+  companyColorEnabled: z.boolean().optional(),
+  companyAddress: z.string().optional(),
+  companyCity: z.string().optional(),
+});
+
+export type UserProfileFormData = z.infer<typeof userProfileSchema>;
+
 export const lineItemSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   specification: z.string().optional(),
