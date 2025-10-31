@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from '@/lib/utils';
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Upload } from 'lucide-react';
+import { Button } from './ui/button';
 
 
 const analyticsLinks: { title: string; href: string; description: string }[] = [
@@ -120,6 +121,16 @@ const inventoryLinks: { title: string; href: string; description: string }[] = [
         href: '/inventory/replenishment',
         description: 'Create a transfer order from replenishment calculations.',
     },
+    { 
+        title: 'Stock Changes', 
+        href: '/inventory/stock-changes', 
+        description: 'Adjust stock levels for products.' 
+    },
+    { 
+        title: 'Transfers', 
+        href: '/inventory/transfers', 
+        description: 'Manage stock transfers between locations.' 
+    },
 ];
 
 const sellingLinks: { title: string; href: string; description: string }[] = [
@@ -196,7 +207,9 @@ export default function TopNav({ include }: TopNavProps) {
              <NavigationMenuItem key={key}>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                         <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "flex items-center gap-1")}>Create <ChevronDown className="h-4 w-4" /></NavigationMenuLink>
+                         <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "flex items-center gap-1")}>
+                             Create <ChevronDown className="h-4 w-4" />
+                         </NavigationMenuLink>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
                         <DropdownMenuItem asChild><Link href="/inventory/products/new">Product</Link></DropdownMenuItem>
@@ -222,7 +235,42 @@ export default function TopNav({ include }: TopNavProps) {
         )
     }
 
-    if (item.links) {
+    if (key === 'import') {
+         return (
+             <NavigationMenuItem key={key}>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                         <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "flex items-center gap-1")}>
+                           Import <ChevronDown className="h-4 w-4" />
+                         </NavigationMenuLink>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuItem>Import screen</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Products</DropdownMenuItem>
+                        <DropdownMenuItem>Product lookups</DropdownMenuItem>
+                        <DropdownMenuItem>Product supplier fields</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Suppliers</DropdownMenuItem>
+                        <DropdownMenuItem>Purchase orders</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Customers</DropdownMenuItem>
+                        <DropdownMenuItem>Sales orders</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Stock take</DropdownMenuItem>
+                        <DropdownMenuItem>Stock change</DropdownMenuItem>
+                        <DropdownMenuItem>Transfer orders</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Average cost change</DropdownMenuItem>
+                        <DropdownMenuItem>Journal entries</DropdownMenuItem>
+                        <DropdownMenuItem>Sublocations</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </NavigationMenuItem>
+         )
+    }
+
+    if (item.links && item.links.length > 0) {
         return (
             <NavigationMenuItem key={key}>
                 <NavigationMenuTrigger>{item.name.charAt(0).toUpperCase() + item.name.slice(1)}</NavigationMenuTrigger>
