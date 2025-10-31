@@ -150,6 +150,19 @@ const accountingLinks: { title: string; href: string; description: string }[] = 
     }
 ];
 
+const createLinks: { title: string; href: string; description: string }[] = [
+    { title: "Sale", href: "/sales/new", description: "Create a new sales order." },
+    { title: "Purchase", href: "/purchases/new", description: "Create a new purchase order." },
+    { title: "Customer", href: "/customers", description: "Add a new customer." },
+    { title: "Supplier", href: "/suppliers", description: "Add a new supplier." },
+    { title: "Product", href: "/inventory/products/new", description: "Add a new product." },
+];
+
+const importLinks: { title: string; href: string; description: string }[] = [
+    { title: "Import sales", href: "/sales", description: "Bulk import sales orders." },
+    { title: "Import purchases", href: "/purchases", description: "Bulk import purchase orders." },
+];
+
 
 export default function TopNav() {
   const pathname = usePathname();
@@ -246,6 +259,45 @@ export default function TopNav() {
                  <Link href="/reports" legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Reports
+                    </NavigationMenuLink>
+                </Link>
+            </NavigationMenuItem>
+             <NavigationMenuItem>
+                <NavigationMenuTrigger>Create</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {createLinks.map((component) => (
+                    <ListItem
+                        key={component.title}
+                        title={component.title}
+                        href={component.href}
+                    >
+                        {component.description}
+                    </ListItem>
+                    ))}
+                </ul>
+                </NavigationMenuContent>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+                <NavigationMenuTrigger>Import</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {importLinks.map((component) => (
+                    <ListItem
+                        key={component.title}
+                        title={component.title}
+                        href={component.href}
+                    >
+                        {component.description}
+                    </ListItem>
+                    ))}
+                </ul>
+                </NavigationMenuContent>
+            </NavigationMenuItem>
+             <NavigationMenuItem>
+                 <Link href="#" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Help
                     </NavigationMenuLink>
                 </Link>
             </NavigationMenuItem>

@@ -85,8 +85,8 @@ export function UserNav() {
         <DropdownMenuGroup>
            <DropdownMenuItem asChild className="cursor-pointer">
              <Link href="/settings">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <UserIcon className="mr-2 h-4 w-4" />
+                <span>My profile</span>
              </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
