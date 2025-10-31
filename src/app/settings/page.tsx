@@ -1,8 +1,8 @@
 
-import SettingsPageContent from './settings-page-content';
+import ApplicationSettingsPageContent from './application-settings-page-content';
 
 export default function SettingsPage() {
     return (
-        <SettingsPageContent />
+        <ApplicationSettingsPageContent />
     )
 }
