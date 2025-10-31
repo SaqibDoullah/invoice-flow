@@ -79,7 +79,9 @@ export default function AverageCostChangesPageContent() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button>Create average cost change</Button>
+                        <Button asChild>
+                            <Link href="/accounting/average-cost-changes/new">Create average cost change</Link>
+                        </Button>
                         <Button variant="outline">Import average cost change</Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
