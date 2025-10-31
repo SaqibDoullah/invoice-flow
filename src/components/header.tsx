@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation';
 import { Building2 } from 'lucide-react';
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -66,7 +66,7 @@ export default function Header() {
                             <Building2 className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div>
-                            <p className="font-semibold">Heartland</p>
+                            <p className="font-semibold">{profile?.companyName || 'My Company'}</p>
                             <p className="text-sm font-normal text-muted-foreground">{user?.displayName || user?.email}</p>
                         </div>
                     </div>
