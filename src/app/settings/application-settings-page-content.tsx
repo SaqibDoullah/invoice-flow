@@ -25,6 +25,8 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { userProfileSchema, type UserProfileFormData } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 export default function ApplicationSettingsPageContent() {
     const { user, profile, loading: authLoading } = useAuth();
@@ -60,16 +62,27 @@ export default function ApplicationSettingsPageContent() {
         if (!user || !db) return;
         setIsSubmitting(true);
         
-        try {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, data);
-            toast({ title: 'Success', description: 'Settings updated successfully.' });
-        } catch (error) {
-            console.error("Failed to update settings:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
-        } finally {
-            setIsSubmitting(false);
-        }
+        const userDocRef = doc(db, 'users', user.uid);
+        
+        updateDoc(userDocRef, data)
+            .then(() => {
+                toast({ title: 'Success', description: 'Settings updated successfully.' });
+            })
+            .catch((serverError: any) => {
+                const permissionError = new FirestorePermissionError({
+                    path: userDocRef.path,
+                    operation: 'update',
+                    requestResourceData: data,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+
+                if (serverError.code !== 'permission-denied') {
+                     toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
+                }
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+            });
     };
 
 
