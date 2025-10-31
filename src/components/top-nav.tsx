@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { ChevronDown } from 'lucide-react';
 
 
 const analyticsLinks: { title: string; href: string; description: string }[] = [
@@ -195,55 +196,26 @@ export default function TopNav({ include }: TopNavProps) {
              <NavigationMenuItem key={key}>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>Create</NavigationMenuLink>
+                         <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "flex items-center gap-1")}>Create <ChevronDown className="h-4 w-4" /></NavigationMenuLink>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Product</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem asChild><Link href="/inventory/products/new">Product</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/inventory/product-lookup/new">Product lookup</Link></DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        <DropdownMenuItem asChild><Link href="/inventory/products/new">Product</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/inventory/product-lookup/new">Product lookup</Link></DropdownMenuItem>
                         <DropdownMenuSeparator />
-                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Supplier</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem asChild><Link href="/suppliers">Supplier</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/purchases/new">Purchase order</Link></DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                         <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Customer</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem asChild><Link href="/customers">Customer</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/quotes/new">Quote</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/sales/new">Sales order</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/returns">Return</Link></DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                        <DropdownMenuItem asChild><Link href="/suppliers">Supplier</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/purchases/new">Purchase order</Link></DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild><Link href="/customers">Customer</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/quotes/new">Quote</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/sales/new">Sales order</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/returns">Return</Link></DropdownMenuItem>
                          <DropdownMenuSeparator />
                          <DropdownMenuItem asChild><Link href="/inventory/stock-takes/new">Stock take</Link></DropdownMenuItem>
                          <DropdownMenuItem asChild><Link href="/inventory/stock-changes/new">Stock change</Link></DropdownMenuItem>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>Stock transfer</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                            <DropdownMenuSubContent>
-                                <DropdownMenuItem asChild><Link href="/inventory/transfers/new">Transfer order</Link></DropdownMenuItem>
-                            </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                         <DropdownMenuItem asChild><Link href="/inventory/transfers/new">Transfer order</Link></DropdownMenuItem>
                          <DropdownMenuSeparator />
                          <DropdownMenuItem asChild><Link href="/accounting/average-cost-changes/new">Average cost change</Link></DropdownMenuItem>
                          <DropdownMenuItem>Journal entry</DropdownMenuItem>
-
                     </DropdownMenuContent>
                 </DropdownMenu>
             </NavigationMenuItem>
@@ -328,5 +300,3 @@ const ListItem = React.forwardRef<
   )
 })
 ListItem.displayName = "ListItem"
-
-    
