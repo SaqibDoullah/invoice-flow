@@ -53,7 +53,8 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem>Action 1</DropdownMenuItem>
+                                <DropdownMenuItem>Import average cost change items</DropdownMenuItem>
+                                <DropdownMenuItem>Customize this screen</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Button><Check className="mr-2 h-4 w-4" /> Save changes</Button>
