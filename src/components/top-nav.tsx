@@ -175,11 +175,6 @@ const accountingLinks: { title: string; href: string; description: string }[] = 
 ];
 
 
-const importLinks: { title: string; href: string; description: string }[] = [
-    { title: "Import sales", href: "/sales", description: "Bulk import sales orders." },
-    { title: "Import purchases", href: "/purchases", description: "Bulk import purchase orders." },
-];
-
 const navConfig = [
     { name: 'analytics', links: analyticsLinks },
     { name: 'purchasing', links: purchasingLinks },
@@ -188,7 +183,7 @@ const navConfig = [
     { name: 'accounting', links: accountingLinks },
     { name: 'reports', href: '/reports' },
     { name: 'create', links: [] },
-    { name: 'import', links: importLinks },
+    { name: 'import', links: [] },
     { name: 'help', href: '#' },
 ];
 
