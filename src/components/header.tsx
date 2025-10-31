@@ -11,28 +11,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from './ui/button';
+import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from './ui/navigation-menu';
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-        {/* bar */}
         <div className="flex h-16 items-center justify-between gap-4">
-          {/* brand */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/90 text-primary-foreground">
-              <Workflow className="h-5 w-5" />
-            </span>
-            <span className="text-sm font-semibold tracking-tight">CoreOps</span>
-          </Link>
-
-          {/* nav grows but never overflows brand + user */}
-          <nav className="flex-1 min-w-0">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-2 shrink-0">
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/90 text-primary-foreground">
+                <Workflow className="h-5 w-5" />
+              </span>
+              <span className="text-sm font-semibold tracking-tight">CoreOps</span>
+            </Link>
             <TopNav />
-          </nav>
+          </div>
 
-          {/* user */}
-          <div className="flex items-center gap-2 shrink-0 pr-2 sm:pr-0">
+          <div className="flex items-center gap-2 shrink-0">
+             <NavigationMenu>
+                <NavigationMenuList>
+                    <TopNav include={['create', 'import', 'help']} />
+                </NavigationMenuList>
+            </NavigationMenu>
             <UserNav />
              <DropdownMenu>
               <DropdownMenuTrigger asChild>

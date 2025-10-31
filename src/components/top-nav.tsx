@@ -163,145 +163,76 @@ const importLinks: { title: string; href: string; description: string }[] = [
     { title: "Import purchases", href: "/purchases", description: "Bulk import purchase orders." },
 ];
 
+const navConfig = [
+    { name: 'analytics', links: analyticsLinks },
+    { name: 'purchasing', links: purchasingLinks },
+    { name: 'inventory', links: inventoryLinks },
+    { name: 'selling', links: sellingLinks },
+    { name: 'accounting', links: accountingLinks },
+    { name: 'reports', href: '/reports' },
+    { name: 'create', links: createLinks },
+    { name: 'import', links: importLinks },
+    { name: 'help', href: '#' },
+];
 
-export default function TopNav() {
+type TopNavProps = {
+    include?: string[];
+}
+
+export default function TopNav({ include }: TopNavProps) {
   const pathname = usePathname();
+  
+  const allNavItems = navConfig.map(item => {
+    const key = item.name;
+
+    if (item.links) {
+        return (
+            <NavigationMenuItem key={key}>
+                <NavigationMenuTrigger>{item.name.charAt(0).toUpperCase() + item.name.slice(1)}</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
+                    {item.links.map((component) => (
+                    <ListItem
+                        key={component.title}
+                        title={component.title}
+                        href={component.href}
+                    >
+                        {component.description}
+                    </ListItem>
+                    ))}
+                </ul>
+                </NavigationMenuContent>
+            </NavigationMenuItem>
+        );
+    }
+
+    if (item.href) {
+         return (
+             <NavigationMenuItem key={key}>
+                 <Link href={item.href} legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
+                    </NavigationMenuLink>
+                </Link>
+            </NavigationMenuItem>
+         );
+    }
+    
+    return null;
+  });
+
+  if (include) {
+      return (
+          <>
+            {allNavItems.filter(item => include.includes(item?.key as string))}
+          </>
+      )
+  }
 
   return (
-    <NavigationMenu>
+     <NavigationMenu>
         <NavigationMenuList>
-             <NavigationMenuItem>
-                <NavigationMenuTrigger>Analytics</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {analyticsLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-                <NavigationMenuTrigger>Purchasing</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {purchasingLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-                <NavigationMenuTrigger>Inventory</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {inventoryLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-                <NavigationMenuTrigger>Selling</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {sellingLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-            
-            <NavigationMenuItem>
-                <NavigationMenuTrigger>Accounting</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px] ">
-                    {accountingLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-                 <Link href="/reports" legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Reports
-                    </NavigationMenuLink>
-                </Link>
-            </NavigationMenuItem>
-             <NavigationMenuItem>
-                <NavigationMenuTrigger>Create</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {createLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-                <NavigationMenuTrigger>Import</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
-                    {importLinks.map((component) => (
-                    <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                    >
-                        {component.description}
-                    </ListItem>
-                    ))}
-                </ul>
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-             <NavigationMenuItem>
-                 <Link href="#" legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Help
-                    </NavigationMenuLink>
-                </Link>
-            </NavigationMenuItem>
-
+            {allNavItems.filter(item => !['create', 'import', 'help'].includes(item?.key as string))}
         </NavigationMenuList>
     </NavigationMenu>
   );
