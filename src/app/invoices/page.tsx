@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InvoiceList from "./list/invoice-list";
+import AuthGuard from '@/components/auth/auth-guard';
 
 export const metadata = {
   title: "Invoices",
@@ -23,6 +24,7 @@ export default function Page({ searchParams }: PageProps) {
   const statusFilter = (searchParams?.status ?? "all").toString();
 
   return (
+      <AuthGuard>
        <div className="flex-1 container mx-auto p-4 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -62,5 +64,6 @@ export default function Page({ searchParams }: PageProps) {
 
           <InvoiceList searchTerm={searchTerm} statusFilter={statusFilter} />
         </div>
+        </AuthGuard>
   )
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -11,6 +12,17 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuPortal,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from '@/lib/utils';
 import React from 'react';
 
@@ -150,13 +162,6 @@ const accountingLinks: { title: string; href: string; description: string }[] = 
     }
 ];
 
-const createLinks: { title: string; href: string; description: string }[] = [
-    { title: "Sale", href: "/sales/new", description: "Create a new sales order." },
-    { title: "Purchase", href: "/purchases/new", description: "Create a new purchase order." },
-    { title: "Customer", href: "/customers", description: "Add a new customer." },
-    { title: "Supplier", href: "/suppliers", description: "Add a new supplier." },
-    { title: "Product", href: "/inventory/products/new", description: "Add a new product." },
-];
 
 const importLinks: { title: string; href: string; description: string }[] = [
     { title: "Import sales", href: "/sales", description: "Bulk import sales orders." },
@@ -170,7 +175,7 @@ const navConfig = [
     { name: 'selling', links: sellingLinks },
     { name: 'accounting', links: accountingLinks },
     { name: 'reports', href: '/reports' },
-    { name: 'create', links: createLinks },
+    { name: 'create', links: [] },
     { name: 'import', links: importLinks },
     { name: 'help', href: '#' },
 ];
@@ -184,6 +189,66 @@ export default function TopNav({ include }: TopNavProps) {
   
   const allNavItems = navConfig.map(item => {
     const key = item.name;
+
+    if (key === 'create') {
+        return (
+             <NavigationMenuItem key={key}>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>Create</NavigationMenuLink>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Product</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/inventory/products/new">Product</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/inventory/product-lookup/new">Product lookup</Link></DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Supplier</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/suppliers">Supplier</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/purchases/new">Purchase order</Link></DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Customer</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/customers">Customer</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/quotes/new">Quote</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/sales/new">Sales order</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/returns">Return</Link></DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem asChild><Link href="/inventory/stock-takes/new">Stock take</Link></DropdownMenuItem>
+                         <DropdownMenuItem asChild><Link href="/inventory/stock-changes/new">Stock change</Link></DropdownMenuItem>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Stock transfer</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/inventory/transfers/new">Transfer order</Link></DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSeparator />
+                         <DropdownMenuItem asChild><Link href="/accounting/average-cost-changes/new">Average cost change</Link></DropdownMenuItem>
+                         <DropdownMenuItem>Journal entry</DropdownMenuItem>
+
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </NavigationMenuItem>
+        )
+    }
 
     if (item.links) {
         return (
@@ -263,3 +328,5 @@ const ListItem = React.forwardRef<
   )
 })
 ListItem.displayName = "ListItem"
+
+    
