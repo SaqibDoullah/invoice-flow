@@ -16,14 +16,12 @@ export default function CreateNewAverageCostChangePageContent() {
     const handleCreateWithSystemId = () => {
         // In a real app, you'd fetch this from a backend service.
         const systemJournalId = '100002';
-        // router.push(`/accounting/average-cost-changes/${systemJournalId}`);
-        console.log("Navigating with system ID:", systemJournalId);
+        router.push(`/accounting/average-cost-changes/${systemJournalId}`);
     }
 
     const handleCreateWithEnteredId = () => {
         if (!journalId.trim()) return;
-        // router.push(`/accounting/average-cost-changes/${journalId.trim()}`);
-        console.log("Navigating with entered ID:", journalId.trim());
+        router.push(`/accounting/average-cost-changes/${journalId.trim()}`);
     }
 
     return (
