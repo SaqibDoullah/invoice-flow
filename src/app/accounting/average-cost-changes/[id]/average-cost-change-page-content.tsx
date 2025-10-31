@@ -38,7 +38,16 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                         <Button variant="outline">Print average cost change</Button>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">Print average cost change <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem>Print average cost change</DropdownMenuItem>
+                                <DropdownMenuItem>Export average cost change to excel</DropdownMenuItem>
+                                <DropdownMenuItem>Email average cost change</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
