@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import CustomizeColumnsDialog from '@/components/accounting/average-cost-changes/customize-columns-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface AverageCostChangePageContentProps {
@@ -40,11 +41,23 @@ const initialColumns: Column[] = [
 export default function AverageCostChangePageContent({ id }: AverageCostChangePageContentProps) {
     const [columns, setColumns] = useState<Column[]>(initialColumns);
     const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+    const { toast } = useToast();
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const showComingSoon = (feature: string) => {
+        toast({
+            title: 'Coming Soon',
+            description: `${feature} feature is not yet implemented.`,
+        });
+    };
 
     return (
         <AuthGuard>
             <main className="flex-1 container mx-auto p-4 md:p-8">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-6 print:hidden">
                     <div className="flex items-center gap-4">
                         <div className="p-3 rounded-lg bg-teal-100 dark:bg-teal-900/50">
                             <Calculator className="w-6 h-6 text-teal-500" />
@@ -63,9 +76,9 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                                 <Button variant="outline">Print average cost change <ChevronDown className="ml-2 w-4 h-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem>Print average cost change</DropdownMenuItem>
-                                <DropdownMenuItem>Export average cost change to excel</DropdownMenuItem>
-                                <DropdownMenuItem>Email average cost change</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handlePrint}>Print average cost change</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => showComingSoon('Excel Export')}>Export average cost change to excel</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => showComingSoon('Emailing')}>Email average cost change</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                          <DropdownMenu>
@@ -73,7 +86,7 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem>Import average cost change items</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => showComingSoon('Import Items')}>Import average cost change items</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -132,7 +145,7 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                             </CardContent>
                         </Card>
                     </div>
-                    <div className="space-y-6">
+                    <div className="space-y-6 print:hidden">
                         <Card>
                              <CardHeader className="flex-row items-center gap-2 space-y-0">
                                 <Calculator className="w-5 h-5 text-muted-foreground" />
@@ -170,7 +183,7 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                     </div>
                 </div>
 
-                <div className="fixed bottom-8 right-8">
+                <div className="fixed bottom-8 right-8 print:hidden">
                     <Button size="icon" className="rounded-full w-14 h-14 shadow-lg">
                         <MessageCircle className="w-8 h-8" />
                     </Button>
