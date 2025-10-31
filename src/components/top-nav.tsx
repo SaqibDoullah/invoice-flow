@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -144,7 +143,11 @@ const sellingLinks: { title: string; href: string; description: string }[] = [
 ];
 
 const accountingLinks: { title: string; href: string; description: string }[] = [
-    // Add links when accounting pages are created
+    {
+        title: "Average cost changes",
+        href: "/accounting/average-cost-changes",
+        description: "Update product's average cost.",
+    }
 ];
 
 
@@ -210,6 +213,23 @@ export default function TopNav() {
                 <NavigationMenuContent>
                 <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px] ">
                     {sellingLinks.map((component) => (
+                    <ListItem
+                        key={component.title}
+                        title={component.title}
+                        href={component.href}
+                    >
+                        {component.description}
+                    </ListItem>
+                    ))}
+                </ul>
+                </NavigationMenuContent>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+                <NavigationMenuTrigger>Accounting</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-1 lg:w-[600px] ">
+                    {accountingLinks.map((component) => (
                     <ListItem
                         key={component.title}
                         title={component.title}

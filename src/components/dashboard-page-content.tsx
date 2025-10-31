@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -41,14 +40,14 @@ const inventoryFeatures = [
   { title: 'Stock', description: 'View product stock levels.', icon: <Factory />, href: '/inventory/stock', color: 'blue' },
   { title: 'Products', description: 'View all products.', icon: <Boxes />, href: '/inventory/products', color: 'blue' },
   { title: 'Stock takes', description: 'Enter physical count of stock.', icon: <ClipboardList />, href: '/inventory/stock-takes', color: 'purple' },
-  { title: 'Replenishment', description: 'Create a transfer order from replenishment calculations.', icon: <RefreshCcw />, href: '#', color: 'purple' },
+  { title: 'Replenishment', description: 'Create a transfer order from replenishment calculations.', icon: <RefreshCcw />, href: '/inventory/replenishment', color: 'purple' },
 ];
 
 const inventoryFeaturesCol2 = [
     { title: 'Stock history', description: 'View stock and transaction history.', icon: <History />, href: '/inventory/stock-history', color: 'blue' },
     { title: 'Product lookups', description: 'View all product lookups & alias SKUs.', icon: <Search />, href: '/inventory/product-lookup', color: 'blue' },
-    { title: 'Stock changes', description: 'Adjust the stock levels.', icon: <ArrowLeftRight />, href: '#', color: 'purple' },
-    { title: 'Transfers', description: 'Move stock between locations.', icon: <Truck />, href: '#', color: 'purple' },
+    { title: 'Stock changes', description: 'Adjust the stock levels.', icon: <ArrowLeftRight />, href: '/inventory/stock-changes', color: 'purple' },
+    { title: 'Transfers', description: 'Move stock between locations.', icon: <Truck />, href: '/inventory/transfers', color: 'purple' },
 ]
 
 const sellingFeatures = [
@@ -61,7 +60,7 @@ const sellingFeatures = [
 ];
 
 const accountingFeatures = [
-    { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '#', color: 'teal' },
+    { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '/accounting/average-cost-changes', color: 'teal' },
     { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '#', color: 'teal' },
     { title: 'QuickBooks Online sync status', description: "View transactions' sync status.", icon: <RefreshCcw />, href: '#', color: 'teal' },
 ];
