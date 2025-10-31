@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -14,12 +15,31 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import CustomizeColumnsDialog from '@/components/accounting/average-cost-changes/customize-columns-dialog';
+
 
 interface AverageCostChangePageContentProps {
     id: string;
 }
 
+type Column = {
+  id: string;
+  label: string;
+};
+
+const initialColumns: Column[] = [
+    { id: 'product', label: 'Product' },
+    { id: 'effectiveDateAvgCost', label: 'Effective date avg cost' },
+    { id: 'expectedAvgCost', label: 'Expected avg cost' },
+    { id: 'resultingAvgCost', label: 'Resulting avg cost' },
+    { id: 'changeInValuation', label: 'Change in valuation' },
+    { id: 'itemNotes', label: 'Item notes' },
+];
+
+
 export default function AverageCostChangePageContent({ id }: AverageCostChangePageContentProps) {
+    const [columns, setColumns] = useState<Column[]>(initialColumns);
+    const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
 
     return (
         <AuthGuard>
@@ -54,7 +74,7 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Import average cost change items</DropdownMenuItem>
-                                <DropdownMenuItem>Customize this screen</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Button><Check className="mr-2 h-4 w-4" /> Save changes</Button>
@@ -87,17 +107,14 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="w-12"><Checkbox disabled/></TableHead>
-                                                <TableHead>Product</TableHead>
-                                                <TableHead>Effective date avg cost</TableHead>
-                                                <TableHead>Expected avg cost</TableHead>
-                                                <TableHead>Resulting avg cost</TableHead>
-                                                <TableHead>Change in valuation</TableHead>
-                                                <TableHead>Item notes</TableHead>
+                                                {columns.map(col => (
+                                                    <TableHead key={col.id}>{col.label}</TableHead>
+                                                ))}
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center text-muted-foreground py-4">
+                                                <TableCell colSpan={columns.length + 1} className="text-center text-muted-foreground py-4">
                                                     Type on last line to add an item. Additional lines are automatically added.
                                                 </TableCell>
                                             </TableRow>
@@ -158,6 +175,12 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                         <MessageCircle className="w-8 h-8" />
                     </Button>
                 </div>
+                 <CustomizeColumnsDialog
+                    isOpen={isCustomizeOpen}
+                    setIsOpen={setIsCustomizeOpen}
+                    columns={columns}
+                    setColumns={setColumns}
+                />
             </main>
         </AuthGuard>
     );
