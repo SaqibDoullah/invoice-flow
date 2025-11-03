@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -29,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import SecurityGroups from '@/components/settings/security-groups';
 
 const timezones = [
     { value: 'Etc/GMT+12', label: '(GMT-12:00) International Date Line West' },
@@ -121,6 +121,7 @@ export default function ApplicationSettingsPageContent() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [users, setUsers] = useState<UserProfileFormData[]>([]);
     const [usersLoading, setUsersLoading] = useState(true);
+    const [activeUserSubTab, setActiveUserSubTab] = useState('users');
     
     const form = useForm<UserProfileFormData>({
         resolver: zodResolver(userProfileSchema),
@@ -442,51 +443,58 @@ export default function ApplicationSettingsPageContent() {
                                 <div className="grid md:grid-cols-4 gap-8">
                                     <div className="md:col-span-1">
                                         <nav className="flex flex-col gap-1">
-                                            <Button variant="secondary" className="justify-start">Users</Button>
-                                            <Button variant="ghost" className="justify-start text-muted-foreground">Security groups</Button>
+                                            <Button variant={activeUserSubTab === 'users' ? 'secondary' : 'ghost'} className="justify-start" onClick={() => setActiveUserSubTab('users')}>Users</Button>
+                                            <Button variant={activeUserSubTab === 'security-groups' ? 'secondary' : 'ghost'} className="justify-start" onClick={() => setActiveUserSubTab('security-groups')}>Security groups</Button>
                                             <Button variant="ghost" className="justify-start text-muted-foreground">Notifications</Button>
                                             <Button variant="ghost" className="justify-start text-muted-foreground">Mobile scanner</Button>
                                             <Button variant="ghost" className="justify-start text-muted-foreground">API keys</Button>
                                         </nav>
                                     </div>
                                     <div className="md:col-span-3">
-                                        <h2 className="text-2xl font-bold mb-4">Users</h2>
-                                        <Card>
-                                            <CardContent className="p-0">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>Username</TableHead>
-                                                            <TableHead>Email</TableHead>
-                                                            <TableHead>Security groups</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {usersLoading ? (
-                                                            <TableRow>
-                                                                <TableCell colSpan={3} className="h-24 text-center">
-                                                                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ) : users.length > 0 ? (
-                                                            users.map((user, index) => (
-                                                                <TableRow key={index}>
-                                                                    <TableCell>{user.fullName}</TableCell>
-                                                                    <TableCell>--</TableCell>
-                                                                    <TableCell>--</TableCell>
+                                        {activeUserSubTab === 'users' && (
+                                            <>
+                                                <h2 className="text-2xl font-bold mb-4">Users</h2>
+                                                <Card>
+                                                    <CardContent className="p-0">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
+                                                                    <TableHead>Username</TableHead>
+                                                                    <TableHead>Email</TableHead>
+                                                                    <TableHead>Security groups</TableHead>
                                                                 </TableRow>
-                                                            ))
-                                                        ) : (
-                                                            <TableRow>
-                                                                <TableCell colSpan={3} className="h-24 text-center">
-                                                                    No users found.
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )}
-                                                    </TableBody>
-                                                </Table>
-                                            </CardContent>
-                                        </Card>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {usersLoading ? (
+                                                                    <TableRow>
+                                                                        <TableCell colSpan={3} className="h-24 text-center">
+                                                                            <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ) : users.length > 0 ? (
+                                                                    users.map((user, index) => (
+                                                                        <TableRow key={index}>
+                                                                            <TableCell>{user.fullName}</TableCell>
+                                                                            <TableCell>--</TableCell>
+                                                                            <TableCell>--</TableCell>
+                                                                        </TableRow>
+                                                                    ))
+                                                                ) : (
+                                                                    <TableRow>
+                                                                        <TableCell colSpan={3} className="h-24 text-center">
+                                                                            No users found.
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </CardContent>
+                                                </Card>
+                                            </>
+                                        )}
+                                        {activeUserSubTab === 'security-groups' && (
+                                            <SecurityGroups />
+                                        )}
                                     </div>
                                 </div>
                             </TabsContent>
