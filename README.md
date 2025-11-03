@@ -50,8 +50,10 @@ Follow these instructions to get a copy of the project up and running on your lo
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
-          // A user can read and write their own user document (for settings)
           match /users/{userId} {
+            // Allow authenticated users to read the list of users for display in settings.
+            allow list: if request.auth != null;
+            // Allow a user to read and write their own user document (for settings)
             allow read, write: if request.auth != null && request.auth.uid == userId;
 
             // A user can manage their own invoices subcollection
@@ -168,6 +170,7 @@ To deploy the application to Firebase Hosting:
     ```
 
 After deployment, Firebase CLI will provide you with the URL to your live application.
+
 
 
 

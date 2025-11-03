@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Home, Settings, ChevronDown, MessageCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 import { Button } from '@/components/ui/button';
@@ -113,26 +113,14 @@ const timezones = [
     { value: 'Pacific/Tongatapu', label: '(GMT+13:00) Nuku\'alofa' },
 ];
 
-const mockUsers = [
-  { username: 'ali', email: 'tawakkalimportsllc@gmail.com', securityGroups: 'Owner' },
-  { username: 'Eduardo', email: 'gomezeduardo713@gmail.com', securityGroups: 'Staff' },
-  { username: 'Hira', email: 'hira@paylessdistro.com', securityGroups: 'Staff' },
-  { username: 'Juan', email: 'medinamanuel159@gmail.com', securityGroups: 'Staff' },
-  { username: 'Kash', email: 'kash@paylessdistro.com', securityGroups: 'Owner' },
-  { username: 'Nabiha', email: 'nabiha@paylessdistro.com', securityGroups: 'Staff' },
-  { username: 'Nabil', email: 'nabilnagda@hotmail.com', securityGroups: 'Staff' },
-  { username: 'Quentin', email: 'quentin@paylessdistro.com', securityGroups: 'Owner' },
-  { username: 'Saqib', email: 'doullahsaqib@yahoo.com', securityGroups: 'Admin, Staff' },
-  { username: 'Tanisha', email: 'tanisha@paylessdistro.com', securityGroups: 'Staff' },
-  { username: 'Wara', email: 'purchasing.marhaba@gmail.com', securityGroups: 'Staff' },
-];
-
 export default function ApplicationSettingsPageContent() {
     const { user, profile, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [users, setUsers] = useState<UserProfileFormData[]>([]);
+    const [usersLoading, setUsersLoading] = useState(true);
     
     const form = useForm<UserProfileFormData>({
         resolver: zodResolver(userProfileSchema),
@@ -159,6 +147,30 @@ export default function ApplicationSettingsPageContent() {
             });
         }
     }, [profile, form]);
+
+    useEffect(() => {
+        const db = getFirestoreDb();
+        if (!user || !db || authLoading) return;
+
+        setUsersLoading(true);
+        const usersColRef = collection(db, 'users');
+        const unsubscribe = onSnapshot(usersColRef, (snapshot) => {
+            const usersData = snapshot.docs.map(doc => doc.data() as UserProfileFormData);
+            setUsers(usersData);
+            setUsersLoading(false);
+        }, (error) => {
+            console.error("Error fetching users collection:", error);
+            const permissionError = new FirestorePermissionError({
+                path: usersColRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            setUsersLoading(false);
+        });
+
+        return () => unsubscribe();
+
+    }, [user, authLoading]);
 
     const saveProfileUpdate = async (data: Partial<UserProfileFormData>) => {
         const db = getFirestoreDb();
@@ -450,13 +462,27 @@ export default function ApplicationSettingsPageContent() {
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {mockUsers.map((user, index) => (
-                                                            <TableRow key={index}>
-                                                                <TableCell>{user.username}</TableCell>
-                                                                <TableCell>{user.email}</TableCell>
-                                                                <TableCell>{user.securityGroups}</TableCell>
+                                                        {usersLoading ? (
+                                                            <TableRow>
+                                                                <TableCell colSpan={3} className="h-24 text-center">
+                                                                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                                                                </TableCell>
                                                             </TableRow>
-                                                        ))}
+                                                        ) : users.length > 0 ? (
+                                                            users.map((user, index) => (
+                                                                <TableRow key={index}>
+                                                                    <TableCell>{user.fullName}</TableCell>
+                                                                    <TableCell>--</TableCell>
+                                                                    <TableCell>--</TableCell>
+                                                                </TableRow>
+                                                            ))
+                                                        ) : (
+                                                            <TableRow>
+                                                                <TableCell colSpan={3} className="h-24 text-center">
+                                                                    No users found.
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )}
                                                     </TableBody>
                                                 </Table>
                                             </CardContent>
