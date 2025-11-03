@@ -28,6 +28,7 @@ import { userProfileSchema, type UserProfileFormData } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const timezones = [
     { value: 'Etc/GMT+12', label: '(GMT-12:00) International Date Line West' },
@@ -112,6 +113,20 @@ const timezones = [
     { value: 'Pacific/Tongatapu', label: '(GMT+13:00) Nuku\'alofa' },
 ];
 
+const mockUsers = [
+  { username: 'ali', email: 'tawakkalimportsllc@gmail.com', securityGroups: 'Owner' },
+  { username: 'Eduardo', email: 'gomezeduardo713@gmail.com', securityGroups: 'Staff' },
+  { username: 'Hira', email: 'hira@paylessdistro.com', securityGroups: 'Staff' },
+  { username: 'Juan', email: 'medinamanuel159@gmail.com', securityGroups: 'Staff' },
+  { username: 'Kash', email: 'kash@paylessdistro.com', securityGroups: 'Owner' },
+  { username: 'Nabiha', email: 'nabiha@paylessdistro.com', securityGroups: 'Staff' },
+  { username: 'Nabil', email: 'nabilnagda@hotmail.com', securityGroups: 'Staff' },
+  { username: 'Quentin', email: 'quentin@paylessdistro.com', securityGroups: 'Owner' },
+  { username: 'Saqib', email: 'doullahsaqib@yahoo.com', securityGroups: 'Admin, Staff' },
+  { username: 'Tanisha', email: 'tanisha@paylessdistro.com', securityGroups: 'Staff' },
+  { username: 'Wara', email: 'purchasing.marhaba@gmail.com', securityGroups: 'Staff' },
+];
+
 export default function ApplicationSettingsPageContent() {
     const { user, profile, loading: authLoading } = useAuth();
     const { toast } = useToast();
@@ -151,10 +166,11 @@ export default function ApplicationSettingsPageContent() {
         
         const userDocRef = doc(db, 'users', user.uid);
         
-        try {
-            await updateDoc(userDocRef, data);
+        updateDoc(userDocRef, data)
+          .then(() => {
             toast({ title: 'Success', description: 'Settings updated successfully.' });
-        } catch (serverError: any) {
+          })
+          .catch((serverError: any) => {
             const permissionError = new FirestorePermissionError({
                 path: userDocRef.path,
                 operation: 'update',
@@ -165,7 +181,7 @@ export default function ApplicationSettingsPageContent() {
             if (serverError.code !== 'permission-denied') {
                  toast({ variant: 'destructive', title: 'Error', description: 'Failed to update settings.' });
             }
-        }
+        });
     };
 
     const onSubmit = async (data: UserProfileFormData) => {
@@ -181,6 +197,14 @@ export default function ApplicationSettingsPageContent() {
 
         setIsUploading(true);
         try {
+            if (profile?.companyLogoUrl) {
+                const oldStorageRef = ref(storage, profile.companyLogoUrl);
+                await deleteObject(oldStorageRef).catch((error) => {
+                    if (error.code !== 'storage/object-not-found') {
+                        throw error;
+                    }
+                });
+            }
             const filePath = `logos/${user.uid}/${file.name}`;
             const storageRef = ref(storage, filePath);
             await uploadBytes(storageRef, file);
@@ -207,7 +231,6 @@ export default function ApplicationSettingsPageContent() {
             form.setValue('companyLogoUrl', '');
             await saveProfileUpdate({ companyLogoUrl: '' });
         } catch (error: any) {
-            // If file doesn't exist, we can still clear the URL from profile
             if (error.code === 'storage/object-not-found') {
                 form.setValue('companyLogoUrl', '');
                 await saveProfileUpdate({ companyLogoUrl: '' });
@@ -257,6 +280,7 @@ export default function ApplicationSettingsPageContent() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
+                                <p className="text-sm text-muted-foreground">All changes saved</p>
                                 <Button type="submit" disabled={isSubmitting || isUploading}>
                                     {(isSubmitting || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     Save Changes
@@ -264,7 +288,7 @@ export default function ApplicationSettingsPageContent() {
                             </div>
                         </div>
 
-                        <Tabs defaultValue="company-info">
+                        <Tabs defaultValue="users" className="w-full">
                             <TabsList className="flex-wrap h-auto">
                                 <TabsTrigger value="company-info">Company info</TabsTrigger>
                                 <TabsTrigger value="users">Users</TabsTrigger>
@@ -397,6 +421,44 @@ export default function ApplicationSettingsPageContent() {
                                                         </FormItem>
                                                     )}
                                                 />
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                             <TabsContent value="users" className="mt-6">
+                                <div className="grid md:grid-cols-4 gap-8">
+                                    <div className="md:col-span-1">
+                                        <nav className="flex flex-col gap-1">
+                                            <Button variant="secondary" className="justify-start">Users</Button>
+                                            <Button variant="ghost" className="justify-start text-muted-foreground">Security groups</Button>
+                                            <Button variant="ghost" className="justify-start text-muted-foreground">Notifications</Button>
+                                            <Button variant="ghost" className="justify-start text-muted-foreground">Mobile scanner</Button>
+                                            <Button variant="ghost" className="justify-start text-muted-foreground">API keys</Button>
+                                        </nav>
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <h2 className="text-2xl font-bold mb-4">Users</h2>
+                                        <Card>
+                                            <CardContent className="p-0">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>Username</TableHead>
+                                                            <TableHead>Email</TableHead>
+                                                            <TableHead>Security groups</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {mockUsers.map((user, index) => (
+                                                            <TableRow key={index}>
+                                                                <TableCell>{user.username}</TableCell>
+                                                                <TableCell>{user.email}</TableCell>
+                                                                <TableCell>{user.securityGroups}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
                                             </CardContent>
                                         </Card>
                                     </div>
