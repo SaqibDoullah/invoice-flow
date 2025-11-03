@@ -29,6 +29,89 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 
+const timezones = [
+    { value: 'Etc/GMT+12', label: '(GMT-12:00) International Date Line West' },
+    { value: 'Pacific/Midway', label: '(GMT-11:00) Midway Island, Samoa' },
+    { value: 'Pacific/Honolulu', label: '(GMT-10:00) Hawaii' },
+    { value: 'US/Alaska', label: '(GMT-09:00) Alaska' },
+    { value: 'America/Los_Angeles', label: '(GMT-08:00) Pacific Time (US & Canada)' },
+    { value: 'America/Tijuana', label: '(GMT-08:00) Tijuana, Baja California' },
+    { value: 'America/Denver', label: '(GMT-07:00) Mountain Time (US & Canada)' },
+    { value: 'America/Chihuahua', label: '(GMT-07:00) Chihuahua, La Paz, Mazatlan' },
+    { value: 'America/Phoenix', label: '(GMT-07:00) Arizona' },
+    { value: 'America/Chicago', label: '(GMT-06:00) Central Time (US & Canada)' },
+    { value: 'America/Mexico_City', label: '(GMT-06:00) Guadalajara, Mexico City, Monterrey' },
+    { value: 'America/Regina', label: '(GMT-06:00) Saskatchewan' },
+    { value: 'America/Bogota', label: '(GMT-05:00) Bogota, Lima, Quito, Rio Branco' },
+    { value: 'America/New_York', label: '(GMT-05:00) Eastern Time (US & Canada)' },
+    { value: 'America/Indiana/Indianapolis', label: '(GMT-05:00) Indiana (East)' },
+    { value: 'America/Halifax', label: '(GMT-04:00) Atlantic Time (Canada)' },
+    { value: 'America/Caracas', label: '(GMT-04:00) Caracas, La Paz' },
+    { value: 'America/Manaus', label: '(GMT-04:00) Manaus' },
+    { value: 'America/Santiago', label: '(GMT-04:00) Santiago' },
+    { value: 'America/St_Johns', label: '(GMT-03:30) Newfoundland' },
+    { value: 'America/Sao_Paulo', label: '(GMT-03:00) Brasilia' },
+    { value: 'America/Buenos_Aires', label: '(GMT-03:00) Buenos Aires, Georgetown' },
+    { value: 'America/Godthab', label: '(GMT-03:00) Greenland' },
+    { value: 'America/Montevideo', label: '(GMT-03:00) Montevideo' },
+    { value: 'Atlantic/South_Georgia', label: '(GMT-02:00) Mid-Atlantic' },
+    { value: 'Atlantic/Azores', label: '(GMT-01:00) Azores' },
+    { value: 'Atlantic/Cape_Verde', label: '(GMT-01:00) Cape Verde Is.' },
+    { value: 'Africa/Casablanca', label: '(GMT+00:00) Casablanca, Monrovia, Reykjavik' },
+    { value: 'Etc/Greenwich', label: '(GMT+00:00) Greenwich Mean Time : Dublin, Edinburgh, Lisbon, London' },
+    { value: 'Europe/Amsterdam', label: '(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna' },
+    { value: 'Europe/Belgrade', label: '(GMT+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague' },
+    { value: 'Europe/Brussels', label: '(GMT+01:00) Brussels, Copenhagen, Madrid, Paris' },
+    { value: 'Europe/Sarajevo', label: '(GMT+01:00) Sarajevo, Skopje, Warsaw, Zagreb' },
+    { value: 'Africa/Lagos', label: '(GMT+01:00) West Central Africa' },
+    { value: 'Asia/Amman', label: '(GMT+02:00) Amman' },
+    { value: 'Europe/Athens', label: '(GMT+02:00) Athens, Bucharest, Istanbul' },
+    { value: 'Asia/Beirut', label: '(GMT+02:00) Beirut' },
+    { value: 'Africa/Cairo', label: '(GMT+02:00) Cairo' },
+    { value: 'Africa/Harare', label: '(GMT+02:00) Harare, Pretoria' },
+    { value: 'Europe/Helsinki', label: '(GMT+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius' },
+    { value: 'Asia/Jerusalem', label: '(GMT+02:00) Jerusalem' },
+    { value: 'Europe/Minsk', label: '(GMT+02:00) Minsk' },
+    { value: 'Africa/Windhoek', label: '(GMT+02:00) Windhoek' },
+    { value: 'Asia/Kuwait', label: '(GMT+03:00) Kuwait, Riyadh, Baghdad' },
+    { value: 'Europe/Moscow', label: '(GMT+03:00) Moscow, St. Petersburg, Volgograd' },
+    { value: 'Africa/Nairobi', label: '(GMT+03:00) Nairobi' },
+    { value: 'Asia/Tbilisi', label: '(GMT+03:00) Tbilisi' },
+    { value: 'Asia/Tehran', label: '(GMT+03:30) Tehran' },
+    { value: 'Asia/Dubai', label: '(GMT+04:00) Abu Dhabi, Muscat' },
+    { value: 'Asia/Baku', label: '(GMT+04:00) Baku' },
+    { value: 'Asia/Yerevan', label: '(GMT+04:00) Yerevan' },
+    { value: 'Asia/Kabul', label: '(GMT+04:30) Kabul' },
+    { value: 'Asia/Yekaterinburg', label: '(GMT+05:00) Yekaterinburg' },
+    { value: 'Asia/Karachi', label: '(GMT+05:00) Islamabad, Karachi, Tashkent' },
+    { value: 'Asia/Kolkata', label: '(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi' },
+    { value: 'Asia/Kathmandu', label: '(GMT+05:45) Kathmandu' },
+    { value: 'Asia/Almaty', label: '(GMT+06:00) Almaty, Novosibirsk' },
+    { value: 'Asia/Dhaka', label: '(GMT+06:00) Astana, Dhaka' },
+    { value: 'Asia/Rangoon', label: '(GMT+06:30) Yangon (Rangoon)' },
+    { value: 'Asia/Bangkok', label: '(GMT+07:00) Bangkok, Hanoi, Jakarta' },
+    { value: 'Asia/Krasnoyarsk', label: '(GMT+07:00) Krasnoyarsk' },
+    { value: 'Asia/Hong_Kong', label: '(GMT+08:00) Beijing, Chongqing, Hong Kong, Urumqi' },
+    { value: 'Asia/Kuala_Lumpur', label: '(GMT+08:00) Kuala Lumpur, Singapore' },
+    { value: 'Asia/Irkutsk', label: '(GMT+08:00) Irkutsk, Ulaan Bataar' },
+    { value: 'Australia/Perth', label: '(GMT+08:00) Perth' },
+    { value: 'Asia/Taipei', label: '(GMT+08:00) Taipei' },
+    { value: 'Asia/Tokyo', label: '(GMT+09:00) Osaka, Sapporo, Tokyo' },
+    { value: 'Asia/Seoul', label: '(GMT+09:00) Seoul' },
+    { value: 'Asia/Yakutsk', label: '(GMT+09:00) Yakutsk' },
+    { value: 'Australia/Adelaide', label: '(GMT+09:30) Adelaide' },
+    { value: 'Australia/Darwin', label: '(GMT+09:30) Darwin' },
+    { value: 'Australia/Brisbane', label: '(GMT+10:00) Brisbane' },
+    { value: 'Australia/Canberra', label: '(GMT+10:00) Canberra, Melbourne, Sydney' },
+    { value: 'Australia/Hobart', label: '(GMT+10:00) Hobart' },
+    { value: 'Pacific/Guam', label: '(GMT+10:00) Guam, Port Moresby' },
+    { value: 'Asia/Vladivostok', label: '(GMT+10:00) Vladivostok' },
+    { value: 'Asia/Magadan', label: '(GMT+11:00) Magadan, Solomon Is., New Caledonia' },
+    { value: 'Pacific/Auckland', label: '(GMT+12:00) Auckland, Wellington' },
+    { value: 'Pacific/Fiji', label: '(GMT+12:00) Fiji, Kamchatka, Marshall Is.' },
+    { value: 'Pacific/Tongatapu', label: '(GMT+13:00) Nuku\'alofa' },
+];
+
 export default function ApplicationSettingsPageContent() {
     const { user, profile, loading: authLoading } = useAuth();
     const { toast } = useToast();
@@ -43,7 +126,7 @@ export default function ApplicationSettingsPageContent() {
             companyLogoUrl: '',
             systemOfMeasure: 'us',
             notes: '',
-            timezone: 'cst',
+            timezone: 'America/Chicago',
             companyColorEnabled: false,
         },
     });
@@ -56,7 +139,7 @@ export default function ApplicationSettingsPageContent() {
                 companyLogoUrl: profile.companyLogoUrl || '',
                 systemOfMeasure: profile.systemOfMeasure || 'us',
                 notes: profile.notes || '',
-                timezone: profile.timezone || 'cst',
+                timezone: profile.timezone || 'America/Chicago',
                 companyColorEnabled: profile.companyColorEnabled || false,
             });
         }
@@ -268,7 +351,9 @@ export default function ApplicationSettingsPageContent() {
                                                             <Select onValueChange={field.onChange} value={field.value}>
                                                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                                                 <SelectContent>
-                                                                    <SelectItem value="cst">UTC-5:00 - CST6CDT</SelectItem>
+                                                                     {timezones.map(tz => (
+                                                                        <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                                                                    ))}
                                                                 </SelectContent>
                                                             </Select>
                                                         </FormItem>
