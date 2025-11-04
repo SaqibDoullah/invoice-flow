@@ -159,7 +159,13 @@ export default function ApplicationSettingsPageContent() {
         setUsersLoading(true);
         const usersColRef = collection(db, 'users');
         const unsubscribe = onSnapshot(usersColRef, (snapshot) => {
-            const usersData = snapshot.docs.map(doc => doc.data() as UserProfileFormData);
+            const usersData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    fullName: data.fullName,
+                    email: data.email, // Ensure email is fetched
+                } as UserProfileFormData;
+            });
             setUsers(usersData);
             setUsersLoading(false);
         }, (error) => {
