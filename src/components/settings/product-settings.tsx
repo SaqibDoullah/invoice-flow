@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, 'useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Plus, GripVertical, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const CheckboxField = ({ id, label, description, checked = false, disabled = false }: { id: string, label: string, description: string, checked?: boolean, disabled?: boolean }) => (
     <div className="flex items-start space-x-3">
@@ -137,6 +138,86 @@ export default function ProductSettings() {
                         </Table>
                     </div>
                      <p className="text-xs text-muted-foreground">Enter as many categories as required. Additional rows are automatically added.</p>
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardContent className="p-6 space-y-2">
+                    <h3 className="text-lg font-semibold">Selling prices</h3>
+                    <p className="text-sm text-muted-foreground">If you have multiple prices for your products, define the price levels here. For example, enter Wholesale, Retail and Preferred customer to setup three price lists. The product's detail screen will have one field for each price level.</p>
+                    <div className="border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-1/2">Name</TableHead>
+                                    <TableHead className="w-1/2">Formula</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {[1,2,3,4].map((i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
+                                        <TableCell><Button variant="link" className="p-0 h-auto text-sm">add formula</Button></TableCell>
+                                    </TableRow>
+                                ))}
+                                <TableRow>
+                                    <TableCell colSpan={2}>
+                                        <Button variant="link" className="p-0 h-auto text-sm">
+                                            <Plus className="mr-2 h-4 w-4" /> add product price level option
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                     <p className="text-xs text-muted-foreground">Enter as many price levels as required. Additional rows are automatically added.</p>
+                      <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox id="update-prices" />
+                        <label
+                            htmlFor="update-prices"
+                            className="text-sm font-medium leading-none"
+                        >
+                            Update prices on quantity change
+                        </label>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardContent className="p-6 space-y-2">
+                    <h3 className="text-lg font-semibold">Stores</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Use stores to track how products are listed for sale. For each store, you control the product lookup(s) used to identify your products in the store.
+                        <br/>
+                        The options base quantity, include supplier quantity, minimum quantity, and maximum quantity control the calculation used to determine the quantity listed for each product in the store. The options specified on this screen are default values used for all products in a store and can be changed for specific products on the product detail screen.
+                    </p>
+                    <div className="border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Active</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Base quantity</TableHead>
+                                    <TableHead>Inc supplier qty</TableHead>
+                                    <TableHead>Quantity perc</TableHead>
+                                    <TableHead>Min qty</TableHead>
+                                    <TableHead>Max qty</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell><Checkbox /></TableCell>
+                                    <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
+                                    <TableCell><Select><SelectTrigger /></Select></TableCell>
+                                    <TableCell><Select><SelectTrigger /></Select></TableCell>
+                                    <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
+                                    <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
+                                    <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Enter as many stores as required. Additional rows are automatically added.</p>
                 </CardContent>
             </Card>
 
