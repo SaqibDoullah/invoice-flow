@@ -32,6 +32,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import SecurityGroups from '@/components/settings/security-groups';
 import Notifications from '@/components/settings/notifications';
 import ProductSettings from '@/components/settings/product-settings';
+import FacilitySettings from '@/components/settings/facility-settings';
 
 const timezones = [
     { value: 'Etc/GMT+12', label: '(GMT-12:00) International Date Line West' },
@@ -512,6 +513,9 @@ export default function ApplicationSettingsPageContent() {
                             </TabsContent>
                             <TabsContent value="product" className="mt-6">
                                 <ProductSettings />
+                            </TabsContent>
+                            <TabsContent value="facility" className="mt-6">
+                                <FacilitySettings />
                             </TabsContent>
                         </Tabs>
 
