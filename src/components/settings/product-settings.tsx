@@ -41,6 +41,34 @@ const initialCategories = [
     "Disposable",
 ];
 
+const industryFields = [
+    { id: 'use-mfg-country', label: 'Use Manufacturer country field' },
+    { id: 'use-neq', label: 'Use NEQ (Net Explosive Quantity) field' },
+    { id: 'use-mfg-mark', label: 'Use Manufacturer mark text field' },
+    { id: 'use-ex-number', label: 'Use EX Number(s) field' },
+    { id: 'use-ce-number', label: 'Use CE Number field' },
+    { id: 'use-choreography', label: 'Use Choreography tab field' },
+    { id: 'use-chain-number', label: 'Use Chain number of devices field' },
+    { id: 'use-caliber', label: 'Use Caliber field' },
+    { id: 'use-effect-height', label: 'Use Effect height field' },
+    { id: 'use-prefire', label: 'Use Prefire field' },
+    { id: 'use-effect-width', label: 'Use Effect width field' },
+    { id: 'use-duration', label: 'Use Duration field' },
+    { id: 'use-safety-distance', label: 'Use Safety distance field' },
+    { id: 'use-vdl-desc', label: 'Use VDL description field' },
+    { id: 'use-fuse-delay', label: 'Use Fuse delay field' },
+    { id: 'use-hazard-default', label: 'Use Hazard default field' },
+    { id: 'use-rack-type', label: 'Use Rack type default field' },
+    { id: 'use-dmx-patch', label: 'Use DMX patch field' },
+    { id: 'use-rack-tubes', label: 'Use Rack tubes field' },
+    { id: 'use-custom-part', label: 'Use Custom part field' },
+    { id: 'use-effect-color', label: 'Use Effect color field' },
+    { id: 'use-e-matches', label: 'Use E-matches' },
+    { id: 'use-effect-subtype', label: 'Use Effect subtype field' },
+    { id: 'use-dmx-fixture', label: 'Use DMX Fixture Definition' },
+    { id: 'use-physical-specs', label: 'Use Physical Specifications field' },
+];
+
 export default function ProductSettings() {
     const [categories, setCategories] = useState(initialCategories);
     const [newCategory, setNewCategory] = useState('');
@@ -121,6 +149,72 @@ export default function ProductSettings() {
                     <div className="space-y-4 pt-6 border-t">
                          <p className="text-sm text-muted-foreground">The build screens are used to track assembly or manufacturing operations that use the bill of materials. The build screens are not required if the bill of materials is just used for kits on sales orders.</p>
                          <CheckboxField id="use-build-screens" label="Use build screens" />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardContent className="p-6 space-y-4">
+                     <h3 className="text-lg font-semibold">Lot identifiers</h3>
+                     <p className="text-sm text-muted-foreground">Lot identifiers store information that can be different among items of the same product, such as serial numbers, batch labels, or expiration dates. When using lot identifiers, you must specify the lot identifier each time you ship, receive, or transfer items (e.g. selecting which serial numbers you are shipping).</p>
+                     <CheckboxField id="use-lot-identifiers" label="Use lot identifiers for tracking stock" checked />
+                     <div className="flex items-center gap-4">
+                        <Label>Default lot identifier format:</Label>
+                        <Select defaultValue="plain-text">
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="plain-text">Plain text</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Finale short codes are 12 digit number assigned by the software to each combination of product id, packing, and lot id. The number is a valid UPC barcode within the set of number defined for restricted circulation items within a company, so it will not collide with UPC codes you receive on products from other companies. Short codes are used with Finale's default label templates to ensure reliable printing and scanning. Unless there is a specific conflict with another use of restricted circulation items within your company or a performance problem caused by a large number of Finale short codes being created, we recommend enabling short codes.</p>
+                    <CheckboxField id="enable-finale-short-codes" label="Enable the creation of Finale short codes" checked />
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardContent className="p-6 space-y-4">
+                    <h3 className="text-lg font-semibold">Unit of measure</h3>
+                    <p className="text-sm text-muted-foreground">If you want to label products with their unit of measure, first enable the unit of measure field and then add the units of measure to this list (e.g.. Each, Foot, Liter). Select the unit of measure on the product's detail screen.</p>
+                    <CheckboxField id="enable-uom" label="Enable Unit of Measure field" checked />
+                    <div className="border rounded-md mt-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-1/2">Name</TableHead>
+                                    <TableHead className="w-1/2">Display</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell>ea</TableCell>
+                                    <TableCell>Display</TableCell>
+                                </TableRow>
+                                 <TableRow>
+                                    <TableCell colSpan={2} className="py-1">
+                                         <Button variant="link" className="p-0 h-auto text-sm">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            add product unit of measure option
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Enter as many units of measure as required. Additional rows are automatically added.</p>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardContent className="p-6 space-y-4">
+                    <h3 className="text-lg font-semibold">Industry specific fields</h3>
+                    <p className="text-sm text-muted-foreground">Enable pre-defined industry specific fields.</p>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                       {industryFields.map(field => (
+                            <CheckboxField key={field.id} id={field.id} label={field.label} />
+                       ))}
                     </div>
                 </CardContent>
             </Card>
