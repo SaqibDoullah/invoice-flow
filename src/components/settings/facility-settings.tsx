@@ -87,7 +87,7 @@ export default function FacilitySettings() {
                                     <TableRow key={i}>
                                         <TableCell>{loc.type}</TableCell>
                                         <TableCell>{loc.status}</TableCell>
-                                        <TableCell>{loc.name}</TableCell>
+                                        <TableCell><Input defaultValue={loc.name} className="border-none focus-visible:ring-0" /></TableCell>
                                         <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
                                         <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
                                         <TableCell><Input className="border-none focus-visible:ring-0" /></TableCell>
