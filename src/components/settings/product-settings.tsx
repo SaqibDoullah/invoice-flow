@@ -1,11 +1,14 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Plus, GripVertical, X } from 'lucide-react';
 
 const CheckboxField = ({ id, label, description, checked = false, disabled = false }: { id: string, label: string, description: string, checked?: boolean, disabled?: boolean }) => (
     <div className="flex items-start space-x-3">
@@ -22,10 +25,122 @@ const CheckboxField = ({ id, label, description, checked = false, disabled = fal
     </div>
 );
 
+const initialCategories = [
+    "Vape Starter Kits",
+    "Vape Tanks",
+    "Vape Pods",
+    "Vape Coils",
+    "Vaporizers",
+    "Vape Batteries",
+    "Vaporizers Accessories",
+    "Vape Mods",
+    "Miscellaneous",
+    "Vape Accessories",
+    "Disposable Drop Ship",
+    "Disposable",
+];
 
 export default function ProductSettings() {
+    const [categories, setCategories] = useState(initialCategories);
+    const [newCategory, setNewCategory] = useState('');
+
+    const addCategory = () => {
+        if (newCategory.trim()) {
+            setCategories([...categories, newCategory.trim()]);
+            setNewCategory('');
+        }
+    };
+
+    const removeCategory = (index: number) => {
+        setCategories(categories.filter((_, i) => i !== index));
+    };
+
     return (
         <div className="space-y-8">
+            <Card>
+                <CardContent className="p-6 space-y-2">
+                    <h3 className="text-lg font-semibold">Custom fields</h3>
+                    <p className="text-sm text-muted-foreground">Enter names for custom fields on this list to add your own fields to each product. For example, Color or Fabric type.</p>
+                     <div className="border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Data type</TableHead>
+                                    <TableHead>Options</TableHead>
+                                    <TableHead>Active</TableHead>
+                                    <TableHead>Template variable</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell colSpan={5} className="py-2">
+                                         <Button variant="link" className="p-0 h-auto text-sm">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add custom products field
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                     <p className="text-xs text-muted-foreground">Enter as many custom fields as required. Additional rows are automatically added.</p>
+                </CardContent>
+            </Card>
+
+            <Card>
+                 <CardContent className="p-6 space-y-2">
+                    <h3 className="text-lg font-semibold">Product categories</h3>
+                    <p className="text-sm text-muted-foreground">Products can be organized by category for sorting, grouping and filtering. Setup categories by adding names to this list (just type over or delete the sample category names). For example, enter Meat, Bread, and Dairy on different lines to organize food products into three categories.</p>
+                    <div className="flex items-center space-x-2 pt-2">
+                        <Checkbox id="legacy-categories" />
+                        <label
+                            htmlFor="legacy-categories"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                            Use legacy categories
+                        </label>
+                    </div>
+                    <div className="border rounded-md mt-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-full">Option name</TableHead>
+                                    <TableHead></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                             <TableBody>
+                                {categories.map((category, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell className="py-1">
+                                            <div className="flex items-center">
+                                                <GripVertical className="h-4 w-4 text-muted-foreground cursor-move mr-2" />
+                                                <Input defaultValue={category} className="border-none focus-visible:ring-0" />
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-1">
+                                            <Button variant="ghost" size="icon" onClick={() => removeCategory(index)}>
+                                                <X className="h-4 w-4 text-muted-foreground" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                 <TableRow>
+                                    <TableCell colSpan={2} className="py-1">
+                                         <Button variant="link" className="p-0 h-auto text-sm" onClick={addCategory}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            add product category option
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                     <p className="text-xs text-muted-foreground">Enter as many categories as required. Additional rows are automatically added.</p>
+                </CardContent>
+            </Card>
+
+
             <Card>
                 <CardContent className="p-6 space-y-6">
                     <h3 className="text-lg font-semibold">Required fields</h3>
