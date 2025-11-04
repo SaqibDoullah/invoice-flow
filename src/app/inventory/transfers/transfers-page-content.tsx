@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type StockHistoryEntry } from '@/types';
+import { type StockHistoryEntry, type Transfer } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
@@ -30,28 +30,18 @@ import {
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const mockShipments = [
-    { id: '100845', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
-    { id: '100844', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
-    { id: '100843', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
-    { id: '100842', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/29/2025', shipUser: 'Juan', receiveDate: '10/29/2025', receiveUser: 'Juan' },
-    { id: '100841', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: '', shipDate: '10/28/2025', shipUser: 'Juan', receiveDate: '10/28/2025', receiveUser: 'Juan' },
-    { id: '100840', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: '', shipDate: '10/28/2025', shipUser: 'Juan', receiveDate: '10/28/2025', receiveUser: 'Juan' },
-    { id: '100839', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/24/2025', shipUser: 'Juan', receiveDate: '10/24/2025', receiveUser: 'Juan' },
-    { id: '100838', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: '', shipDate: '10/24/2025', shipUser: 'Juan', receiveDate: '10/24/2025', receiveUser: 'Juan' },
-    { id: '100837', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/24/2025', shipUser: 'Juan', receiveDate: '10/24/2025', receiveUser: 'Juan' },
-    { id: '100836', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/22/2025', shipUser: 'Juan', receiveDate: '10/22/2025', receiveUser: 'Juan' },
-    { id: '100835', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
-    { id: '100834', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
-    { id: '100833', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
-    { id: '100832', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/21/2025', shipUser: 'Juan', receiveDate: '10/21/2025', receiveUser: 'Juan' },
-    { id: '100831', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: 'Tawakkal Warehouse', destination: 'Tawakkal Warehouse', shipDate: '10/17/2025', shipUser: 'Juan', receiveDate: '10/17/2025', receiveUser: 'Juan' },
-    { id: '100830', status: 'Received', orderId: '', carrier: '', trackingCode: '', origin: '', destination: 'Tawakkal Warehouse', shipDate: '10/16/2025', shipUser: 'Juan', receiveDate: '10/16/2025', receiveUser: 'Juan' },
-];
+const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v.toDate === 'function') return v.toDate();
+    const d = new Date(v);
+    return isValid(d) ? d : null;
+};
 
 
 export default function TransfersPageContent() {
     const [recentTransfers, setRecentTransfers] = useState<StockHistoryEntry[]>([]);
+    const [shipments, setShipments] = useState<Transfer[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
@@ -64,35 +54,50 @@ export default function TransfersPageContent() {
         }
 
         setLoading(true);
-        const historyCollectionRef = collection(db, 'users', user.uid, 'stockHistory');
-        // Assuming 'Transfer' is a possible value in the 'transaction' field
-        const q = query(historyCollectionRef, where('transaction', '==', 'Transfer'), limit(5));
+        let historyLoaded = false;
+        let shipmentsLoaded = false;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const checkAllLoaded = () => {
+            if (historyLoaded && shipmentsLoaded) {
+                setLoading(false);
+            }
+        };
+
+        const historyCollectionRef = collection(db, 'users', user.uid, 'stockHistory');
+        const qHistory = query(historyCollectionRef, where('transaction', '==', 'Transfer'), orderBy('timestamp', 'desc'), limit(5));
+        const unsubHistory = onSnapshot(qHistory, (snapshot) => {
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StockHistoryEntry));
-            // Sort client-side since we removed orderBy
-            data.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
             setRecentTransfers(data);
-            setLoading(false);
+            historyLoaded = true;
+            checkAllLoaded();
         }, (error) => {
-            console.error("Error fetching recent transfers:", error);
-            // Don't show toast if it's just no data
             if(error.code !== 'not-found') {
               toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch recent transfers.' });
             }
-            setLoading(false);
+            historyLoaded = true;
+            checkAllLoaded();
         });
 
-        return () => unsubscribe();
+        const shipmentsCollectionRef = collection(db, 'users', user.uid, 'transfers');
+        const qShipments = query(shipmentsCollectionRef, orderBy('shipDate', 'desc'));
+        const unsubShipments = onSnapshot(qShipments, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transfer));
+            setShipments(data);
+            shipmentsLoaded = true;
+            checkAllLoaded();
+        }, (error) => {
+            if(error.code !== 'not-found') {
+              toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch transfer shipments.' });
+            }
+            shipmentsLoaded = true;
+            checkAllLoaded();
+        });
+
+        return () => {
+            unsubHistory();
+            unsubShipments();
+        };
     }, [user, authLoading, toast]);
-    
-    const toDate = (v: any): Date | null => {
-        if (!v) return null;
-        if (v instanceof Date) return v;
-        if (typeof v.toDate === 'function') return v.toDate();
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? null : d;
-    };
 
 
     return (
@@ -350,7 +355,10 @@ export default function TransfersPageContent() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {mockShipments.map((shipment) => (
+                                        {loading ? (
+                                            <TableRow><TableCell colSpan={12} className="h-24 text-center"><Skeleton className="h-8 w-full"/></TableCell></TableRow>
+                                        ) : shipments.length > 0 ? (
+                                            shipments.map((shipment) => (
                                             <TableRow key={shipment.id}>
                                                 <TableCell><Checkbox /></TableCell>
                                                 <TableCell>{shipment.status}</TableCell>
@@ -360,12 +368,18 @@ export default function TransfersPageContent() {
                                                 <TableCell>{shipment.trackingCode}</TableCell>
                                                 <TableCell>{shipment.origin}</TableCell>
                                                 <TableCell>{shipment.destination}</TableCell>
-                                                <TableCell>{shipment.shipDate}</TableCell>
+                                                <TableCell>{format(toDate(shipment.shipDate)!, 'MM/dd/yyyy')}</TableCell>
                                                 <TableCell>{shipment.shipUser}</TableCell>
-                                                <TableCell>{shipment.receiveDate}</TableCell>
+                                                <TableCell>{format(toDate(shipment.receiveDate)!, 'MM/dd/yyyy')}</TableCell>
                                                 <TableCell>{shipment.receiveUser}</TableCell>
                                             </TableRow>
-                                        ))}
+                                        ))) : (
+                                            <TableRow>
+                                                <TableCell colSpan={12} className="h-24 text-center">
+                                                    No transfer shipments found.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </TableBody>
                                 </Table>
                                 </div>

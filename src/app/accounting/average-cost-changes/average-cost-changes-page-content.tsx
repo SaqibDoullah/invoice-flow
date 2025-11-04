@@ -1,8 +1,11 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, Calculator, ChevronDown, Search, ArrowUpDown, ShieldAlert, MessageCircle } from 'lucide-react';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+import { format, isValid } from 'date-fns';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -25,25 +28,49 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type AverageCostChange } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-
-const mockData = [
-    {
-        status: 'Posted',
-        effectiveDate: '12/31/2023',
-        journalEntryId: '100001',
-        warning: '',
-        productId: 'Multiple products',
-        description: 'Multiple products',
-        notes: 'Initial average cost',
-        recordCreatedUser: 'ali',
-        recordCreated: 'Jun 12 2024...',
-        recordLastUpdatedUser: 'ali',
-        recordLastUpdated: 'Jun 12 2024...',
-    }
-]
+const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v.toDate === 'function') return v.toDate();
+    const d = new Date(v);
+    return isValid(d) ? d : null;
+};
 
 export default function AverageCostChangesPageContent() {
+    const [changes, setChanges] = useState<AverageCostChange[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        const db = getFirestoreDb();
+        if (!user || authLoading || !db) {
+            if (!authLoading) setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        const changesRef = collection(db, 'users', user.uid, 'averageCostChanges');
+        const q = query(changesRef);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const changesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AverageCostChange));
+            setChanges(changesData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching average cost changes:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch average cost changes.'});
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading, toast]);
 
     return (
         <AuthGuard>
@@ -138,21 +165,30 @@ export default function AverageCostChangesPageContent() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                   {mockData.map((row, i) => (
-                                       <TableRow key={i}>
+                                   {loading ? (
+                                     <TableRow><TableCell colSpan={11} className="h-24 text-center"><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                                   ) : changes.length > 0 ? (
+                                       changes.map((row) => (
+                                       <TableRow key={row.id}>
                                            <TableCell><Badge variant="secondary">{row.status}</Badge></TableCell>
-                                           <TableCell>{row.effectiveDate}</TableCell>
+                                           <TableCell>{format(toDate(row.effectiveDate)!, 'MM/dd/yyyy')}</TableCell>
                                            <TableCell className="text-primary font-medium">{row.journalEntryId}</TableCell>
                                            <TableCell>{row.warning}</TableCell>
                                            <TableCell>{row.productId}</TableCell>
                                            <TableCell>{row.description}</TableCell>
                                            <TableCell>{row.notes}</TableCell>
                                            <TableCell>{row.recordCreatedUser}</TableCell>
-                                           <TableCell>{row.recordCreated}</TableCell>
+                                           <TableCell>{format(toDate(row.recordCreated)!, 'PPp')}</TableCell>
                                            <TableCell>{row.recordLastUpdatedUser}</TableCell>
-                                           <TableCell>{row.recordLastUpdated}</TableCell>
+                                           <TableCell>{format(toDate(row.recordLastUpdated)!, 'PPp')}</TableCell>
                                        </TableRow>
-                                   ))}
+                                   ))) : (
+                                     <TableRow>
+                                        <TableCell colSpan={11} className="h-24 text-center">
+                                            No average cost changes found.
+                                        </TableCell>
+                                     </TableRow>
+                                   )}
                                 </TableBody>
                             </Table>
                         </div>

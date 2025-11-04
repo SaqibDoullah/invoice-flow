@@ -385,3 +385,32 @@ export type LocationFormData = z.infer<typeof locationSchema>;
 export interface Location extends LocationFormData {
   id: string;
 }
+
+export interface AverageCostChange {
+    id: string;
+    status: 'Posted' | 'Draft';
+    effectiveDate: Date | Timestamp;
+    journalEntryId: string;
+    warning: string;
+    productId: string;
+    description: string;
+    notes: string;
+    recordCreatedUser: string;
+    recordCreated: Date | Timestamp;
+    recordLastUpdatedUser: string;
+    recordLastUpdated: Date | Timestamp;
+}
+
+export interface Transfer {
+    id: string;
+    status: 'Received' | 'Editable';
+    orderId: string;
+    carrier: string;
+    trackingCode: string;
+    origin: string;
+    destination: string;
+    shipDate: Date | Timestamp;
+    shipUser: string;
+    receiveDate: Date | Timestamp;
+    receiveUser: string;
+}
