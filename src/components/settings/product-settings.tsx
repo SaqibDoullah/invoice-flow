@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, GripVertical, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
-const CheckboxField = ({ id, label, description, checked = false, disabled = false }: { id: string, label: string, description: string, checked?: boolean, disabled?: boolean }) => (
+const CheckboxField = ({ id, label, description, checked = false, disabled = false }: { id: string, label: string, description?: string, checked?: boolean, disabled?: boolean }) => (
     <div className="flex items-start space-x-3">
         <Checkbox id={id} checked={checked} disabled={disabled} className="mt-1" />
         <div className="grid gap-1.5 leading-none">
@@ -21,7 +21,7 @@ const CheckboxField = ({ id, label, description, checked = false, disabled = fal
             >
                 {label}
             </label>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
     </div>
 );
@@ -58,6 +58,73 @@ export default function ProductSettings() {
 
     return (
         <div className="space-y-8">
+            <Card>
+                <CardContent className="p-6 space-y-6">
+                    <h3 className="text-lg font-semibold">Buying prices & reordering</h3>
+                    <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">Use a standard buy price field to set a default buy price for each product that will be used on purchase orders. Use per supplier pricing fields to specify up to three preferred suppliers and supplier specific prices for each product. Use both to have a default price that can be overridden on a per supplier basis.</p>
+                        <CheckboxField id="use-std-buy-price" label="Use Std buy price field" checked />
+                        <CheckboxField id="use-per-supplier-pricing" label="Use per supplier pricing fields" checked />
+                        <CheckboxField id="enable-additional-pricing" label="Enable additional per supplier pricing fields" />
+                    </div>
+                    <div className="space-y-4 pt-6 border-t">
+                        <p className="text-sm text-muted-foreground">Set reorder parameters to use the reordering screen to build purchase orders for products whose available stock is too low.</p>
+                        <CheckboxField id="use-std-reorder" label="Use std reorder configuration" checked />
+                        <CheckboxField id="use-per-location-reorder" label="Use per location reorder configuration" checked />
+                        <CheckboxField id="use-full-cases" label="Create purchase orders using full cases when reordering" />
+                        <CheckboxField id="include-all-products" label="Include all possible products when reordering from selected supplier" />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center pt-2">
+                             <div className="flex items-center gap-4">
+                                <Label className="whitespace-nowrap">Default reorder calculation method:</Label>
+                                <Select defaultValue="manual">
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="manual">Manual reorder point entry</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <Label htmlFor="reorder-period" className="whitespace-nowrap">Default reorder calculation method time period (days):</Label>
+                                <Input id="reorder-period" type="number" defaultValue={30} />
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <Label htmlFor="reorder-inventory-days" className="whitespace-nowrap">Default reorder days of inventory:</Label>
+                                <Input id="reorder-inventory-days" type="number" defaultValue={30} />
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardContent className="p-6 space-y-6">
+                    <h3 className="text-lg font-semibold">Bill of materials</h3>
+                    <p className="text-sm text-muted-foreground">The bill of materials is used for tracking the raw materials or components that are included when building a finished product. The bill of materials is used both for build operations within Finale and for converting SKUs imported from e-commerce systems that correspond to kits within in Finale.</p>
+                    <CheckboxField id="use-bom" label="Use bill of materials" />
+                    <div className="space-y-4 pt-6 border-t">
+                        <p className="text-sm text-muted-foreground">The reservation policy for a finished product determines which products are reserved when a sales order is received. If set to "Finished product only", the finished product will be reserved on a sales order. If set to "Include BOM components", the finished product will be reserved until all existing stock is accounted for, at which point future reservations will count against the bill of material components.</p>
+                        <div className="flex items-center gap-4">
+                            <Label>Reservation policy:</Label>
+                            <Select defaultValue="finished-product-only">
+                                <SelectTrigger className="w-[240px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="finished-product-only">Finished product only</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="space-y-4 pt-6 border-t">
+                         <p className="text-sm text-muted-foreground">The build screens are used to track assembly or manufacturing operations that use the bill of materials. The build screens are not required if the bill of materials is just used for kits on sales orders.</p>
+                         <CheckboxField id="use-build-screens" label="Use build screens" />
+                    </div>
+                </CardContent>
+            </Card>
+            
             <Card>
                 <CardContent className="p-6 space-y-2">
                     <h3 className="text-lg font-semibold">Custom fields</h3>
@@ -226,7 +293,7 @@ export default function ProductSettings() {
                 <CardContent className="p-6 space-y-6">
                     <h3 className="text-lg font-semibold">Required fields</h3>
                     <div className="space-y-4">
-                        <CheckboxField id="use-product-id" label="Use product ID field" description="(required for all products, up to 191 digits & letters, must be unique)" checked disabled />
+                        <CheckboxField id="use-product-id" label="Use product ID field" description="(required for all products, up to 191 digits &amp; letters, must be unique)" checked disabled />
                         <CheckboxField id="use-description" label="Use description field" description="(the product's name)" checked disabled />
                         <CheckboxField id="use-category" label="Use category field" description="(allows grouping products for easier searching and reporting)" checked disabled />
                         <CheckboxField id="use-notes" label="Use notes field" description="(multi-line text field with additional information on product)" checked disabled />
