@@ -476,7 +476,7 @@ export default function ApplicationSettingsPageContent() {
                                                                     users.map((user, index) => (
                                                                         <TableRow key={index}>
                                                                             <TableCell>{user.fullName}</TableCell>
-                                                                            <TableCell>--</TableCell>
+                                                                            <TableCell>{user.email || '--'}</TableCell>
                                                                             <TableCell>--</TableCell>
                                                                         </TableRow>
                                                                     ))

@@ -86,9 +86,9 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         await updateProfile(user, { displayName: fullName });
 
-        // Also save the name to the user's document in Firestore
+        // Also save the name and email to the user's document in Firestore
         const userDocRef = doc(db, 'users', user.uid);
-        await setDoc(userDocRef, { fullName }, { merge: true });
+        await setDoc(userDocRef, { fullName, email }, { merge: true });
       } else {
         const { email, password } = values as z.infer<typeof loginSchema>;
         await signInWithEmailAndPassword(auth, email, password);
