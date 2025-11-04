@@ -29,6 +29,7 @@ import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import SecurityGroups from '@/components/settings/security-groups';
+import Notifications from '@/components/settings/notifications';
 
 const timezones = [
     { value: 'Etc/GMT+12', label: '(GMT-12:00) International Date Line West' },
@@ -445,7 +446,7 @@ export default function ApplicationSettingsPageContent() {
                                         <nav className="flex flex-col gap-1">
                                             <Button variant={activeUserSubTab === 'users' ? 'secondary' : 'ghost'} className="justify-start" onClick={() => setActiveUserSubTab('users')}>Users</Button>
                                             <Button variant={activeUserSubTab === 'security-groups' ? 'secondary' : 'ghost'} className="justify-start" onClick={() => setActiveUserSubTab('security-groups')}>Security groups</Button>
-                                            <Button variant="ghost" className="justify-start text-muted-foreground">Notifications</Button>
+                                            <Button variant={activeUserSubTab === 'notifications' ? 'secondary' : 'ghost'} className="justify-start" onClick={() => setActiveUserSubTab('notifications')}>Notifications</Button>
                                             <Button variant="ghost" className="justify-start text-muted-foreground">Mobile scanner</Button>
                                             <Button variant="ghost" className="justify-start text-muted-foreground">API keys</Button>
                                         </nav>
@@ -494,6 +495,9 @@ export default function ApplicationSettingsPageContent() {
                                         )}
                                         {activeUserSubTab === 'security-groups' && (
                                             <SecurityGroups />
+                                        )}
+                                        {activeUserSubTab === 'notifications' && (
+                                            <Notifications users={users} />
                                         )}
                                     </div>
                                 </div>
