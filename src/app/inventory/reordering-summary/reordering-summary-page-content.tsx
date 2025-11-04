@@ -35,7 +35,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type InventoryItem } from '@/types';
+import { type InventoryItem, type Location } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
@@ -51,10 +51,7 @@ type ReorderSummaryItem = {
     stdBuyPrice: number;
     reservations: number;
     remaining: number;
-    loc1Avail: number | null;
-    loc2Avail: number | null;
-    loc3Avail: number | null;
-}
+} & Record<string, number | string | null>
 
 type Column = {
   id: string;
@@ -73,9 +70,6 @@ const initialColumns: Column[] = [
     { id: 'stdBuyPrice', label: 'Std buy price' },
     { id: 'reservations', label: 'Reservations units' },
     { id: 'remaining', label: 'Remaining + BOM units' },
-    { id: 'loc1', label: 'Location: Drop Ship', subColumns: [{id: 'loc1Avail', label: 'Avail'}, {id: 'loc1Reorder', label: 'Reorder level'}, {id: 'loc1Variance', label: 'Variance'}] },
-    { id: 'loc2', label: 'Location: Marhaba', subColumns: [{id: 'loc2Avail', label: 'Avail'}, {id: 'loc2Reorder', label: 'Reorder level'}, {id: 'loc2Variance', label: 'Variance'}] },
-    { id: 'loc3', label: 'Location: Tawakkal Warehouse', subColumns: [{id: 'loc3Avail', label: 'Avail'}, {id: 'loc2Reorder', label: 'Reorder level'}, {id: 'loc3Variance', label: 'Variance'}] },
 ];
 
 export default function ReorderingSummaryPageContent() {
@@ -83,6 +77,7 @@ export default function ReorderingSummaryPageContent() {
   const [loading, setLoading] = useState(true);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [locations, setLocations] = useState<Location[]>([]);
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -95,32 +90,53 @@ export default function ReorderingSummaryPageContent() {
     }
 
     setLoading(true);
-    const itemCollectionRef = collection(db, 'users', user.uid, 'inventory');
-    const q = query(itemCollectionRef);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const locUnsub = onSnapshot(collection(db, 'users', user.uid, 'locations'), (snapshot) => {
+        const fetchedLocations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Location));
+        setLocations(fetchedLocations);
+
+        const locationColumns: Column[] = fetchedLocations.map(loc => ({
+            id: `loc_${loc.id}`,
+            label: `Location: ${loc.name}`,
+            subColumns: [
+                { id: `loc_${loc.id}_avail`, label: 'Avail' },
+                { id: `loc_${loc.id}_reorder`, label: 'Reorder level' },
+                { id: `loc_${loc.id}_variance`, label: 'Variance' }
+            ]
+        }));
+        setColumns([...initialColumns, ...locationColumns]);
+    });
+
+    const itemUnsub = onSnapshot(collection(db, 'users', user.uid, 'inventory'), (snapshot) => {
         const inventoryData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
         
-        const summaryData: ReorderSummaryItem[] = inventoryData.map(item => ({
-            id: item.sku || item.id,
-            desc: item.name,
-            salesVel: '0.00', // Placeholder
-            stockout: '', // Placeholder
-            onOrder: item.quantityOnOrder || 0,
-            sublocations: item.sublocation || '',
-            stdBuyPrice: item.stdBuyPrice || 0,
-            reservations: item.quantityReserved || 0,
-            remaining: item.quantity || 0,
-            loc1Avail: null, // Placeholder for different locations
-            loc2Avail: null, // Placeholder for different locations
-            loc3Avail: item.quantityAvailable,
-        }));
+        const summaryData: ReorderSummaryItem[] = inventoryData.map(item => {
+            const dynamicLocationData: Record<string, number | null> = {};
+            locations.forEach(loc => {
+                // This is a placeholder logic. Real logic would depend on how stock is tracked per location.
+                const isItemInLocation = loc.name === "Tawakkal Warehouse"; // Example
+                dynamicLocationData[`loc_${loc.id}_avail`] = isItemInLocation ? item.quantityAvailable : null;
+            });
+
+            return {
+                id: item.sku || item.id,
+                desc: item.name,
+                salesVel: '0.00',
+                stockout: '',
+                onOrder: item.quantityOnOrder || 0,
+                sublocations: item.sublocation || '',
+                stdBuyPrice: item.stdBuyPrice || 0,
+                reservations: item.quantityReserved || 0,
+                remaining: item.quantity || 0,
+                ...dynamicLocationData
+            }
+        });
 
         setData(summaryData);
         setLoading(false);
     }, (serverError) => {
         const permissionError = new FirestorePermissionError({
-            path: itemCollectionRef.path,
+            path: collection(db, 'users', user.uid, 'inventory').path,
             operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
@@ -131,7 +147,10 @@ export default function ReorderingSummaryPageContent() {
         setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+        locUnsub();
+        itemUnsub();
+    }
   }, [user, authLoading, toast]);
 
 
@@ -144,6 +163,7 @@ export default function ReorderingSummaryPageContent() {
     }).format(amount);
 
   const renderCell = (item: any, columnId: string) => {
+    const value = item[columnId];
     switch (columnId) {
         case 'img': return <ImageIcon className="w-4 h-4 text-muted-foreground"/>;
         case 'productId': return <span className="font-medium text-primary">{item.id}</span>;
@@ -155,10 +175,7 @@ export default function ReorderingSummaryPageContent() {
         case 'stdBuyPrice': return formatCurrency(item.stdBuyPrice);
         case 'reservations': return item.reservations;
         case 'remaining': return item.remaining;
-        case 'loc1Avail': return item.loc1Avail;
-        case 'loc2Avail': return item.loc2Avail;
-        case 'loc3Avail': return item.loc3Avail;
-        default: return null;
+        default: return value;
     }
   }
 
@@ -237,14 +254,14 @@ export default function ReorderingSummaryPageContent() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                     <TableRow><TableCell colSpan={19} className="h-96"><Skeleton className="h-full w-full" /></TableCell></TableRow>
+                     <TableRow><TableCell colSpan={columns.reduce((a,c) => a + (c.subColumns?.length || 1), 0)} className="h-96"><Skeleton className="h-full w-full" /></TableCell></TableRow>
                   ) : data.length > 0 ? (
                     data.map((item) => (
                       <TableRow key={item.id} className="text-xs">
                           {columns.map(col => {
                             if (col.subColumns) {
                                 return col.subColumns.map(subCol => (
-                                    <TableCell key={subCol.id} className="p-2 border-l">{renderCell(item, subCol.id)}</TableCell>
+                                    <TableCell key={subCol.id} className="p-2 border-l text-right">{renderCell(item, subCol.id)}</TableCell>
                                 ));
                             }
                             return (
@@ -257,7 +274,7 @@ export default function ReorderingSummaryPageContent() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={19} className="h-24 text-center">
+                      <TableCell colSpan={columns.reduce((a,c) => a + (c.subColumns?.length || 1), 0)} className="h-24 text-center">
                         No data found.
                       </TableCell>
                     </TableRow>
@@ -345,7 +362,7 @@ const CustomizeColumnsDialog = ({
             Drag and drop the columns to reorder them.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
+        <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto">
             {localColumns.map((col, index) => (
                 <div
                     key={col.id}

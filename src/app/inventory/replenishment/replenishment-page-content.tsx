@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, RefreshCw, ChevronDown, Filter, ArrowUpDown, ShieldAlert, MessageCircle, ImageIcon } from 'lucide-react';
 
@@ -13,6 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import CustomizeColumnsDialog from '@/components/purchases/reorder-legacy-customize-columns-dialog';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { type Location } from '@/types';
 
 
 type Column = {
@@ -39,6 +43,29 @@ const initialColumns: Column[] = [
 export default function ReplenishmentPageContent() {
     const [columns, setColumns] = useState<Column[]>(initialColumns);
     const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+    const { user, loading: authLoading } = useAuth();
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [originLocation, setOriginLocation] = useState<string | undefined>();
+    const [destinationLocation, setDestinationLocation] = useState<string | undefined>();
+
+    useEffect(() => {
+        if (authLoading || !user) return;
+        const db = getFirestoreDb();
+        if (!db) return;
+
+        const unsub = onSnapshot(collection(db, 'users', user.uid, 'locations'), (snapshot) => {
+            const fetchedLocations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Location));
+            setLocations(fetchedLocations);
+            if (fetchedLocations.length > 0) {
+                setOriginLocation(fetchedLocations[0].id);
+            }
+             if (fetchedLocations.length > 1) {
+                setDestinationLocation(fetchedLocations[1].id);
+            }
+        });
+
+        return () => unsub();
+    }, [user, authLoading]);
 
     return (
         <AuthGuard>
@@ -94,7 +121,12 @@ export default function ReplenishmentPageContent() {
                         </div>
                         <div>
                             <label className="text-xs text-muted-foreground">Origin</label>
-                            <Select defaultValue="marhaba"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="marhaba">Marhaba</SelectItem></SelectContent></Select>
+                            <Select value={originLocation} onValueChange={setOriginLocation}>
+                                <SelectTrigger><SelectValue placeholder="Select Origin" /></SelectTrigger>
+                                <SelectContent>
+                                    {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div>
                             <label className="text-xs text-muted-foreground">Origin quantity</label>
@@ -102,7 +134,12 @@ export default function ReplenishmentPageContent() {
                         </div>
                         <div>
                             <label className="text-xs text-muted-foreground">Destination</label>
-                            <Select defaultValue="drop-ship"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="drop-ship">Drop Ship</SelectItem></SelectContent></Select>
+                             <Select value={destinationLocation} onValueChange={setDestinationLocation}>
+                                <SelectTrigger><SelectValue placeholder="Select Destination" /></SelectTrigger>
+                                <SelectContent>
+                                    {locations.map(loc => <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div>
                             <label className="text-xs text-muted-foreground">Destination recommended quantity</label>

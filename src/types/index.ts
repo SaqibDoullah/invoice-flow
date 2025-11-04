@@ -368,3 +368,20 @@ export interface StockTake {
     commitTimestamp: Date | Timestamp;
     commitUser: string;
 }
+
+export const locationSchema = z.object({
+  name: z.string().min(1, 'Location name is required'),
+  type: z.string().optional(),
+  status: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
+});
+
+export type LocationFormData = z.infer<typeof locationSchema>;
+
+export interface Location extends LocationFormData {
+  id: string;
+}

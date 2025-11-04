@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { type InventoryItem, type Supplier } from '@/types';
+import { type InventoryItem, type Supplier, type Location } from '@/types';
 import { doc, getDoc, onSnapshot, collection, query, getDocs } from 'firebase/firestore';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useAuth } from '@/context/auth-context';
@@ -59,10 +59,10 @@ const productLookupsData = [
 export default function ProductDetailPageContent({ productId }: ProductDetailPageContentProps) {
     const [product, setProduct] = useState<InventoryItem | null>(null);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
     const { user, loading: authLoading } = useAuth();
     
-    // In a real app, you would fetch this data or calculate it
     const createdBy = "Saqib";
     const lastUpdatedBy = "Saqib";
 
@@ -79,8 +79,16 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
              const supplierList = supplierSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
              setSuppliers(supplierList);
         }
+
+        const fetchLocations = async () => {
+            const locationsCollectionRef = collection(db, 'users', user.uid, 'locations');
+            const locationsSnapshot = await getDocs(locationsCollectionRef);
+            const locationsList = locationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Location));
+            setLocations(locationsList);
+        }
         
         fetchSuppliers();
+        fetchLocations();
 
         const itemCollectionRef = collection(db, 'users', user.uid, 'inventory');
         const q = query(itemCollectionRef);
@@ -353,14 +361,12 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
                                         <div className="font-semibold">Std reorder point max:</div>
                                         <div className="font-semibold">Std reorder in qty of:</div>
                                         
-                                        <div className="font-semibold">Drop Ship:</div>
-                                        <Input /> <Input /> <Input />
-
-                                        <div className="font-semibold">Marhaba:</div>
-                                        <Input /> <Input /> <Input />
-                                        
-                                        <div className="font-semibold">Tawakkal Warehouse:</div>
-                                        <Input /> <Input /> <Input />
+                                        {locations.map(loc => (
+                                            <React.Fragment key={loc.id}>
+                                                <div className="font-semibold">{loc.name}:</div>
+                                                <Input /> <Input /> <Input />
+                                            </React.Fragment>
+                                        ))}
                                     </div>
                                 </CardContent>
                             </Card>

@@ -37,7 +37,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Supplier } from '@/types';
+import { type Supplier, type Location } from '@/types';
 import AddSupplierDialog from '@/components/suppliers/add-supplier-dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,7 @@ interface PurchaseOrderPageContentProps {
 export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageContentProps) {
     const { user, loading: authLoading } = useAuth();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [locations, setLocations] = useState<Location[]>([]);
     const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
     const [isSupplierPopoverOpen, setIsSupplierPopoverOpen] = useState(false);
     const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
@@ -63,22 +64,28 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
         if (authLoading || !user || !db) return;
 
         const suppliersRef = collection(db, 'users', user.uid, 'suppliers');
-        const q = query(suppliersRef);
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const qSuppliers = query(suppliersRef);
+        const unsubSuppliers = onSnapshot(qSuppliers, (snapshot) => {
             const suppliersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier));
             setSuppliers(suppliersData);
-        }, (error) => {
-            console.error("Error fetching suppliers:", error);
-        });
+        }, (error) => console.error("Error fetching suppliers:", error));
 
-        return () => unsubscribe();
+        const locationsRef = collection(db, 'users', user.uid, 'locations');
+        const qLocations = query(locationsRef);
+        const unsubLocations = onSnapshot(qLocations, (snapshot) => {
+            const locationsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Location));
+            setLocations(locationsData);
+        }, (error) => console.error("Error fetching locations:", error));
+
+        return () => {
+            unsubSuppliers();
+            unsubLocations();
+        };
     }, [user, authLoading]);
 
     const selectedSupplierName = suppliers.find(s => s.id === selectedSupplierId)?.name || 'Unspecified';
 
     const handleSaveAddress = () => {
-        // In a real app, you would save this data to your backend/DB.
         console.log({ billToAddress, shipToAddress, shipFromAddress });
         setIsEditingAddress(false);
     };
@@ -210,7 +217,16 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                             </div>
                                             <div className="space-y-1">
                                                 <label className="text-sm font-medium">Purchase destination</label>
-                                                <Input defaultValue="Tawakkal Warehouse" />
+                                                <Select>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select location" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {locations.map(loc => (
+                                                            <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                              <div className="space-y-1">
                                                 <label className="text-sm font-medium">Terms</label>
@@ -348,7 +364,7 @@ export default function PurchaseOrderPageContent({ orderId }: PurchaseOrderPageC
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </CardContent>
-                                    </Card>
+                                     </Card>
                                      <Card>
                                         <CardHeader className="flex-row items-center gap-2 space-y-0">
                                             <Users className="w-5 h-5 text-muted-foreground" />
