@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -30,6 +31,7 @@ import { FirestorePermissionError } from '@/lib/firebase-errors';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import SecurityGroups from '@/components/settings/security-groups';
 import Notifications from '@/components/settings/notifications';
+import ProductSettings from '@/components/settings/product-settings';
 
 const timezones = [
     { value: 'Etc/GMT+12', label: '(GMT-12:00) International Date Line West' },
@@ -302,7 +304,7 @@ export default function ApplicationSettingsPageContent() {
                             </div>
                         </div>
 
-                        <Tabs defaultValue="users" className="w-full">
+                        <Tabs defaultValue="company-info" className="w-full">
                             <TabsList className="flex-wrap h-auto">
                                 <TabsTrigger value="company-info">Company info</TabsTrigger>
                                 <TabsTrigger value="users">Users</TabsTrigger>
@@ -501,6 +503,9 @@ export default function ApplicationSettingsPageContent() {
                                         )}
                                     </div>
                                 </div>
+                            </TabsContent>
+                            <TabsContent value="product" className="mt-6">
+                                <ProductSettings />
                             </TabsContent>
                         </Tabs>
 
