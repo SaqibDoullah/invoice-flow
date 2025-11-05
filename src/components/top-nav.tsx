@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -167,6 +168,11 @@ const sellingLinks: { title: string; href: string; description: string }[] = [
 
 const accountingLinks: { title: string; href: string; description: string }[] = [
     {
+        title: "Dashboard",
+        href: "/accounting",
+        description: "Overview of financial KPIs.",
+    },
+    {
         title: "Average cost changes",
         href: "/accounting/average-cost-changes",
         description: "Update product's average cost.",
@@ -262,6 +268,76 @@ export default function TopNav({ include }: TopNavProps) {
                 </DropdownMenu>
             </NavigationMenuItem>
          )
+    }
+    
+    if (key === 'accounting') {
+        return (
+            <NavigationMenuItem key={key}>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                         <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "flex items-center gap-1")}>
+                            Accounting <ChevronDown className="h-4 w-4" />
+                         </NavigationMenuLink>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuItem asChild><Link href="/accounting">Dashboard</Link></DropdownMenuItem>
+                        <DropdownMenuItem>Chart of Accounts</DropdownMenuItem>
+                        <DropdownMenuItem>Journal Entries</DropdownMenuItem>
+                        <DropdownMenuItem>General Ledger</DropdownMenuItem>
+                        <DropdownMenuItem>Trial Balance</DropdownMenuItem>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Financial Reports</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem>Profit & Loss Statement</DropdownMenuItem>
+                                <DropdownMenuItem>Balance Sheet</DropdownMenuItem>
+                                <DropdownMenuItem>Cash Flow Statement</DropdownMenuItem>
+                                <DropdownMenuItem>Tax Summary</DropdownMenuItem>
+                                <DropdownMenuItem>Inventory Valuation</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Banking</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem>Bank Accounts</DropdownMenuItem>
+                                <DropdownMenuItem>Reconciliation</DropdownMenuItem>
+                                <DropdownMenuItem>Bank Feeds / Imports</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Accounts Receivable</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/invoices">Invoices</Link></DropdownMenuItem>
+                                <DropdownMenuItem>Credit Notes</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/invoice-payments">Payments Received</Link></DropdownMenuItem>
+                                <DropdownMenuItem>AR Aging Report</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Accounts Payable</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/bills">Bills</Link></DropdownMenuItem>
+                                <DropdownMenuItem>Vendor Credits</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/bill-payments">Payments Made</Link></DropdownMenuItem>
+                                <DropdownMenuItem>AP Aging Report</DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild><Link href="/accounting/average-cost-changes">Average Cost Changes</Link></DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Integrations</DropdownMenuItem>
+                        <DropdownMenuItem>Settings</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </NavigationMenuItem>
+        )
     }
 
     if (item.links && item.links.length > 0) {
