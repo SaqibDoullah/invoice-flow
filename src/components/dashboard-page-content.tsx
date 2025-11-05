@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -59,7 +60,7 @@ const sellingFeatures = [
   { title: 'Returns', description: 'View all returns.', icon: <Undo2 />, href: '/returns', color: 'green' },
 ];
 
-const accountingFeatures = [
+const accountingFeaturesCol1 = [
     { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '/accounting/average-cost-changes', color: 'teal' },
     { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '#', color: 'teal' },
     { title: 'QuickBooks Online sync status', description: "View transactions' sync status.", icon: <RefreshCcw />, href: '#', color: 'teal' },
@@ -146,7 +147,7 @@ export default function DashboardPageContent() {
                      <Card>
                         <CardContent className="p-2 grid grid-cols-2 gap-1">
                              <div className="flex flex-col gap-1">
-                                {accountingFeatures.map((feature) => (
+                                {accountingFeaturesCol1.map((feature) => (
                                     <FeatureCard key={feature.title} {...feature} />
                                 ))}
                             </div>
