@@ -19,21 +19,21 @@ const accountingFeatures = [
         title: 'Journal entries', 
         description: 'View all journal entries.', 
         icon: <BookCopy />, 
-        href: '#', 
+        href: '/accounting/journal-entries', 
         color: 'teal' 
     },
     { 
         title: 'Consolidations', 
         description: 'View all consolidations.', 
         icon: <Library />, 
-        href: '#', 
+        href: '/accounting/consolidations', 
         color: 'teal' 
     },
     { 
         title: 'General ledger', 
         description: 'View all financial transactions.', 
         icon: <BookCopy />, 
-        href: '#', 
+        href: '/accounting/general-ledger', 
         color: 'teal' 
     },
     {
