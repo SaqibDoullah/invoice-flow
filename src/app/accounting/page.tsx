@@ -1,6 +1,6 @@
 
-import AccountingDashboardContent from './accounting-dashboard-content';
+import AccountingPageContent from './accounting-page-content';
 
-export default function AccountingDashboardPage() {
-    return <AccountingDashboardContent />;
+export default function AccountingPage() {
+    return <AccountingPageContent />;
 }
