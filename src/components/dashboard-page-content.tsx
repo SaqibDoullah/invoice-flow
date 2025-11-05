@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -21,6 +20,8 @@ import {
   DollarSign,
   Undo2,
   Calculator,
+  BookCopy,
+  Library,
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/auth-guard';
 import Link from 'next/link';
@@ -59,8 +60,15 @@ const sellingFeatures = [
 ];
 
 const accountingFeatures = [
-    { title: 'Accounting', description: "Dashboard, AR/AP, GL, reports.", icon: <Calculator />, href: '/accounting', color: 'teal' },
+    { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '/accounting/average-cost-changes', color: 'teal' },
+    { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '#', color: 'teal' },
+    { title: 'QuickBooks Online sync status', description: "View transactions' sync status.", icon: <RefreshCcw />, href: '#', color: 'teal' },
 ];
+
+const accountingFeaturesCol2 = [
+    { title: 'Journal entries', description: 'View all journal entries.', icon: <BookCopy />, href: '#', color: 'teal' },
+    { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy />, href: '#', color: 'teal' },
+]
 
 const colorVariants = {
   red: { bg: 'bg-red-500', text: 'text-red-500', icon: 'text-white' },
@@ -136,10 +144,17 @@ export default function DashboardPageContent() {
                  <div>
                     <h2 className="text-2xl font-bold mb-4">Accounting</h2>
                      <Card>
-                        <CardContent className="p-2 flex flex-col gap-1">
-                           {accountingFeatures.map((feature) => (
-                                <FeatureCard key={feature.title} {...feature} />
-                            ))}
+                        <CardContent className="p-2 grid grid-cols-2 gap-1">
+                             <div className="flex flex-col gap-1">
+                                {accountingFeatures.map((feature) => (
+                                    <FeatureCard key={feature.title} {...feature} />
+                                ))}
+                            </div>
+                             <div className="flex flex-col gap-1">
+                                {accountingFeaturesCol2.map((feature) => (
+                                    <FeatureCard key={feature.title} {...feature} />
+                                ))}
+                            </div>
                         </CardContent>
                     </Card>
                  </div>
