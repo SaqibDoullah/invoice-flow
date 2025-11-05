@@ -166,26 +166,12 @@ const sellingLinks: { title: string; href: string; description: string }[] = [
     }
 ];
 
-const accountingLinks: { title: string; href: string; description: string }[] = [
-    {
-        title: "Dashboard",
-        href: "/accounting",
-        description: "Overview of financial KPIs.",
-    },
-    {
-        title: "Average cost changes",
-        href: "/accounting/average-cost-changes",
-        description: "Update product's average cost.",
-    }
-];
-
-
 const navConfig = [
     { name: 'analytics', links: analyticsLinks },
     { name: 'purchasing', links: purchasingLinks },
     { name: 'inventory', links: inventoryLinks },
     { name: 'selling', links: sellingLinks },
-    { name: 'accounting', links: accountingLinks },
+    { name: 'accounting', links: [] },
     { name: 'reports', href: '/reports' },
     { name: 'create', links: [] },
     { name: 'import', links: [] },
