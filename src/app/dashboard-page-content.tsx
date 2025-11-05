@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -61,12 +62,12 @@ const sellingFeatures = [
 
 const accountingFeatures = [
     { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '/accounting/average-cost-changes', color: 'teal' },
-    { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '#', color: 'teal' },
+    { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '/accounting/consolidations', color: 'teal' },
 ];
 
 const accountingFeaturesCol2 = [
-    { title: 'Journal entries', description: 'View all journal entries.', icon: <BookCopy />, href: '#', color: 'teal' },
-    { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy />, href: '#', color: 'teal' },
+    { title: 'Journal entries', description: 'View all journal entries.', icon: <BookCopy />, href: '/accounting/journal-entries', color: 'teal' },
+    { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy />, href: '/accounting/general-ledger', color: 'teal' },
 ]
 
 const colorVariants = {
