@@ -20,7 +20,7 @@ import {
 import AuthGuard from '@/components/auth/auth-guard';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 
 const MetricCard = ({ title, value, change, changeType }: { title: string, value: string, change: string, changeType: 'increase' | 'decrease' }) => (
@@ -109,4 +109,3 @@ export default function AccountingDashboardContent() {
         </AuthGuard>
     );
 }
-
