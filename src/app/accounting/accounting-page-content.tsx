@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calculator, BookCopy, Library, RefreshCcw, Landmark, FileText } from 'lucide-react';
+import { Calculator, BookCopy, Library, FileText } from 'lucide-react';
 import AuthGuard from '@/components/auth/auth-guard';
 import { Card, CardContent } from '@/components/ui/card';
 
