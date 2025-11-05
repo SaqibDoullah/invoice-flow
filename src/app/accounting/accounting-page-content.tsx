@@ -36,13 +36,6 @@ const accountingFeatures = [
         href: '#', 
         color: 'teal' 
     },
-    { 
-        title: 'QuickBooks Online sync status', 
-        description: "View transactions' sync status.", 
-        icon: <RefreshCcw />, 
-        href: '#', 
-        color: 'teal' 
-    },
     {
         title: 'Tax summary',
         description: 'Collected vs payable taxes.',

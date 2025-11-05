@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -317,7 +318,6 @@ export default function TopNav({ include }: TopNavProps) {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild><Link href="/accounting/average-cost-changes">Average Cost Changes</Link></DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild><Link href="/accounting/integrations/qbo">Integrations</Link></DropdownMenuItem>
                         <DropdownMenuItem asChild><Link href="/settings">Settings</Link></DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
