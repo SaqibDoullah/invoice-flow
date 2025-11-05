@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -267,19 +266,19 @@ export default function TopNav({ include }: TopNavProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
                         <DropdownMenuItem asChild><Link href="/accounting">Dashboard</Link></DropdownMenuItem>
-                        <DropdownMenuItem>Chart of Accounts</DropdownMenuItem>
-                        <DropdownMenuItem>Journal Entries</DropdownMenuItem>
-                        <DropdownMenuItem>General Ledger</DropdownMenuItem>
-                        <DropdownMenuItem>Trial Balance</DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/accounting/chart-of-accounts">Chart of Accounts</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/accounting/journal-entries">Journal Entries</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/accounting/general-ledger">General Ledger</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/accounting/trial-balance">Trial Balance</Link></DropdownMenuItem>
                         <DropdownMenuSub>
                             <DropdownMenuSubTrigger>Financial Reports</DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem>Profit & Loss Statement</DropdownMenuItem>
-                                <DropdownMenuItem>Balance Sheet</DropdownMenuItem>
-                                <DropdownMenuItem>Cash Flow Statement</DropdownMenuItem>
-                                <DropdownMenuItem>Tax Summary</DropdownMenuItem>
-                                <DropdownMenuItem>Inventory Valuation</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/reports/p-and-l">Profit & Loss Statement</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/reports/balance-sheet">Balance Sheet</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/reports/cash-flow">Cash Flow Statement</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/tax-summary">Tax Summary</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/reports/inventory-valuation">Inventory Valuation</Link></DropdownMenuItem>
                             </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
@@ -287,9 +286,9 @@ export default function TopNav({ include }: TopNavProps) {
                             <DropdownMenuSubTrigger>Banking</DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                             <DropdownMenuSubContent>
-                                <DropdownMenuItem>Bank Accounts</DropdownMenuItem>
-                                <DropdownMenuItem>Reconciliation</DropdownMenuItem>
-                                <DropdownMenuItem>Bank Feeds / Imports</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/banking/accounts">Bank Accounts</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/banking/reconciliation">Reconciliation</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/banking/feeds">Bank Feeds / Imports</Link></DropdownMenuItem>
                             </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
@@ -298,9 +297,9 @@ export default function TopNav({ include }: TopNavProps) {
                             <DropdownMenuPortal>
                             <DropdownMenuSubContent>
                                 <DropdownMenuItem asChild><Link href="/invoices">Invoices</Link></DropdownMenuItem>
-                                <DropdownMenuItem>Credit Notes</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/ar/credit-notes">Credit Notes</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/invoice-payments">Payments Received</Link></DropdownMenuItem>
-                                <DropdownMenuItem>AR Aging Report</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/ar/aging">AR Aging Report</Link></DropdownMenuItem>
                             </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
@@ -309,17 +308,17 @@ export default function TopNav({ include }: TopNavProps) {
                             <DropdownMenuPortal>
                             <DropdownMenuSubContent>
                                 <DropdownMenuItem asChild><Link href="/bills">Bills</Link></DropdownMenuItem>
-                                <DropdownMenuItem>Vendor Credits</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/ap/vendor-credits">Vendor Credits</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/bill-payments">Payments Made</Link></DropdownMenuItem>
-                                <DropdownMenuItem>AP Aging Report</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/accounting/ap/aging">AP Aging Report</Link></DropdownMenuItem>
                             </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild><Link href="/accounting/average-cost-changes">Average Cost Changes</Link></DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>Integrations</DropdownMenuItem>
-                        <DropdownMenuItem>Settings</DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/accounting/integrations/qbo">Integrations</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/settings">Settings</Link></DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </NavigationMenuItem>
