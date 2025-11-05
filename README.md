@@ -120,6 +120,18 @@ Follow these instructions to get a copy of the project up and running on your lo
             match /stockTakes/{stockTakeId} {
               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
             }
+            
+            // Accounting collections
+            match /chart_of_accounts/{accountId} {
+              allow list, read: if request.auth != null; // Allow reading for all authenticated users
+              allow create, update, delete: if request.auth != null && request.auth.uid == userId; // Allow write only to own data
+            }
+            match /journals/{journalId} {
+               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
+             match /journal_lines/{lineId} {
+               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
       }
@@ -170,13 +182,3 @@ To deploy the application to Firebase Hosting:
     ```
 
 After deployment, Firebase CLI will provide you with the URL to your live application.
-
-
-
-
-
-
-
-
-
-

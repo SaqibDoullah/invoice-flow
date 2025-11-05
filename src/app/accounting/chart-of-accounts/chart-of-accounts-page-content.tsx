@@ -1,9 +1,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Home, ChevronRight, BookUser, Search, Plus, Upload, Download, Settings, Printer, Mail, ArrowUpDown } from 'lucide-react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -23,28 +24,56 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-const mockAccounts = [
-    { code: '1010', name: 'Cash', type: 'Asset', subType: 'Bank', balance: 125000.00, isActive: true, isSystem: true },
-    { code: '1200', name: 'Accounts Receivable (A/R)', type: 'Asset', subType: 'Accounts Receivable', balance: 55000.00, isActive: true, isSystem: true },
-    { code: '1400', name: 'Inventory Asset', type: 'Asset', subType: 'Current Asset', balance: 210000.00, isActive: true, isSystem: true },
-    { code: '2000', name: 'Accounts Payable (A/P)', type: 'Liability', subType: 'Accounts Payable', balance: 35000.00, isActive: true, isSystem: true },
-    { code: '2200', name: 'Sales Tax Payable', type: 'Liability', subType: 'Current Liability', balance: 8500.00, isActive: true, isSystem: true },
-    { code: '3000', name: 'Owner\'s Equity', type: 'Equity', subType: '', balance: 346500.00, isActive: true, isSystem: true },
-    { code: '4000', name: 'Sales', type: 'Income', subType: '', balance: 150000.00, isActive: true, isSystem: true },
-    { code: '4500', name: 'Shipping Income', type: 'Income', subType: '', balance: 5000.00, isActive: true, isSystem: true },
-    { code: '5000', name: 'Cost of Goods Sold (COGS)', type: 'Expense', subType: 'Cost of Goods Sold', balance: 75000.00, isActive: true, isSystem: true },
-    { code: '6000', name: 'Bank Fees', type: 'Expense', subType: 'Bank Charges', balance: 250.00, isActive: true, isSystem: false },
-    { code: '6100', name: 'Rent Expense', type: 'Expense', subType: 'Operating Expense', balance: 10000.00, isActive: true, isSystem: false },
-];
-
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { type ChartOfAccount } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 export default function ChartOfAccountsPageContent() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
 
-  const filteredAccounts = mockAccounts.filter(account => 
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const coaCollectionRef = collection(db, 'users', user.uid, 'chart_of_accounts');
+    const q = query(coaCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const accountsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChartOfAccount));
+        setAccounts(accountsData);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: coaCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch chart of accounts.' });
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
+
+  const filteredAccounts = accounts.filter(account => 
     account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (account.code && account.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
     account.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
@@ -138,17 +167,27 @@ export default function ChartOfAccountsPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAccounts.map((account) => (
-                    <TableRow key={account.code} className={account.isSystem ? 'bg-muted/50' : ''}>
-                      <TableCell className="font-medium">{account.code}</TableCell>
-                      <TableCell>
-                        <p>{account.name}</p>
-                        {account.isSystem && <p className="text-xs text-muted-foreground">System Account</p>}
+                  {loading || authLoading ? (
+                    [...Array(5)].map((_, i) => <TableRow key={i}><TableCell colSpan={4}><Skeleton className="h-8 w-full" /></TableCell></TableRow>)
+                  ) : filteredAccounts.length > 0 ? (
+                    filteredAccounts.map((account) => (
+                      <TableRow key={account.id} className={account.isSystem ? 'bg-muted/50' : ''}>
+                        <TableCell className="font-medium">{account.code}</TableCell>
+                        <TableCell>
+                          <p>{account.name}</p>
+                          {account.isSystem && <p className="text-xs text-muted-foreground">System Account</p>}
+                        </TableCell>
+                        <TableCell>{account.type}</TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(account.balance || 0)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        No accounts found.
                       </TableCell>
-                      <TableCell>{account.type}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(account.balance)}</TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -156,7 +195,7 @@ export default function ChartOfAccountsPageContent() {
         </Card>
         
         <div className="mt-4 text-right text-sm text-muted-foreground">
-            {filteredAccounts.length} of {mockAccounts.length} accounts showing.
+            {filteredAccounts.length} of {accounts.length} accounts showing.
         </div>
       </div>
     </AuthGuard>

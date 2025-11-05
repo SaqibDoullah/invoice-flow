@@ -1,6 +1,7 @@
+
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Home,
@@ -13,6 +14,7 @@ import {
   Search,
   Filter,
 } from 'lucide-react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -39,17 +41,53 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/select';
-
-const mockLedgerData = [
-    { date: '10/26/2024', type: 'Invoice', num: '1001', contact: 'Customer A', memo: 'Sale of goods', account: 'Accounts Receivable', debit: 500, credit: 0, balance: 500 },
-    { date: '10/26/2024', type: 'Invoice', num: '1001', contact: 'Customer A', memo: 'Sale of goods', account: 'Sales', debit: 0, credit: 500, balance: -500 },
-    { date: '10/25/2024', type: 'Bill', num: 'B-501', contact: 'Supplier X', memo: 'Office Supplies', account: 'Office Expenses', debit: 150, credit: 0, balance: 150 },
-    { date: '10/25/2024', type: 'Bill', num: 'B-501', contact: 'Supplier X', memo: 'Office Supplies', account: 'Accounts Payable', debit: 0, credit: 150, balance: -150 },
-    { date: '10/24/2024', type: 'Payment', num: 'P-201', contact: 'Customer A', memo: 'Payment for INV-1001', account: 'Cash', debit: 500, credit: 0, balance: 500 },
-    { date: '10/24/2024', type: 'Payment', num: 'P-201', contact: 'Customer A', memo: 'Payment for INV-1001', account: 'Accounts Receivable', debit: 0, credit: 500, balance: -500 },
-];
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type JournalLine } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
+import { format } from 'date-fns';
 
 export default function GeneralLedgerPageContent() {
+  const [ledgerLines, setLedgerLines] = useState<JournalLine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+      if (!authLoading) setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const linesCollectionRef = collection(db, 'users', user.uid, 'journal_lines');
+    const q = query(linesCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const linesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalLine));
+        // This is a simplified view. A real GL would need to join with journals for dates, etc.
+        setLedgerLines(linesData);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: linesCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch general ledger data.' });
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -153,19 +191,29 @@ export default function GeneralLedgerPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockLedgerData.map((entry, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{entry.date}</TableCell>
-                      <TableCell>{entry.type}</TableCell>
-                      <TableCell className="text-primary hover:underline cursor-pointer">{entry.num}</TableCell>
-                      <TableCell className="text-primary hover:underline cursor-pointer">{entry.contact}</TableCell>
-                      <TableCell>{entry.memo}</TableCell>
-                      <TableCell>{entry.account}</TableCell>
-                      <TableCell className="text-right font-mono">{entry.debit > 0 ? formatCurrency(entry.debit) : '-'}</TableCell>
-                      <TableCell className="text-right font-mono">{entry.credit > 0 ? formatCurrency(entry.credit) : '-'}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(entry.balance)}</TableCell>
+                  {loading || authLoading ? (
+                     <TableRow><TableCell colSpan={9} className="h-24"><Skeleton className="h-8 w-full"/></TableCell></TableRow>
+                  ) : ledgerLines.length > 0 ? (
+                    ledgerLines.map((entry, index) => (
+                        <TableRow key={entry.id}>
+                        <TableCell>{/* Date would be from parent journal */}</TableCell>
+                        <TableCell>{/* Type would be from parent journal */}</TableCell>
+                        <TableCell className="text-primary hover:underline cursor-pointer">{entry.journalId.substring(0, 7)}</TableCell>
+                        <TableCell className="text-primary hover:underline cursor-pointer">{entry.contactId}</TableCell>
+                        <TableCell>{/* Memo would be from parent journal */}</TableCell>
+                        <TableCell>{entry.accountId}</TableCell>
+                        <TableCell className="text-right font-mono">{entry.debit > 0 ? formatCurrency(entry.debit) : '-'}</TableCell>
+                        <TableCell className="text-right font-mono">{entry.credit > 0 ? formatCurrency(entry.credit) : '-'}</TableCell>
+                        <TableCell className="text-right font-mono">{/* Balance needs calculation */}</TableCell>
+                        </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} className="h-24 text-center">
+                        No general ledger entries found.
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>

@@ -414,3 +414,40 @@ export interface Transfer {
     receiveDate: Date | Timestamp;
     receiveUser: string;
 }
+
+export interface ChartOfAccount {
+    id: string;
+    code: string;
+    name: string;
+    type: 'Asset' | 'Liability' | 'Equity' | 'Income' | 'Expense';
+    subType: string;
+    isSystem: boolean;
+    isActive: boolean;
+    balance?: number;
+}
+
+export interface Journal {
+    id: string;
+    date: Date;
+    memo: string;
+    source: 'invoice' | 'bill' | 'payment' | 'adjustment' | 'inventory_cogs' | 'bank_recon';
+    referenceId?: string;
+    createdBy: string;
+    approvedBy?: string;
+    status: 'draft' | 'posted';
+}
+
+export interface JournalLine {
+    id: string;
+    journalId: string;
+    accountId: string;
+    contactId?: string;
+    itemId?: string;
+    warehouseId?: string;
+    debit: number;
+    credit: number;
+    currency: string;
+    fxRate?: number;
+    taxId?: string;
+    meta?: any;
+}

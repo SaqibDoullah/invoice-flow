@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Home,
@@ -13,6 +13,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -33,25 +34,55 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type ChartOfAccount } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
-const mockTrialBalanceData = [
-    { code: '1010', name: 'Cash', debit: 125000.00, credit: 0 },
-    { code: '1200', name: 'Accounts Receivable', debit: 55000.00, credit: 0 },
-    { code: '1400', name: 'Inventory Asset', debit: 210000.00, credit: 0 },
-    { code: '2000', name: 'Accounts Payable', debit: 0, credit: 35000.00 },
-    { code: '2200', name: 'Sales Tax Payable', debit: 0, credit: 8500.00 },
-    { code: '3000', name: "Owner's Equity", debit: 0, credit: 346500.00 },
-    { code: '4000', name: 'Sales', debit: 0, credit: 150000.00 },
-    { code: '4500', name: 'Shipping Income', debit: 0, credit: 5000.00 },
-    { code: '5000', name: 'Cost of Goods Sold', debit: 75000.00, credit: 0 },
-    { code: '6000', name: 'Bank Fees', debit: 250.00, credit: 0 },
-    { code: '6100', name: 'Rent Expense', debit: 10000.00, credit: 0 },
-];
 
 export default function TrialBalancePageContent() {
+  const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
 
-  const totalDebits = mockTrialBalanceData.reduce((acc, curr) => acc + curr.debit, 0);
-  const totalCredits = mockTrialBalanceData.reduce((acc, curr) => acc + curr.credit, 0);
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const coaCollectionRef = collection(db, 'users', user.uid, 'chart_of_accounts');
+    const q = query(coaCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const accountsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChartOfAccount));
+        setAccounts(accountsData);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: coaCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch accounts for trial balance.' });
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
+
+  const totalDebits = accounts.reduce((acc, curr) => acc + (curr.type === 'Asset' || curr.type === 'Expense' ? (curr.balance || 0) : 0), 0);
+  const totalCredits = accounts.reduce((acc, curr) => acc + (curr.type === 'Liability' || curr.type === 'Equity' || curr.type === 'Income' ? (curr.balance || 0) : 0), 0);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -139,14 +170,28 @@ export default function TrialBalancePageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockTrialBalanceData.map((entry) => (
-                    <TableRow key={entry.code}>
-                      <TableCell className="font-mono">{entry.code}</TableCell>
-                      <TableCell>{entry.name}</TableCell>
-                      <TableCell className="text-right font-mono">{entry.debit > 0 ? formatCurrency(entry.debit) : '-'}</TableCell>
-                      <TableCell className="text-right font-mono">{entry.credit > 0 ? formatCurrency(entry.credit) : '-'}</TableCell>
+                  {loading || authLoading ? (
+                      <TableRow><TableCell colSpan={4} className="h-24"><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                  ) : accounts.length > 0 ? (
+                    accounts.map((account) => {
+                      const isDebit = account.type === 'Asset' || account.type === 'Expense';
+                      const balance = account.balance || 0;
+                      return (
+                        <TableRow key={account.id}>
+                          <TableCell className="font-mono">{account.code}</TableCell>
+                          <TableCell>{account.name}</TableCell>
+                          <TableCell className="text-right font-mono">{isDebit ? formatCurrency(balance) : '-'}</TableCell>
+                          <TableCell className="text-right font-mono">{!isDebit ? formatCurrency(balance) : '-'}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            No accounts found.
+                        </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
                 <TableFooter>
                     <TableRow className="bg-muted/50 font-bold">
@@ -162,4 +207,3 @@ export default function TrialBalancePageContent() {
     </AuthGuard>
   );
 }
-

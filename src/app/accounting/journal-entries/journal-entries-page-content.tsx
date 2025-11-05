@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BookCopy,
   ChevronDown,
@@ -10,6 +10,7 @@ import {
   ArrowUpDown,
   ShieldAlert
 } from 'lucide-react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -32,18 +33,59 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-
-const mockJournalEntries = [
-    { id: 'JE-001', date: '2024-10-26', reference: 'INV-00123', memo: 'Sales Invoice', status: 'Posted', debit: 500.00, credit: 500.00 },
-    { id: 'JE-002', date: '2024-10-25', reference: 'BILL-0045', memo: 'Office Supplies', status: 'Posted', debit: 75.50, credit: 75.50 },
-    { id: 'JE-003', date: '2024-10-24', reference: '', memo: 'Bank Transfer', status: 'Draft', debit: 2000.00, credit: 2000.00 },
-    { id: 'JE-004', date: '2024-10-23', reference: 'PAY-0089', memo: 'Payment for BILL-0042', status: 'Posted', debit: 1200.00, credit: 1200.00 },
-    { id: 'JE-005', date: '2024-10-22', reference: 'ADJ-001', memo: 'Depreciation Expense', status: 'Posted', debit: 350.00, credit: 350.00 },
-];
-
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type Journal } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
+import { format } from 'date-fns';
 
 export default function JournalEntriesPageContent() {
-  
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const db = getFirestoreDb();
+    if (!user || authLoading || !db) {
+        if (!authLoading) setLoading(false);
+        return;
+    }
+
+    setLoading(true);
+    const journalsCollectionRef = collection(db, 'users', user.uid, 'journals');
+    const q = query(journalsCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const journalsData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                date: data.date.toDate(),
+            } as Journal;
+        });
+        setJournals(journalsData);
+        setLoading(false);
+    }, (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: journalsCollectionRef.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        if (serverError.code !== 'permission-denied') {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch journal entries.' });
+        }
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user, authLoading, toast]);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -120,22 +162,32 @@ export default function JournalEntriesPageContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {mockJournalEntries.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell><Checkbox /></TableCell>
-                      <TableCell>
-                        <Badge variant={entry.status === 'Posted' ? 'default' : 'secondary'} className={entry.status === 'Posted' ? 'bg-green-100 text-green-800' : ''}>
-                          {entry.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{entry.date}</TableCell>
-                      <TableCell className="font-medium text-primary">{entry.id}</TableCell>
-                      <TableCell className="text-primary">{entry.reference}</TableCell>
-                      <TableCell>{entry.memo}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(entry.debit)}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(entry.credit)}</TableCell>
+                  {loading || authLoading ? (
+                    [...Array(5)].map((_, i) => <TableRow key={i}><TableCell colSpan={8}><Skeleton className="h-8 w-full"/></TableCell></TableRow>)
+                  ) : journals.length > 0 ? (
+                    journals.map((entry) => (
+                        <TableRow key={entry.id}>
+                        <TableCell><Checkbox /></TableCell>
+                        <TableCell>
+                            <Badge variant={entry.status === 'posted' ? 'default' : 'secondary'} className={entry.status === 'posted' ? 'bg-green-100 text-green-800' : ''}>
+                            {entry.status}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>{format(entry.date, 'yyyy-MM-dd')}</TableCell>
+                        <TableCell className="font-medium text-primary">{entry.id.substring(0, 7)}</TableCell>
+                        <TableCell className="text-primary">{entry.referenceId}</TableCell>
+                        <TableCell>{entry.memo}</TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(0)}</TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(0)}</TableCell>
+                        </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                        <TableCell colSpan={8} className="h-24 text-center">
+                            No journal entries found.
+                        </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
