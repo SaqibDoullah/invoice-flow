@@ -1,13 +1,24 @@
 
-import AuthGuard from '@/components/auth/auth-guard';
+import JournalEntriesPageContent from './journal-entries-page-content';
+import { Home, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 export default function JournalEntriesPage() {
     return (
-        <AuthGuard>
-            <div className="container mx-auto p-8">
-                <h1 className="text-2xl font-bold">Journal Entries</h1>
-                <p className="text-muted-foreground">This page will display journal entries.</p>
+        <div className="p-4 md:p-8">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                <Link href="/" className="flex items-center gap-1 hover:text-foreground">
+                    <Home className="w-4 h-4" />
+                    Home
+                </Link>
+                <ChevronRight className="w-4 h-4" />
+                <Link href="/accounting" className="hover:text-foreground">
+                    Accounting
+                </Link>
+                 <ChevronRight className="w-4 h-4" />
+                <span>Journal Entries</span>
             </div>
-        </AuthGuard>
-    )
+            <JournalEntriesPageContent />
+        </div>
+    );
 }
