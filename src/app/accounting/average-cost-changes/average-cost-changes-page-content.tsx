@@ -33,6 +33,8 @@ import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
 import { type AverageCostChange } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 const toDate = (v: any): Date | null => {
     if (!v) return null;
@@ -63,9 +65,16 @@ export default function AverageCostChangesPageContent() {
             const changesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AverageCostChange));
             setChanges(changesData);
             setLoading(false);
-        }, (error) => {
-            console.error("Error fetching average cost changes:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch average cost changes.'});
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: changesRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+
+            if (serverError.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch average cost changes.'});
+            }
             setLoading(false);
         });
 

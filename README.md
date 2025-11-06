@@ -139,6 +139,11 @@ Follow these instructions to get a copy of the project up and running on your lo
                 allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
               }
             }
+
+            // A user can manage their own averageCostChanges subcollection
+            match /averageCostChanges/{changeId} {
+              allow read, write, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
       }
@@ -189,3 +194,4 @@ To deploy the application to Firebase Hosting:
     ```
 
 After deployment, Firebase CLI will provide you with the URL to your live application.
+
