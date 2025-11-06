@@ -47,7 +47,7 @@ const accountingFeatures = [
         title: 'Tax summary',
         description: 'Collected vs payable taxes.',
         icon: <FileText />,
-        href: '#',
+        href: '/accounting/tax-summary',
         color: 'teal'
     }
 ];
