@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Home,
@@ -13,11 +13,11 @@ import {
   Mail,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,25 +25,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-const reportData = {
-    operatingActivities: [
-        { account: 'Net Income', amount: 38000, isPositive: true },
-        { account: 'Depreciation', amount: 5000, isPositive: true },
-        { account: 'Increase in Accounts Receivable', amount: -10000, isPositive: false },
-        { account: 'Decrease in Inventory', amount: 15000, isPositive: true },
-        { account: 'Increase in Accounts Payable', amount: 8000, isPositive: true },
-    ],
-    investingActivities: [
-        { account: 'Purchase of Equipment', amount: -20000, isPositive: false },
-        { account: 'Sale of Assets', amount: 3000, isPositive: true },
-    ],
-    financingActivities: [
-        { account: 'Proceeds from Long-term Debt', amount: 50000, isPositive: true },
-        { account: 'Payment of Dividends', amount: -10000, isPositive: false },
-    ],
-    cashAtBeginning: 25000,
-};
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type JournalLine } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
 const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -59,13 +47,13 @@ const ReportRow = ({ account, amount }: { account: string, amount: number }) => 
     </div>
 );
 
-const ReportSection = ({ title, items, isSubSection = false }: { title: string, items: {account: string, amount: number}[], isSubSection?: boolean }) => {
+const ReportSection = ({ title, items, isLoading }: { title: string, items: {account: string, amount: number}[], isLoading: boolean }) => {
     const total = items.reduce((sum, item) => sum + item.amount, 0);
     return (
-         <div className={isSubSection ? 'pl-4' : ''}>
-            <h3 className={`font-semibold mb-2 ${isSubSection ? 'text-base' : 'text-lg'}`}>{title}</h3>
+         <div>
+            <h3 className={`font-semibold mb-2 text-lg`}>{title}</h3>
             <div className="space-y-1 pl-4">
-               {items.map(item => <ReportRow key={item.account} {...item} />)}
+               {isLoading ? <Skeleton className="h-10 w-full" /> : items.map(item => <ReportRow key={item.account} {...item} />)}
                 <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
                     <span>Net Cash from {title}</span>
                     <span>{total < 0 ? `(${formatCurrency(Math.abs(total))})` : formatCurrency(total)}</span>
@@ -77,13 +65,52 @@ const ReportSection = ({ title, items, isSubSection = false }: { title: string, 
 
 
 export default function CashFlowStatementPageContent() {
-    
-    const totalOperating = reportData.operatingActivities.reduce((sum, item) => sum + item.amount, 0);
-    const totalInvesting = reportData.investingActivities.reduce((sum, item) => sum + item.amount, 0);
-    const totalFinancing = reportData.financingActivities.reduce((sum, item) => sum + item.amount, 0);
+    const [lines, setLines] = useState<JournalLine[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        if (authLoading || !user) return;
+        const db = getFirestoreDb();
+        if (!db) return;
+
+        setLoading(true);
+        const linesRef = collection(db, 'users', user.uid, 'journal_lines');
+        const q = query(linesRef);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const linesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalLine));
+            setLines(linesData);
+            setLoading(false);
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: linesRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            if (serverError.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch ledger data.' });
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading, toast]);
+
+    // This is a simplified calculation for demonstration. A real cash flow statement is much more complex.
+    const netIncome = lines.filter(l => l.accountId.startsWith('4') || l.accountId.startsWith('5')).reduce((acc, l) => acc + l.credit - l.debit, 0);
+    const operatingActivities = [{ account: 'Net Income', amount: netIncome }]; // Simplified
+    const investingActivities: {account: string, amount: number}[] = [];
+    const financingActivities: {account: string, amount: number}[] = [];
+
+    const totalOperating = operatingActivities.reduce((sum, item) => sum + item.amount, 0);
+    const totalInvesting = investingActivities.reduce((sum, item) => sum + item.amount, 0);
+    const totalFinancing = financingActivities.reduce((sum, item) => sum + item.amount, 0);
 
     const netCashChange = totalOperating + totalInvesting + totalFinancing;
-    const cashAtEnd = reportData.cashAtBeginning + netCashChange;
+    const cashAtBeginning = 25000; // This should be calculated from previous period's balance
+    const cashAtEnd = cashAtBeginning + netCashChange;
 
   return (
     <AuthGuard>
@@ -173,9 +200,9 @@ export default function CashFlowStatementPageContent() {
         <Card>
           <CardContent className="p-6">
              <div className="max-w-2xl mx-auto space-y-6">
-                <ReportSection title="Operating Activities" items={reportData.operatingActivities} />
-                <ReportSection title="Investing Activities" items={reportData.investingActivities} />
-                <ReportSection title="Financing Activities" items={reportData.financingActivities} />
+                <ReportSection title="Operating Activities" items={operatingActivities} isLoading={loading || authLoading} />
+                <ReportSection title="Investing Activities" items={investingActivities} isLoading={loading || authLoading}/>
+                <ReportSection title="Financing Activities" items={financingActivities} isLoading={loading || authLoading}/>
                 
                 <div className="space-y-2 border-t pt-4">
                     <div className="flex justify-between font-bold">
@@ -184,7 +211,7 @@ export default function CashFlowStatementPageContent() {
                     </div>
                     <div className="flex justify-between">
                         <span>Cash at Beginning of Period</span>
-                        <span>{formatCurrency(reportData.cashAtBeginning)}</span>
+                        <span>{formatCurrency(cashAtBeginning)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
                         <span>Cash at End of Period</span>

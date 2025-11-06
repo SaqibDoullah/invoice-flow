@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -274,16 +275,28 @@ export interface BillPayment {
     recordLastUpdated: Date;
 }
 
+export const invoicePaymentSchema = z.object({
+    date: z.date(),
+    customer: z.string(),
+    amount: z.coerce.number().positive(),
+    method: z.string().optional(),
+    transactionId: z.string().optional(),
+    status: z.enum(['Draft', 'Posted']),
+});
+
+export type InvoicePaymentFormData = z.infer<typeof invoicePaymentSchema>;
+
+
 export interface InvoicePayment {
     id: string;
     status: 'Posted' | 'Draft';
-    date: Date;
+    date: Date | Timestamp;
     paymentId: string;
     customer: string;
     amount: number;
     method: string | null;
-    recordCreated: Date;
-    recordLastUpdated: Date;
+    recordCreated: Date | Timestamp;
+    recordLastUpdated: Date | Timestamp;
 }
 
 export interface StockHistoryEntry {

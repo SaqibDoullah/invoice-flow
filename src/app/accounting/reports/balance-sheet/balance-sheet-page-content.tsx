@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Home,
@@ -13,6 +13,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -24,33 +25,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type ChartOfAccount } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
-const reportData = {
-    assets: {
-        currentAssets: [
-            { account: 'Cash and Cash Equivalents', amount: 75000 },
-            { account: 'Accounts Receivable', amount: 50000 },
-            { account: 'Inventory', amount: 120000 },
-        ],
-        fixedAssets: [
-            { account: 'Property, Plant, and Equipment', amount: 250000 },
-        ]
-    },
-    liabilities: {
-        currentLiabilities: [
-            { account: 'Accounts Payable', amount: 40000 },
-            { account: 'Short-term Loans', amount: 25000 },
-        ],
-        longTermLiabilities: [
-            { account: 'Long-term Debt', amount: 100000 },
-        ]
-    },
-    equity: [
-        { account: 'Common Stock', amount: 150000 },
-        { account: 'Retained Earnings', amount: 180000 },
-    ],
-};
 
 const ReportRow = ({ account, amount }: { account: string, amount: number }) => (
     <div className="flex justify-between text-sm py-1">
@@ -59,13 +41,13 @@ const ReportRow = ({ account, amount }: { account: string, amount: number }) => 
     </div>
 );
 
-const ReportSection = ({ title, items }: { title: string, items: {account: string, amount: number}[]}) => {
-    const total = items.reduce((sum, item) => sum + item.amount, 0);
+const ReportSection = ({ title, items, isLoading }: { title: string, items: ChartOfAccount[], isLoading: boolean}) => {
+    const total = items.reduce((sum, item) => sum + (item.balance || 0), 0);
     return (
          <div>
             <h3 className="text-lg font-semibold mb-2">{title}</h3>
             <div className="space-y-1 pl-4">
-               {items.map(item => <ReportRow key={item.account} {...item} />)}
+               {isLoading ? <Skeleton className="h-8 w-full" /> : items.map(item => <ReportRow key={item.id} account={item.name} amount={item.balance || 0} />)}
                 <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
                     <span>Total {title}</span>
                     <span>{formatCurrency(total)}</span>
@@ -84,17 +66,46 @@ const formatCurrency = (amount: number) =>
 
 
 export default function BalanceSheetPageContent() {
-    
-    const totalCurrentAssets = reportData.assets.currentAssets.reduce((sum, item) => sum + item.amount, 0);
-    const totalFixedAssets = reportData.assets.fixedAssets.reduce((sum, item) => sum + item.amount, 0);
-    const totalAssets = totalCurrentAssets + totalFixedAssets;
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
 
-    const totalCurrentLiabilities = reportData.liabilities.currentLiabilities.reduce((sum, item) => sum + item.amount, 0);
-    const totalLongTermLiabilities = reportData.liabilities.longTermLiabilities.reduce((sum, item) => sum + item.amount, 0);
-    const totalLiabilities = totalCurrentLiabilities + totalLongTermLiabilities;
-    
-    const totalEquity = reportData.equity.reduce((sum, item) => sum + item.amount, 0);
+    useEffect(() => {
+        if (authLoading || !user) return;
+        const db = getFirestoreDb();
+        if (!db) return;
 
+        setLoading(true);
+        const coaCollectionRef = collection(db, 'users', user.uid, 'chart_of_accounts');
+        const q = query(coaCollectionRef);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const accountsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChartOfAccount));
+            setAccounts(accountsData);
+            setLoading(false);
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: coaCollectionRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            if (serverError.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch account data.' });
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading, toast]);
+    
+    const assets = accounts.filter(a => a.type === 'Asset');
+    const liabilities = accounts.filter(a => a.type === 'Liability');
+    const equity = accounts.filter(a => a.type === 'Equity');
+    
+    const totalAssets = assets.reduce((sum, item) => sum + (item.balance || 0), 0);
+    const totalLiabilities = liabilities.reduce((sum, item) => sum + (item.balance || 0), 0);
+    const totalEquity = equity.reduce((sum, item) => sum + (item.balance || 0), 0);
     const totalLiabilitiesAndEquity = totalLiabilities + totalEquity;
 
   return (
@@ -173,8 +184,7 @@ export default function BalanceSheetPageContent() {
                  {/* Left side: Assets */}
                  <div className="space-y-6">
                     <h2 className="text-xl font-bold border-b pb-2">Assets</h2>
-                    <ReportSection title="Current Assets" items={reportData.assets.currentAssets} />
-                    <ReportSection title="Fixed Assets" items={reportData.assets.fixedAssets} />
+                    <ReportSection title="Assets" items={assets} isLoading={loading || authLoading} />
                     <div className="flex justify-between font-bold text-lg border-t pt-2 mt-4">
                         <span>Total Assets</span>
                         <span>{formatCurrency(totalAssets)}</span>
@@ -184,18 +194,8 @@ export default function BalanceSheetPageContent() {
                  {/* Right side: Liabilities & Equity */}
                  <div className="space-y-6">
                     <h2 className="text-xl font-bold border-b pb-2">Liabilities and Equity</h2>
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2">Liabilities</h3>
-                        <div className="space-y-4 pl-4">
-                            <ReportSection title="Current Liabilities" items={reportData.liabilities.currentLiabilities} />
-                            <ReportSection title="Long-Term Liabilities" items={reportData.liabilities.longTermLiabilities} />
-                             <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
-                                <span>Total Liabilities</span>
-                                <span>{formatCurrency(totalLiabilities)}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <ReportSection title="Equity" items={reportData.equity} />
+                    <ReportSection title="Liabilities" items={liabilities} isLoading={loading || authLoading} />
+                    <ReportSection title="Equity" items={equity} isLoading={loading || authLoading}/>
 
                      <div className="flex justify-between font-bold text-lg border-t pt-2 mt-4">
                         <span>Total Liabilities and Equity</span>

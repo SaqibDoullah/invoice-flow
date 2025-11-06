@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Home,
@@ -12,7 +12,7 @@ import {
   Download,
   Mail,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -33,12 +33,14 @@ import {
   TableFooter,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type ChartOfAccount } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
-const taxData = [
-    { jurisdiction: 'California', rate: '7.25%', collected: 1812.50, payable: 1812.50 },
-    { jurisdiction: 'Texas', rate: '6.25%', collected: 1250.00, payable: 1250.00 },
-    { jurisdiction: 'New York', rate: '4.00%', collected: 800.00, payable: 800.00 },
-];
 
 const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', {
@@ -49,9 +51,43 @@ const formatCurrency = (amount: number) =>
 
 
 export default function TaxSummaryPageContent() {
+    const [taxAccounts, setTaxAccounts] = useState<ChartOfAccount[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        if (authLoading || !user) return;
+        const db = getFirestoreDb();
+        if (!db) return;
+
+        setLoading(true);
+        const coaCollectionRef = collection(db, 'users', user.uid, 'chart_of_accounts');
+        // A real query would be more specific, e.g. where('subType', '==', 'SalesTax')
+        const q = query(coaCollectionRef);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const accountsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChartOfAccount))
+                .filter(acc => acc.name.toLowerCase().includes('tax'));
+            setTaxAccounts(accountsData);
+            setLoading(false);
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: coaCollectionRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            if (serverError.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch tax accounts.' });
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading, toast]);
     
-    const totalCollected = taxData.reduce((sum, item) => sum + item.collected, 0);
-    const totalPayable = taxData.reduce((sum, item) => sum + item.payable, 0);
+    // This is a simplified summary. A real one would differentiate between collected and payable.
+    const totalTaxBalance = taxAccounts.reduce((sum, item) => sum + (item.balance || 0), 0);
 
   return (
     <AuthGuard>
@@ -132,27 +168,37 @@ export default function TaxSummaryPageContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Jurisdiction</TableHead>
+                    <TableHead>Jurisdiction / Account</TableHead>
                     <TableHead>Tax Rate</TableHead>
                     <TableHead className="text-right">Tax Collected</TableHead>
                     <TableHead className="text-right">Tax Payable</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {taxData.map((row) => (
-                    <TableRow key={row.jurisdiction}>
-                        <TableCell className="font-medium">{row.jurisdiction}</TableCell>
-                        <TableCell>{row.rate}</TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(row.collected)}</TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(row.payable)}</TableCell>
+                  {loading || authLoading ? (
+                    <TableRow><TableCell colSpan={4} className="h-24"><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                  ) : taxAccounts.length > 0 ? (
+                    taxAccounts.map((account) => (
+                        <TableRow key={account.id}>
+                            <TableCell className="font-medium">{account.name}</TableCell>
+                            <TableCell>--</TableCell>
+                            <TableCell className="text-right font-mono">{formatCurrency(0)}</TableCell>
+                            <TableCell className="text-right font-mono">{formatCurrency(account.balance || 0)}</TableCell>
+                        </TableRow>
+                    ))
+                  ) : (
+                     <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            No tax accounts found or configured.
+                        </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
                 <TableFooter>
                     <TableRow className="bg-muted/50 font-bold">
                         <TableCell colSpan={2}>Total</TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(totalCollected)}</TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(totalPayable)}</TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(0)}</TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(totalTaxBalance)}</TableCell>
                     </TableRow>
                 </TableFooter>
               </Table>

@@ -14,7 +14,7 @@ import {
   Search,
   Filter,
 } from 'lucide-react';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,6 @@ import { type JournalLine } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
-import { format } from 'date-fns';
 
 export default function GeneralLedgerPageContent() {
   const [ledgerLines, setLedgerLines] = useState<JournalLine[]>([]);
@@ -65,11 +64,10 @@ export default function GeneralLedgerPageContent() {
 
     setLoading(true);
     const linesCollectionRef = collection(db, 'users', user.uid, 'journal_lines');
-    const q = query(linesCollectionRef);
+    const q = query(linesCollectionRef, orderBy('journalId')); // A real implementation would order by date from the joined journal
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const linesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalLine));
-        // This is a simplified view. A real GL would need to join with journals for dates, etc.
         setLedgerLines(linesData);
         setLoading(false);
     }, (serverError) => {

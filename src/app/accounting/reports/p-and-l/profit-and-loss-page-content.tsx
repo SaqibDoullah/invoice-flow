@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Home,
@@ -13,11 +13,11 @@ import {
   Mail,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,37 +25,86 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/context/auth-context';
+import { getFirestoreDb } from '@/lib/firebase-client';
+import { useToast } from '@/hooks/use-toast';
+import { type ChartOfAccount } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase-errors';
 
-const reportData = {
-    income: [
-        { account: 'Sales', amount: 150000 },
-        { account: 'Other Income', amount: 5000 },
-    ],
-    cogs: [
-        { account: 'Cost of Goods Sold', amount: 70000 },
-    ],
-    expenses: [
-        { account: 'Advertising', amount: 10000 },
-        { account: 'Rent', amount: 5000 },
-        { account: 'Utilities', amount: 2000 },
-        { account: 'Salaries', amount: 30000 },
-    ],
+const formatCurrency = (amount: number) =>
+new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+}).format(amount);
+
+const ReportSection = ({ title, items, isLoading }: { title: string; items: ChartOfAccount[]; isLoading: boolean; }) => {
+    const total = items.reduce((sum, item) => sum + (item.balance || 0), 0);
+    return (
+        <div>
+            <h3 className="text-lg font-semibold mb-2">{title}</h3>
+            <div className="space-y-1 pl-4">
+                {isLoading ? <Skeleton className="h-8 w-full" /> : items.map(item => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                        <span>{item.name}</span>
+                        <span>{formatCurrency(item.balance || 0)}</span>
+                    </div>
+                ))}
+                <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
+                    <span>Total {title}</span>
+                    <span>{formatCurrency(total)}</span>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 
 export default function ProfitAndLossPageContent() {
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading } = useAuth();
+    const { toast } = useToast();
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
+    useEffect(() => {
+        if (authLoading || !user) return;
+        const db = getFirestoreDb();
+        if (!db) return;
+
+        setLoading(true);
+        const coaCollectionRef = collection(db, 'users', user.uid, 'chart_of_accounts');
+        const q = query(coaCollectionRef);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const accountsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChartOfAccount));
+            setAccounts(accountsData);
+            setLoading(false);
+        }, (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: coaCollectionRef.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            if (serverError.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch account data.' });
+            }
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [user, authLoading, toast]);
+
+    const incomeAccounts = accounts.filter(a => a.type === 'Income');
+    // Assuming COGS is a subtype of Expense for now. A real implementation would need a more robust way to identify these.
+    const cogsAccounts = accounts.filter(a => a.type === 'Expense' && a.subType === 'CostOfGoodsSold');
+    const expenseAccounts = accounts.filter(a => a.type === 'Expense' && a.subType !== 'CostOfGoodsSold');
     
-    const totalIncome = reportData.income.reduce((sum, item) => sum + item.amount, 0);
-    const totalCogs = reportData.cogs.reduce((sum, item) => sum + item.amount, 0);
+    const totalIncome = incomeAccounts.reduce((sum, item) => sum + (item.balance || 0), 0);
+    const totalCogs = cogsAccounts.reduce((sum, item) => sum + (item.balance || 0), 0);
     const grossProfit = totalIncome - totalCogs;
-    const totalExpenses = reportData.expenses.reduce((sum, item) => sum + item.amount, 0);
+    const totalExpenses = expenseAccounts.reduce((sum, item) => sum + (item.balance || 0), 0);
     const netIncome = grossProfit - totalExpenses;
 
   return (
@@ -146,64 +195,16 @@ export default function ProfitAndLossPageContent() {
         <Card>
           <CardContent className="p-6">
              <div className="space-y-4">
-                 {/* Income Section */}
-                <div>
-                    <h3 className="text-lg font-semibold mb-2">Income</h3>
-                    <div className="space-y-1 pl-4">
-                       {reportData.income.map(item => (
-                           <div key={item.account} className="flex justify-between text-sm">
-                               <span>{item.account}</span>
-                               <span>{formatCurrency(item.amount)}</span>
-                           </div>
-                       ))}
-                        <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
-                            <span>Total Income</span>
-                            <span>{formatCurrency(totalIncome)}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* COGS Section */}
-                <div>
-                    <h3 className="text-lg font-semibold mb-2">Cost of Goods Sold</h3>
-                    <div className="space-y-1 pl-4">
-                       {reportData.cogs.map(item => (
-                           <div key={item.account} className="flex justify-between text-sm">
-                               <span>{item.account}</span>
-                               <span>{formatCurrency(item.amount)}</span>
-                           </div>
-                       ))}
-                         <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
-                            <span>Total Cost of Goods Sold</span>
-                            <span>{formatCurrency(totalCogs)}</span>
-                        </div>
-                    </div>
-                </div>
+                <ReportSection title="Income" items={incomeAccounts} isLoading={loading || authLoading} />
+                <ReportSection title="Cost of Goods Sold" items={cogsAccounts} isLoading={loading || authLoading} />
                 
-                 {/* Gross Profit */}
                  <div className="flex justify-between font-bold text-lg border-t border-b py-2 my-2">
                     <span>Gross Profit</span>
                     <span>{formatCurrency(grossProfit)}</span>
                 </div>
 
-                {/* Expenses Section */}
-                 <div>
-                    <h3 className="text-lg font-semibold mb-2">Expenses</h3>
-                    <div className="space-y-1 pl-4">
-                       {reportData.expenses.map(item => (
-                           <div key={item.account} className="flex justify-between text-sm">
-                               <span>{item.account}</span>
-                               <span>{formatCurrency(item.amount)}</span>
-                           </div>
-                       ))}
-                         <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
-                            <span>Total Expenses</span>
-                            <span>{formatCurrency(totalExpenses)}</span>
-                        </div>
-                    </div>
-                </div>
+                <ReportSection title="Expenses" items={expenseAccounts} isLoading={loading || authLoading} />
 
-                {/* Net Income */}
                 <div className="flex justify-between font-bold text-xl border-t-2 border-primary pt-4 mt-4 text-primary">
                     <span>Net Income</span>
                     <span>{formatCurrency(netIncome)}</span>
