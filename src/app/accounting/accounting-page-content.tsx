@@ -40,7 +40,7 @@ const accountingFeatures = [
         title: 'Banking & reconciliation',
         description: 'Import, match, and reconcile bank transactions.',
         icon: <Banknote />,
-        href: '#',
+        href: '/accounting/banking/accounts',
         color: 'teal'
     },
     {
