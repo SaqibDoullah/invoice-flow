@@ -134,6 +134,10 @@ Follow these instructions to get a copy of the project up and running on your lo
             }
              match /bank_accounts/{accountId} {
               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              
+              match /transactions/{transactionId} {
+                allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              }
             }
           }
         }

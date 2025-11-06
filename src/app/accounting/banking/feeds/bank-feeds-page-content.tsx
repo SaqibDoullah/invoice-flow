@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,22 +15,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type BankAccount } from '@/types';
+import { type BankAccount, type BankTransaction } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const mockTransactions = [
-    { id: 't1', date: new Date(), description: 'Stripe Payment', amount: 1250.00, type: 'in' },
-    { id: 't2', date: new Date(), description: 'AMAZON WEB SERVICES', amount: -250.55, type: 'out' },
-    { id: 't3', date: new Date(), description: 'Mailchimp', amount: -89.00, type: 'out' },
-    { id: 't4', date: new Date(), description: 'Office Depot', amount: -121.30, type: 'out' },
-    { id: 't5', date: new Date(), description: 'Shopify Payment', amount: 899.99, type: 'in' },
-];
+const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v.toDate === 'function') return v.toDate();
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+};
 
 
 export default function BankFeedsPageContent() {
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+    const [transactions, setTransactions] = useState<BankTransaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedAccount, setSelectedAccount] = useState<string>('');
 
@@ -52,7 +52,7 @@ export default function BankFeedsPageContent() {
             if (accountsData.length > 0 && !selectedAccount) {
                 setSelectedAccount(accountsData[0].id);
             }
-            setLoading(false);
+            if(accountsData.length === 0) setLoading(false);
         }, (error) => {
             console.error("Error fetching bank accounts:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch bank accounts.'});
@@ -61,9 +61,36 @@ export default function BankFeedsPageContent() {
 
         return () => unsubscribe();
     }, [user, authLoading, toast, selectedAccount]);
+    
+    useEffect(() => {
+        if (!selectedAccount || !user) return;
+        const db = getFirestoreDb();
+        if (!db) return;
+
+        setLoading(true);
+        const transactionsRef = collection(db, 'users', user.uid, 'bank_accounts', selectedAccount, 'transactions');
+        const qTransactions = query(transactionsRef);
+
+        const unsubTransactions = onSnapshot(qTransactions, (snapshot) => {
+            const transData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BankTransaction));
+            setTransactions(transData);
+            setLoading(false);
+        }, (error) => {
+             console.error("Error fetching transactions:", error);
+            if (error.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch transactions.'});
+            }
+            setLoading(false);
+        });
+
+        return () => unsubTransactions();
+
+    }, [selectedAccount, user, toast]);
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     
+    const transactionsToReview = transactions.filter(t => t.status === 'unmatched');
+
     return (
         <AuthGuard>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -87,7 +114,7 @@ export default function BankFeedsPageContent() {
                 <CardContent className="p-4 flex items-center gap-4">
                      <div className="flex-1">
                         <label className="text-sm font-medium">Account</label>
-                        {loading ? <Skeleton className="h-10 w-full" /> : (
+                        {loading && bankAccounts.length === 0 ? <Skeleton className="h-10 w-full" /> : (
                             <Select value={selectedAccount} onValueChange={setSelectedAccount}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -97,7 +124,7 @@ export default function BankFeedsPageContent() {
                         )}
                     </div>
                     <div className="text-center pt-5">
-                        <p className="font-bold text-lg">{mockTransactions.length}</p>
+                        <p className="font-bold text-lg">{transactionsToReview.length}</p>
                         <p className="text-sm text-muted-foreground">Transactions to review</p>
                     </div>
                     <div className="text-center pt-5">
@@ -129,31 +156,41 @@ export default function BankFeedsPageContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {mockTransactions.map(t => (
-                                <TableRow key={t.id}>
-                                    <TableCell>{format(t.date, 'dd-MMM-yyyy')}</TableCell>
-                                    <TableCell>{t.description}</TableCell>
-                                    <TableCell className="text-right font-mono text-red-600">{t.type === 'out' ? formatCurrency(Math.abs(t.amount)) : '-'}</TableCell>
-                                    <TableCell className="text-right font-mono text-green-600">{t.type === 'in' ? formatCurrency(t.amount) : '-'}</TableCell>
-                                    <TableCell>
-                                        <Select>
-                                            <SelectTrigger className="h-8">
-                                                <SelectValue placeholder="Choose category" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="office-expense">Office Expense</SelectItem>
-                                                <SelectItem value="sales">Sales</SelectItem>
-                                                <SelectItem value="utilities">Utilities</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button variant="outline" size="sm">
-                                            <Plus className="mr-2 h-4 w-4" /> Add
-                                        </Button>
+                            {loading ? (
+                                <TableRow><TableCell colSpan={6} className="h-24"><Skeleton className="w-full h-8" /></TableCell></TableRow>
+                            ) : transactionsToReview.length > 0 ? (
+                                transactionsToReview.map(t => (
+                                    <TableRow key={t.id}>
+                                        <TableCell>{format(toDate(t.date)!, 'dd-MMM-yyyy')}</TableCell>
+                                        <TableCell>{t.description}</TableCell>
+                                        <TableCell className="text-right font-mono text-red-600">{t.type === 'debit' ? formatCurrency(Math.abs(t.amount)) : '-'}</TableCell>
+                                        <TableCell className="text-right font-mono text-green-600">{t.type === 'credit' ? formatCurrency(t.amount) : '-'}</TableCell>
+                                        <TableCell>
+                                            <Select>
+                                                <SelectTrigger className="h-8">
+                                                    <SelectValue placeholder="Choose category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="office-expense">Office Expense</SelectItem>
+                                                    <SelectItem value="sales">Sales</SelectItem>
+                                                    <SelectItem value="utilities">Utilities</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button variant="outline" size="sm">
+                                                <Plus className="mr-2 h-4 w-4" /> Add
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-24 text-center">
+                                        No transactions to review.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>

@@ -473,3 +473,13 @@ export interface BankAccount {
     openingBalance: number;
     currentBalance: number;
 }
+
+export interface BankTransaction {
+    id: string;
+    date: Date | Timestamp;
+    description: string;
+    amount: number;
+    type: 'credit' | 'debit';
+    status: 'unmatched' | 'matched' | 'reconciled';
+    categoryId?: string;
+}
