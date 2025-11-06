@@ -318,6 +318,15 @@ export default function TopNav({ include }: TopNavProps) {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild><Link href="/accounting/average-cost-changes">Average Cost Changes</Link></DropdownMenuItem>
                         <DropdownMenuSeparator />
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>Integrations</DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuItem asChild><Link href="/accounting/integrations/qbo">QuickBooks Online</Link></DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem asChild><Link href="/settings">Settings</Link></DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

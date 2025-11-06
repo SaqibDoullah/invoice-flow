@@ -355,8 +355,6 @@ export interface SalesOrder {
     trackingNumber: string;
     shipmentDate: Date | Timestamp | null;
     deliveryDate: Date | Timestamp | null;
-    publicNotes: string;
-    internalNotes: string;
 }
 
 export interface Return {
@@ -463,4 +461,15 @@ export interface JournalLine {
     fxRate?: number;
     taxId?: string;
     meta?: any;
+}
+
+export interface BankAccount {
+    id: string;
+    name: string;
+    institution: string;
+    type: 'checking' | 'savings' | 'credit_card';
+    currency: string;
+    accountNumberMask: string;
+    openingBalance: number;
+    currentBalance: number;
 }

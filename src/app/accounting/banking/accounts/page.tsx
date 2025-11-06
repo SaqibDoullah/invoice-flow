@@ -1,12 +1,12 @@
 
 import AuthGuard from '@/components/auth/auth-guard';
+import BankAccountsPageContent from './bank-accounts-page-content';
 
 export default function BankAccountsPage() {
     return (
         <AuthGuard>
-            <div className="container mx-auto p-8">
-                <h1 className="text-2xl font-bold">Bank Accounts</h1>
-                <p className="text-muted-foreground">This page will display bank accounts.</p>
+            <div className="container mx-auto p-4 md:p-8">
+                <BankAccountsPageContent />
             </div>
         </AuthGuard>
     )
