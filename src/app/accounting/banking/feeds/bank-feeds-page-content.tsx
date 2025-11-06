@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type BankAccount, type BankTransaction } from '@/types';
+import { type BankAccount, type BankTransaction, type ChartOfAccount } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const toDate = (v: any): Date | null => {
@@ -31,6 +32,7 @@ export default function BankFeedsPageContent() {
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+    const [chartOfAccounts, setChartOfAccounts] = useState<ChartOfAccount[]>([]);
     const [transactions, setTransactions] = useState<BankTransaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedAccount, setSelectedAccount] = useState<string>('');
@@ -43,23 +45,51 @@ export default function BankFeedsPageContent() {
         }
 
         setLoading(true);
-        const accountsCollectionRef = collection(db, 'users', user.uid, 'bank_accounts');
-        const q = query(accountsCollectionRef);
+        let accountsLoaded = false;
+        let coaLoaded = false;
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const checkAllLoaded = () => {
+            if(accountsLoaded && coaLoaded) {
+                // Determine loading state based on transaction fetching
+            }
+        }
+
+        const accountsCollectionRef = collection(db, 'users', user.uid, 'bank_accounts');
+        const qAccounts = query(accountsCollectionRef);
+        const unsubAccounts = onSnapshot(qAccounts, (snapshot) => {
             const accountsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BankAccount));
             setBankAccounts(accountsData);
             if (accountsData.length > 0 && !selectedAccount) {
                 setSelectedAccount(accountsData[0].id);
             }
             if(accountsData.length === 0) setLoading(false);
+            accountsLoaded = true;
+            checkAllLoaded();
         }, (error) => {
             console.error("Error fetching bank accounts:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch bank accounts.'});
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        const coaCollectionRef = collection(db, 'users', user.uid, 'chart_of_accounts');
+        const qCoa = query(coaCollectionRef);
+        const unsubCoa = onSnapshot(qCoa, (snapshot) => {
+            const coaData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChartOfAccount));
+            setChartOfAccounts(coaData);
+            coaLoaded = true;
+            checkAllLoaded();
+        }, (error) => {
+            console.error("Error fetching chart of accounts:", error);
+            if (error.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch chart of accounts.' });
+            }
+            setLoading(false);
+        });
+
+        return () => {
+            unsubAccounts();
+            unsubCoa();
+        }
     }, [user, authLoading, toast, selectedAccount]);
     
     useEffect(() => {
@@ -90,6 +120,10 @@ export default function BankFeedsPageContent() {
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     
     const transactionsToReview = transactions.filter(t => t.status === 'unmatched');
+    
+    const selectedBankAccount = bankAccounts.find(a => a.id === selectedAccount);
+    const coreOpsAccount = chartOfAccounts.find(acc => acc.name === selectedBankAccount?.name);
+    const coreOpsBalance = coreOpsAccount?.balance || 0;
 
     return (
         <AuthGuard>
@@ -128,11 +162,11 @@ export default function BankFeedsPageContent() {
                         <p className="text-sm text-muted-foreground">Transactions to review</p>
                     </div>
                     <div className="text-center pt-5">
-                        <p className="font-bold text-lg">{formatCurrency(bankAccounts.find(a => a.id === selectedAccount)?.currentBalance || 0)}</p>
+                        <p className="font-bold text-lg">{formatCurrency(selectedBankAccount?.currentBalance || 0)}</p>
                         <p className="text-sm text-muted-foreground">Bank Balance</p>
                     </div>
                      <div className="text-center pt-5">
-                        <p className="font-bold text-lg">{formatCurrency(12345.67)}</p>
+                        <p className="font-bold text-lg">{formatCurrency(coreOpsBalance)}</p>
                         <p className="text-sm text-muted-foreground">Balance in CoreOps</p>
                     </div>
                 </CardContent>
