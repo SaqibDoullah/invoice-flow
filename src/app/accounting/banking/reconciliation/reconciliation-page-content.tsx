@@ -28,36 +28,43 @@ import {
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
-import { type BankAccount } from '@/types';
+import { type BankAccount, type BankTransaction } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-const initialTransactions = {
-    payments: [
-        { id: 'p1', date: new Date(), description: 'Office Supplies', amount: 150.75, cleared: false },
-        { id: 'p2', date: new Date(), description: 'Software Subscription', amount: 49.99, cleared: false },
-    ],
-    deposits: [
-        { id: 'd1', date: new Date(), description: 'Invoice #2024-001', amount: 1200.00, cleared: false },
-        { id: 'd2', date: new Date(), description: 'Client Payment', amount: 850.50, cleared: false },
-    ]
+type ReconcilableTransaction = {
+    id: string;
+    date: Date;
+    description: string;
+    amount: number;
+    cleared: boolean;
 };
+
+const toDate = (v: any): Date | null => {
+    if (!v) return null;
+    if (v instanceof Date) return v;
+    if (typeof v.toDate === 'function') return v.toDate();
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+};
+
 
 export default function ReconciliationPageContent() {
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
     const [loading, setLoading] = useState(true);
+    const [transactionsLoading, setTransactionsLoading] = useState(false);
 
-    const [step, setStep] = useState(1); // 1 for setup, 2 for reconciliation
+    const [step, setStep] = useState(1);
     const [selectedAccount, setSelectedAccount] = useState<string>('');
     const [statementBalance, setStatementBalance] = useState<string>('');
     const [statementDate, setStatementDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     
-    const [transactions, setTransactions] = useState(initialTransactions);
+    const [transactions, setTransactions] = useState<{ payments: ReconcilableTransaction[], deposits: ReconcilableTransaction[] }>({ payments: [], deposits: []});
 
     useEffect(() => {
         const db = getFirestoreDb();
@@ -82,6 +89,53 @@ export default function ReconciliationPageContent() {
 
         return () => unsubscribe();
     }, [user, authLoading, toast]);
+    
+    useEffect(() => {
+        if (!selectedAccount || !user || step !== 2) return;
+        const db = getFirestoreDb();
+        if (!db) return;
+
+        setTransactionsLoading(true);
+        const transactionsRef = collection(db, 'users', user.uid, 'bank_accounts', selectedAccount, 'transactions');
+        const qTransactions = query(transactionsRef);
+
+        const unsubTransactions = onSnapshot(qTransactions, (snapshot) => {
+            const fetchedTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BankTransaction));
+            
+            const payments = fetchedTransactions
+                .filter(t => t.type === 'debit')
+                .map(t => ({
+                    id: t.id,
+                    date: toDate(t.date)!,
+                    description: t.description,
+                    amount: t.amount,
+                    cleared: false
+                }));
+
+            const deposits = fetchedTransactions
+                .filter(t => t.type === 'credit')
+                .map(t => ({
+                    id: t.id,
+                    date: toDate(t.date)!,
+                    description: t.description,
+                    amount: t.amount,
+                    cleared: false
+                }));
+
+            setTransactions({ payments, deposits });
+            setTransactionsLoading(false);
+        }, (error) => {
+             console.error("Error fetching transactions:", error);
+            if (error.code !== 'permission-denied') {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch transactions.'});
+            }
+            setTransactionsLoading(false);
+        });
+
+        return () => unsubTransactions();
+
+    }, [selectedAccount, user, step, toast]);
+
 
     const handleStartReconciliation = () => {
         if (!selectedAccount || !statementBalance || !statementDate) {
@@ -223,14 +277,20 @@ export default function ReconciliationPageContent() {
                                 </TableRow>
                             </TableHeader>
                              <TableBody>
-                                {transactions.payments.map(t => (
-                                    <TableRow key={t.id}>
-                                        <TableCell><Checkbox checked={t.cleared} onCheckedChange={() => handleTransactionToggle('payments', t.id)} /></TableCell>
-                                        <TableCell>{format(t.date, 'PP')}</TableCell>
-                                        <TableCell>{t.description}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(t.amount)}</TableCell>
-                                    </TableRow>
-                                ))}
+                                {transactionsLoading ? (
+                                    <TableRow><TableCell colSpan={4} className="h-24"><Skeleton className="h-8 w-full"/></TableCell></TableRow>
+                                ) : transactions.payments.length > 0 ? (
+                                    transactions.payments.map(t => (
+                                        <TableRow key={t.id}>
+                                            <TableCell><Checkbox checked={t.cleared} onCheckedChange={() => handleTransactionToggle('payments', t.id)} /></TableCell>
+                                            <TableCell>{format(t.date, 'PP')}</TableCell>
+                                            <TableCell>{t.description}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(t.amount)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow><TableCell colSpan={4} className="h-24 text-center">No payments to reconcile.</TableCell></TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -250,14 +310,20 @@ export default function ReconciliationPageContent() {
                                 </TableRow>
                             </TableHeader>
                              <TableBody>
-                                {transactions.deposits.map(t => (
-                                    <TableRow key={t.id}>
-                                        <TableCell><Checkbox checked={t.cleared} onCheckedChange={() => handleTransactionToggle('deposits', t.id)} /></TableCell>
-                                        <TableCell>{format(t.date, 'PP')}</TableCell>
-                                        <TableCell>{t.description}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(t.amount)}</TableCell>
-                                    </TableRow>
-                                ))}
+                                 {transactionsLoading ? (
+                                    <TableRow><TableCell colSpan={4} className="h-24"><Skeleton className="h-8 w-full"/></TableCell></TableRow>
+                                ) : transactions.deposits.length > 0 ? (
+                                    transactions.deposits.map(t => (
+                                        <TableRow key={t.id}>
+                                            <TableCell><Checkbox checked={t.cleared} onCheckedChange={() => handleTransactionToggle('deposits', t.id)} /></TableCell>
+                                            <TableCell>{format(t.date, 'PP')}</TableCell>
+                                            <TableCell>{t.description}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(t.amount)}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow><TableCell colSpan={4} className="h-24 text-center">No deposits to reconcile.</TableCell></TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
