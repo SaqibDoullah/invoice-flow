@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -48,6 +47,7 @@ import { type JournalLine } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
+import { format } from 'date-fns';
 
 export default function GeneralLedgerPageContent() {
   const [ledgerLines, setLedgerLines] = useState<JournalLine[]>([]);
@@ -92,6 +92,37 @@ export default function GeneralLedgerPageContent() {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
+    
+    const exportToCSV = () => {
+        const headers = ['Date', 'Transaction Type', 'No.', 'Contact', 'Memo/Description', 'Account', 'Debit', 'Credit', 'Balance'];
+        const csvRows = [headers.join(',')];
+
+        for (const entry of ledgerLines) {
+            const row = [
+                '', // Date
+                '', // Type
+                entry.journalId.substring(0, 7),
+                entry.contactId || '',
+                '', // Memo
+                entry.accountId,
+                entry.debit,
+                entry.credit,
+                '', // Balance
+            ].join(',');
+            csvRows.push(row);
+        }
+
+        const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'general-ledger.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
 
   return (
     <AuthGuard>
@@ -121,21 +152,13 @@ export default function GeneralLedgerPageContent() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => window.print()}>
                         <Printer className="mr-2 h-4 w-4" />
                         Print
                     </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export as PDF
-                    </DropdownMenuItem>
-                     <DropdownMenuItem>
+                     <DropdownMenuItem onSelect={exportToCSV}>
                         <Download className="mr-2 h-4 w-4" />
                         Export as CSV
-                    </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email Report
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -90,6 +89,33 @@ export default function TrialBalancePageContent() {
       currency: 'USD',
       minimumFractionDigits: 2,
     }).format(amount);
+    
+   const exportToCSV = () => {
+    const headers = ['Account Code', 'Account Name', 'Debit', 'Credit'];
+    const csvRows = [headers.join(',')];
+
+    for (const account of accounts) {
+        const isDebit = account.type === 'Asset' || account.type === 'Expense';
+        const balance = account.balance || 0;
+        const debit = isDebit ? balance : 0;
+        const credit = !isDebit ? balance : 0;
+        const row = [account.code, `"${account.name}"`, debit, credit].join(',');
+        csvRows.push(row);
+    }
+    
+    csvRows.push(['', 'Total', totalDebits, totalCredits].join(','));
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `trial-balance-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+   };
+
 
   return (
     <AuthGuard>
@@ -122,21 +148,13 @@ export default function TrialBalancePageContent() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => window.print()}>
                         <Printer className="mr-2 h-4 w-4" />
                         Print
                     </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export as PDF
-                    </DropdownMenuItem>
-                     <DropdownMenuItem>
+                     <DropdownMenuItem onSelect={exportToCSV}>
                         <Download className="mr-2 h-4 w-4" />
                         Export as CSV
-                    </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email Report
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

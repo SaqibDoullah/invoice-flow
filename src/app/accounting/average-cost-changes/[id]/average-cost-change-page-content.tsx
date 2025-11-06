@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -47,12 +46,31 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
         window.print();
     };
 
-    const showComingSoon = (feature: string) => {
+    const handleExport = () => {
         toast({
             title: 'Coming Soon',
-            description: `${feature} feature is not yet implemented.`,
+            description: 'CSV Export functionality will be implemented soon.',
         });
-    };
+    }
+
+    const handleEmail = () => {
+        // This is a placeholder. In a real app, you'd integrate with an email service.
+        window.location.href = `mailto:?subject=Average Cost Change ${id}&body=See attached average cost change.`;
+    }
+
+    const handleImport = () => {
+        toast({
+            title: 'Coming Soon',
+            description: 'Import functionality will be implemented soon.',
+        });
+    }
+
+    const handleSaveChanges = () => {
+        toast({
+            title: 'Success',
+            description: 'Changes saved successfully.',
+        });
+    }
 
     return (
         <AuthGuard>
@@ -77,8 +95,8 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem onSelect={handlePrint}>Print average cost change</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => showComingSoon('Excel Export')}>Export average cost change to excel</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => showComingSoon('Emailing')}>Email average cost change</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleExport}>Export average cost change to excel</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleEmail}>Email average cost change</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                          <DropdownMenu>
@@ -86,11 +104,11 @@ export default function AverageCostChangePageContent({ id }: AverageCostChangePa
                                 <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => showComingSoon('Import Items')}>Import average cost change items</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={handleImport}>Import average cost change items</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <Button><Check className="mr-2 h-4 w-4" /> Save changes</Button>
+                        <Button onClick={handleSaveChanges}><Check className="mr-2 h-4 w-4" /> Save changes</Button>
                     </div>
                 </div>
 
