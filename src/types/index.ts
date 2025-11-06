@@ -483,3 +483,13 @@ export interface BankTransaction {
     status: 'unmatched' | 'matched' | 'reconciled';
     categoryId?: string;
 }
+
+export interface CreditNote {
+    id: string;
+    creditNoteId: string;
+    customerId: string;
+    customerName: string;
+    date: Date | Timestamp;
+    amount: number;
+    status: 'Open' | 'Applied' | 'Void';
+}

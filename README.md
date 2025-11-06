@@ -144,6 +144,11 @@ Follow these instructions to get a copy of the project up and running on your lo
             match /averageCostChanges/{changeId} {
               allow read, write, delete, list: if request.auth != null && request.auth.uid == userId;
             }
+
+            // A user can manage their own creditNotes subcollection
+            match /creditNotes/{noteId} {
+               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
       }
