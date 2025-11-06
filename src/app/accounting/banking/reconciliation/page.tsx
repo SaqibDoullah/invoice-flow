@@ -1,12 +1,12 @@
 
 import AuthGuard from '@/components/auth/auth-guard';
+import ReconciliationPageContent from './reconciliation-page-content';
 
 export default function ReconciliationPage() {
     return (
         <AuthGuard>
-            <div className="container mx-auto p-8">
-                <h1 className="text-2xl font-bold">Reconciliation</h1>
-                <p className="text-muted-foreground">This page will display the bank reconciliation wizard.</p>
+            <div className="container mx-auto p-4 md:p-8">
+                <ReconciliationPageContent />
             </div>
         </AuthGuard>
     )
