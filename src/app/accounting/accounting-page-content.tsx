@@ -13,42 +13,42 @@ const accountingFeatures = [
         description: "Update product's average cost.", 
         icon: <Calculator />, 
         href: '/accounting/average-cost-changes', 
-        color?: string 
+        color: "teal" 
     },
     { 
         title: 'Journal entries', 
         description: 'View all journal entries.', 
         icon: <BookCopy />, 
         href: '/accounting/journal-entries', 
-        color?: string 
+        color: "teal" 
     },
     { 
         title: 'Consolidations', 
         description: 'View all consolidations.', 
         icon: <Library />, 
         href: '/accounting/consolidations', 
-        color?: string 
+        color: "teal" 
     },
     { 
         title: 'General ledger', 
         description: 'View all financial transactions.', 
         icon: <BookCopy />, 
         href: '/accounting/general-ledger', 
-        color?: string 
+        color: "teal" 
     },
     {
         title: 'Banking & reconciliation',
         description: 'Import, match, and reconcile bank transactions.',
         icon: <Banknote />,
         href: '/accounting/banking/accounts',
-        color?: string
+        color: "teal"
     },
     {
         title: 'Tax summary',
         description: 'Collected vs payable taxes.',
         icon: <FileText />,
         href: '/accounting/tax-summary',
-        color?: string
+        color: "teal"
     }
 ];
 
@@ -56,7 +56,7 @@ const colorVariants = {
   teal: { bg: 'bg-teal-100 dark:bg-teal-900/50', icon: 'text-teal-500' },
 };
 
-const FeatureCard = ({ title, description, icon, href, color }: { title: string, description: string, icon: React.ReactNode, href: string, color?: string }) => {
+const FeatureCard = ({ title, description, icon, href, color }: { title: string, description: string, icon: React.ReactNode, href: string, color: "teal" }) => {
   const isImplemented = href !== '#';
   const colors = colorVariants[color];
 
