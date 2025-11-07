@@ -52,13 +52,14 @@ const accountingFeatures = [
     }
 ];
 
-const colorVariants = {
+const colorVariants: Record<string, { bg: string; icon: string }>= {
   teal: { bg: 'bg-teal-100 dark:bg-teal-900/50', icon: 'text-teal-500' },
 };
 
-const FeatureCard = ({ title, description, icon, href, color = 'teal' }: { title: string, description: string, icon: React.ReactNode, href: string, color?: keyof typeof colorVariants}) => {
+const FeatureCard = ({ title, description, icon, href, color = 'teal' }: { title: string, description: string, icon: React.ReactNode, href: string, color?: string}) => {
   const isImplemented = href !== '#';
-  const colors = colorVariants[color];
+  const tone = (color as string) || 'teal';
+  const colors = colorVariants[tone] || colorVariants['teal'];
 
   const cardContent = (
     <div className={`flex items-center gap-4 p-4 rounded-lg transition-all duration-200 h-full ${isImplemented ? 'hover:bg-accent' : 'cursor-not-allowed opacity-60'}`}>
