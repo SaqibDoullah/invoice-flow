@@ -70,7 +70,7 @@ const accountingFeaturesCol2 = [
     { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy />, href: '/accounting/general-ledger', color: 'teal' },
 ]
 
-const colorVariants: Record<string, { bg: string; text: string; icon: string }> = {
+const colorVariants = {
   red: { bg: 'bg-red-500', text: 'text-red-500', icon: 'text-white' },
   orange: { bg: 'bg-orange-400', text: 'text-orange-400', icon: 'text-white' },
   yellow: { bg: 'bg-yellow-400', text: 'text-yellow-400', icon: 'text-white' },
@@ -80,7 +80,15 @@ const colorVariants: Record<string, { bg: string; text: string; icon: string }> 
   teal: { bg: 'bg-teal-500', text: 'text-teal-500', icon: 'text-white' },
 };
 
-const FeatureCard = ({ title, description, icon, href, color = "teal" }: { title: string; description: string; icon: React.ReactNode; href: string; color?: string }) => {
+interface FeatureCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  href: string;
+  color?: string;
+}
+
+const FeatureCard = ({ title, description, icon, href, color = "teal" }: FeatureCardProps) => {
   const isImplemented = href !== '#';
   const colors = colorVariants[color as keyof typeof colorVariants];
 
