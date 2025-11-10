@@ -80,7 +80,7 @@ const colorVariants = {
   teal: { bg: 'bg-teal-500', text: 'text-teal-500', icon: 'text-white' },
 };
 
-const FeatureCard = ({ title, description, icon, href, color }: { title: string, description: string, icon: React.ReactNode, href: string, color: keyof typeof colorVariants }) => {
+const FeatureCard = ({ title, description, icon, href, color = "teal" }): { title: string, description: string, icon: React.ReactNode, href: string, color?: string }) => {
   const isImplemented = href !== '#';
   const colors = colorVariants[color];
 
