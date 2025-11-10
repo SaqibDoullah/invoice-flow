@@ -21,12 +21,10 @@ import {
   DollarSign,
   Undo2,
   Calculator,
-  BookCopy,
-  Library,
 } from 'lucide-react';
 import AuthGuard from '@/components/auth/auth-guard';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 const purchasingFeatures = [
   { title: 'Suppliers', description: 'View all suppliers.', icon: <Users />, href: '/suppliers', color: 'red' },
@@ -61,14 +59,8 @@ const sellingFeatures = [
 ];
 
 const accountingFeatures = [
-    { title: 'Average cost changes', description: "Update product's average cost.", icon: <Calculator />, href: '/accounting/average-cost-changes', color: 'teal' },
-    { title: 'Consolidations', description: 'View all consolidations.', icon: <Library />, href: '/accounting/consolidations', color: 'teal' },
+    { title: 'Accounting', description: "Manage GL, AR/AP, banking, and financial reports.", icon: <Calculator />, href: '/accounting', color: 'teal' },
 ];
-
-const accountingFeaturesCol2 = [
-    { title: 'Journal entries', description: 'View all journal entries.', icon: <BookCopy />, href: '/accounting/journal-entries', color: 'teal' },
-    { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy />, href: '/accounting/general-ledger', color: 'teal' },
-]
 
 const colorVariants = {
   red: { bg: 'bg-red-500', text: 'text-red-500', icon: 'text-white' },
@@ -80,9 +72,17 @@ const colorVariants = {
   teal: { bg: 'bg-teal-500', text: 'text-teal-500', icon: 'text-white' },
 };
 
-const FeatureCard = ({ title, description, icon, href, color = "teal" }): { title: string, description: string, icon: React.ReactNode, href: string, color?: string }) => {
+interface FeatureCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  href: string;
+  color?: string;
+}
+
+const FeatureCard = ({ title, description, icon, href, color = "teal" }: FeatureCardProps) => {
   const isImplemented = href !== '#';
-  const colors = colorVariants[color];
+  const colors = colorVariants[color as keyof typeof colorVariants];
 
   const cardContent = (
     <div className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${isImplemented ? 'hover:bg-accent' : 'cursor-not-allowed opacity-60'}`}>
@@ -144,17 +144,10 @@ export default function DashboardPageContent() {
                  <div>
                     <h2 className="text-2xl font-bold mb-4">Accounting</h2>
                      <Card>
-                        <CardContent className="p-2 grid grid-cols-2 gap-1">
-                             <div className="flex flex-col gap-1">
-                                {accountingFeatures.map((feature) => (
-                                    <FeatureCard key={feature.title} {...feature} />
-                                ))}
-                            </div>
-                             <div className="flex flex-col gap-1">
-                                {accountingFeaturesCol2.map((feature) => (
-                                    <FeatureCard key={feature.title} {...feature} />
-                                ))}
-                            </div>
+                        <CardContent className="p-2 flex flex-col gap-1">
+                            {accountingFeatures.map((feature) => (
+                                <FeatureCard key={feature.title} {...feature} />
+                            ))}
                         </CardContent>
                     </Card>
                  </div>
