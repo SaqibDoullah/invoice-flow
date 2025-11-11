@@ -88,7 +88,7 @@ interface FeatureCardProps {
   color?: string;
 }
 
-const FeatureCard = ({ title, description, icon, href, color = "teal" }: FeatureCardProps) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, href, color = "teal" }) => {
   const isImplemented = href !== '#';
   const colors = colorVariants[color as keyof typeof colorVariants];
 
