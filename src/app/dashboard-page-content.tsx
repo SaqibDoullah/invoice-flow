@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -90,7 +89,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, hre
             {React.cloneElement(icon as React.ReactElement, { className: `w-6 h-6 ${colors.icon}` })}
         </div>
         <div>
-            <h3 className={`font-semibold text-blue-600`}>{title}</h3>
+            <h3 className={`font-semibold text-primary`}>{title}</h3>
             <p className="text-sm text-muted-foreground">{description}</p>
         </div>
     </div>
