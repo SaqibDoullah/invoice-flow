@@ -81,7 +81,7 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, href, color = "teal" }) => {
   const isImplemented = href !== '#';
-  const colors = colorVariants[color] || colorVariants.teal;
+  const colors = colorVariants[color] ?? colorVariants.teal;
 
   const cardContent = (
     <div className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${isImplemented ? 'hover:bg-accent' : 'cursor-not-allowed opacity-60'}`}>
