@@ -69,14 +69,14 @@ const accountingFeaturesCol2 = [
     { title: 'General ledger', description: 'View all financial transactions.', icon: <BookCopy />, href: '/accounting/general-ledger', color: 'teal' },
 ]
 
-const colorVariants = {
-  red: { bg: 'bg-red-500', text: 'text-red-500', icon: 'text-white' },
-  orange: { bg: 'bg-orange-400', text: 'text-orange-400', icon: 'text-white' },
-  yellow: { bg: 'bg-yellow-400', text: 'text-yellow-400', icon: 'text-white' },
-  blue: { bg: 'bg-blue-500', text: 'text-blue-500', icon: 'text-white' },
-  purple: { bg: 'bg-purple-500', text: 'text-purple-500', icon: 'text-white' },
-  green: { bg: 'bg-green-500', text: 'text-green-500', icon: 'text-white' },
-  teal: { bg: 'bg-teal-500', text: 'text-teal-500', icon: 'text-white' },
+const colorVariants: Record<string, { bg: string; icon: string }> = {
+  red: { bg: 'bg-red-100 dark:bg-red-900/50', icon: 'text-red-500' },
+  orange: { bg: 'bg-orange-100 dark:bg-orange-900/50', icon: 'text-orange-500' },
+  yellow: { bg: 'bg-yellow-100 dark:bg-yellow-900/50', icon: 'text-yellow-500' },
+  blue: { bg: 'bg-blue-100 dark:bg-blue-900/50', icon: 'text-blue-500' },
+  purple: { bg: 'bg-purple-100 dark:bg-purple-900/50', icon: 'text-purple-500' },
+  green: { bg: 'bg-green-100 dark:bg-green-900/50', icon: 'text-green-500' },
+  teal: { bg: 'bg-teal-100 dark:bg-teal-900/50', icon: 'text-teal-500' },
 };
 
 interface FeatureCardProps {
@@ -89,7 +89,7 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, href, color = "teal" }) => {
   const isImplemented = href !== '#';
-  const colors = colorVariants[color as keyof typeof colorVariants];
+  const colors = colorVariants[color] || colorVariants.teal;
 
   const cardContent = (
     <div className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${isImplemented ? 'hover:bg-accent' : 'cursor-not-allowed opacity-60'}`}>
