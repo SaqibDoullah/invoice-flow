@@ -115,7 +115,7 @@ export default function ReorderingSummaryPageContent() {
             locations.forEach(loc => {
                 // This is a placeholder logic. Real logic would depend on how stock is tracked per location.
                 const isItemInLocation = loc.name === "Tawakkal Warehouse"; // Example
-                dynamicLocationData[`loc_${loc.id}_avail`] = isItemInLocation ? item.quantityAvailable : null;
+                dynamicLocationData[`loc_${loc.id}_avail`] = isItemInLocation ? (item.quantityAvailable ?? null) : null;
             });
 
             return {
