@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Truck, Undo2, RefreshCw, Filter, ArrowUpDown, ShieldAlert, Upload, Download, Settings2, Checkbox, ArrowDown, ArrowUp } from 'lucide-react';
+import { Home, ChevronRight, Search, MessageCircle, ChevronDown, Truck, Undo2, RefreshCw, Filter, ArrowUpDown, ShieldAlert, Upload, Download, Settings2, ArrowDown, ArrowUp } from 'lucide-react';
 import { collection, query, onSnapshot, orderBy, limit, where } from 'firebase/firestore';
 import { format, isValid } from 'date-fns';
 import Image from 'next/image';
@@ -29,6 +30,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+
 
 const toDate = (v: any): Date | null => {
     if (!v) return null;
@@ -229,11 +232,11 @@ export default function TransfersPageContent() {
                                 </Button>
                                 <Button variant="outline">Import transfer orders</Button>
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger>
                                     <DropdownMenuContent><DropdownMenuItem>Export CSV</DropdownMenuItem></DropdownMenuContent>
                                 </DropdownMenu>
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger>
                                     <DropdownMenuContent><DropdownMenuItem>Action 1</DropdownMenuItem></DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -298,11 +301,11 @@ export default function TransfersPageContent() {
                             <div className="flex items-center gap-2">
                                 <Button>Create transfer shipment</Button>
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Export <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger>
                                     <DropdownMenuContent><DropdownMenuItem>Export CSV</DropdownMenuItem></DropdownMenuContent>
                                 </DropdownMenu>
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button></DropdownMenuTrigger>
+                                    <DropdownMenuTrigger asChild><Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger>
                                     <DropdownMenuContent><DropdownMenuItem>Action 1</DropdownMenuItem></DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

@@ -1,5 +1,6 @@
 
 
+
 import { z } from 'zod';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -355,6 +356,8 @@ export interface SalesOrder {
     trackingNumber: string;
     shipmentDate: Date | Timestamp | null;
     deliveryDate: Date | Timestamp | null;
+    publicNotes?: string;
+    internalNotes?: string;
 }
 
 export interface Return {
@@ -493,3 +496,8 @@ export interface CreditNote {
     amount: number;
     status: 'Open' | 'Applied' | 'Void';
 }
+
+export type Column = {
+  id: string;
+  label: string;
+};

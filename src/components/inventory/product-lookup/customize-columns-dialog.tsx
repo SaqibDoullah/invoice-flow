@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -12,11 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { GripVertical } from 'lucide-react';
+import { type Column } from '@/types';
 
-type Column = {
-    id: string;
-    label: string;
-};
 
 interface CustomizeColumnsDialogProps {
   isOpen: boolean;

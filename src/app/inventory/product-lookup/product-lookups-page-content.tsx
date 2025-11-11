@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -35,7 +36,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type ProductLookup } from '@/types';
+import { type ProductLookup, type Column } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
@@ -44,11 +45,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 import CustomizeColumnsDialog from '@/components/inventory/product-lookup/customize-columns-dialog';
-
-type Column = {
-  id: keyof ProductLookup | 'id';
-  label: string;
-};
 
 const initialColumns: Column[] = [
     { id: 'productLookup', label: 'Product lookup' },
@@ -121,7 +117,7 @@ export default function ProductLookupsPageContent() {
     return () => unsubscribe();
   }, [user, authLoading, toast, searchTerm, statusFilter]);
 
-  const renderCell = (lookup: ProductLookup, columnId: keyof ProductLookup | 'id') => {
+  const renderCell = (lookup: ProductLookup, columnId: string) => {
       if (columnId === 'id') return null;
       const value = lookup[columnId as keyof ProductLookup];
 
