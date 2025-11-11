@@ -1,10 +1,15 @@
-
 'use client';
 
 import { usePathname } from 'next/navigation';
 import Header from './header';
 import { Toaster } from './ui/toaster';
-import FirebaseErrorListener from './FirebaseErrorListener';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+const FirebaseErrorListener = dynamic(
+  () => import('./FirebaseErrorListener'),
+  { ssr: false }
+);
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -15,7 +20,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <>
                 {children}
                 <Toaster />
-                {process.env.NODE_ENV === 'development' && <FirebaseErrorListener />}
+                {process.env.NODE_ENV === 'development' && (
+                  <Suspense fallback={null}>
+                    <FirebaseErrorListener />
+                  </Suspense>
+                )}
             </>
         );
     }
@@ -27,7 +36,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {children}
             </main>
             <Toaster />
-            {process.env.NODE_ENV === 'development' && <FirebaseErrorListener />}
+            {process.env.NODE_ENV === 'development' && (
+              <Suspense fallback={null}>
+                <FirebaseErrorListener />
+              </Suspense>
+            )}
         </div>
     );
 }
