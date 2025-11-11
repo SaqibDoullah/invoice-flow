@@ -40,7 +40,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type InventoryItem } from '@/types';
+import { type InventoryItem, type Column } from '@/types';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -51,10 +51,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import CustomizeColumnsDialog from '@/components/inventory/products/customize-columns-dialog';
 
-type Column = {
-  id: keyof InventoryItem | 'id' | 'image';
-  label: string;
-};
 
 const initialColumns: Column[] = [
     { id: 'productStatus', label: 'Product Status' },
@@ -128,7 +124,7 @@ export default function ProductsPageContent() {
       maximumFractionDigits: 2,
     }).format(amount || 0);
 
-  const renderCell = (item: InventoryItem, columnId: Column['id']) => {
+  const renderCell = (item: InventoryItem, columnId: string) => {
     switch (columnId) {
       case 'productStatus':
         return (
@@ -142,7 +138,7 @@ export default function ProductsPageContent() {
         return <span className="font-medium text-primary">{item.sku || item.id}</span>;
       case 'stdBuyPrice':
       case 'price':
-        return <div className="text-right">{formatCurrency(item[columnId] as number)}</div>;
+        return <div className="text-right">{formatCurrency(item[columnId as keyof InventoryItem] as number)}</div>;
       default:
         return item[columnId as keyof InventoryItem] as string | number | null || 'N/A';
     }
@@ -316,3 +312,5 @@ export default function ProductsPageContent() {
     </AuthGuard>
   );
 }
+
+    
