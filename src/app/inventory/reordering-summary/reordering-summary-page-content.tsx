@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -320,7 +319,7 @@ const CustomizeColumnsDialog = ({
   // Update local state if columns prop changes
   useEffect(() => {
     setLocalColumns(columns);
-  }, [columns]);
+  }, [columns, isOpen]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
     draggingItem.current = position;
