@@ -96,7 +96,7 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InventoryItem));
             const foundProduct = items.find(item => item.sku === productId || item.id === productId);
-            setProduct(foundProduct || { id: productId, name: 'New Product' });
+            setProduct(foundProduct || null);
             setLoading(false);
         }, (error) => {
             console.error("Error fetching product:", error);
@@ -108,6 +108,18 @@ export default function ProductDetailPageContent({ productId }: ProductDetailPag
 
     if (loading || authLoading) {
         return <div className="p-8"><Skeleton className="h-64 w-full" /></div>
+    }
+
+    if (!product) {
+        return (
+             <div className="container mx-auto p-8 text-center">
+                <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+                <p>The product with ID "{productId}" does not exist or could not be loaded.</p>
+                <Button asChild className="mt-4">
+                    <Link href="/inventory/products">Return to Products</Link>
+                </Button>
+            </div>
+        )
     }
 
     return (
