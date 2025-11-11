@@ -1,5 +1,7 @@
+
 'use client';
 
+import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import {
   Home,
@@ -308,15 +310,14 @@ const CustomizeColumnsDialog = ({
   setColumns,
 }: {
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   columns: Column[];
-  setColumns: (columns: Column[]) => void;
+  setColumns: React.Dispatch<React.SetStateAction<Column[]>>;
 }) => {
-  const [localColumns, setLocalColumns] = useState(columns);
+  const [localColumns, setLocalColumns] = useState<Column[]>(columns);
   const draggingItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
   
-  // Update local state if columns prop changes
   useEffect(() => {
     setLocalColumns(columns);
   }, [columns, isOpen]);
