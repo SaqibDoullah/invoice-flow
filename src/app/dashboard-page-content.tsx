@@ -61,7 +61,7 @@ const accountingFeatures = [
     { title: 'Accounting', description: "Manage GL, AR/AP, banking, and financial reports.", icon: <Calculator />, href: '/accounting', color: 'teal' },
 ];
 
-const colorVariants: Record<string, { bg: string, icon: string }> = {
+const colorVariants: Record<string, { bg: string; icon: string }> = {
   red: { bg: 'bg-red-100 dark:bg-red-900/50', icon: 'text-red-500' },
   orange: { bg: 'bg-orange-100 dark:bg-orange-900/50', icon: 'text-orange-500' },
   yellow: { bg: 'bg-yellow-100 dark:bg-yellow-900/50', icon: 'text-yellow-500' },
