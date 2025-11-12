@@ -143,7 +143,12 @@ export default function ReplenishmentPageContent() {
                         </div>
                         <div>
                             <label className="text-xs text-muted-foreground">Destination recommended quantity</label>
-                            <Select defaultValue="gt-zero"><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="gt-zero">Transfer quantity {'>'} 0</SelectItem></SelectContent></Select>
+                            <Select defaultValue="gt-zero">
+                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="gt-zero">Transfer quantity {'>'} 0</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                      <div className="flex items-center justify-between">
@@ -207,3 +212,5 @@ export default function ReplenishmentPageContent() {
         </AuthGuard>
     );
 }
+
+    
