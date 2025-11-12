@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type Return } from '@/types';
+import { type Return, type Column } from '@/types';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -44,11 +44,6 @@ const toDate = (v: any): Date | null => {
     if (typeof v.toDate === 'function') return v.toDate();
     const d = new Date(v);
     return isValid(d) ? d : null;
-};
-
-type Column = {
-  id: keyof Return | 'id';
-  label: string;
 };
 
 const initialColumns: Column[] = [
@@ -102,9 +97,7 @@ export default function ReturnsPageContent() {
     return () => unsubscribe();
   }, [user, authLoading, toast]);
 
-  const renderCell = (item: Return, columnId: keyof Return | 'id') => {
-      if (columnId === 'id') return null;
-
+  const renderCell = (item: Return, columnId: string) => {
       const value = item[columnId as keyof Return];
       
       switch(columnId) {

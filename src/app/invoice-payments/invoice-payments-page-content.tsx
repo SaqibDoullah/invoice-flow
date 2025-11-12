@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type InvoicePayment } from '@/types';
+import { type InvoicePayment, type Column } from '@/types';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,11 +35,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import CreateInvoicePaymentDialog from '@/components/invoice-payments/create-invoice-payment-dialog';
 import CustomizeColumnsDialog from '@/components/invoice-payments/customize-columns-dialog';
 
-
-type Column = {
-  id: keyof InvoicePayment | 'id';
-  label: string;
-};
 
 const initialColumns: Column[] = [
     { id: 'status', label: 'Status' },
@@ -100,9 +95,8 @@ export default function InvoicePaymentsPageContent() {
     return new Date();
   };
 
-  const renderCell = (payment: InvoicePayment, columnId: keyof InvoicePayment | 'id') => {
-      if (columnId === 'id') return null;
-      const value = payment[columnId];
+  const renderCell = (payment: InvoicePayment, columnId: string) => {
+      const value = payment[columnId as keyof InvoicePayment];
       
       switch(columnId) {
           case 'status':

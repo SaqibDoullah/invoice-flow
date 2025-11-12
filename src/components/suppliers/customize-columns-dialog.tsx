@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,17 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { GripVertical } from 'lucide-react';
-
-type Column = {
-    id: string;
-    label: string;
-};
+import { type Column } from '@/types';
 
 interface CustomizeColumnsDialogProps {
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   columns: Column[];
-  setColumns: (columns: Column[]) => void;
+  setColumns: React.Dispatch<React.SetStateAction<Column[]>>;
 }
 
 export default function CustomizeColumnsDialog({
@@ -34,6 +30,10 @@ export default function CustomizeColumnsDialog({
   const [localColumns, setLocalColumns] = useState(columns);
   const draggingItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
+  
+  useEffect(() => {
+    setLocalColumns(columns);
+  }, [columns, isOpen]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, position: number) => {
     draggingItem.current = position;
@@ -75,7 +75,7 @@ export default function CustomizeColumnsDialog({
             Drag and drop the columns to reorder them.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
+        <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto">
             {localColumns.map((col, index) => (
                 <div
                     key={col.id}

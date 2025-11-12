@@ -12,17 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { GripVertical } from 'lucide-react';
-
-type Column = {
-    id: string;
-    label: string;
-};
+import { type Column } from '@/types';
 
 interface CustomizeColumnsDialogProps {
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   columns: Column[];
-  setColumns: (columns: Column[]) => void;
+  setColumns: React.Dispatch<React.SetStateAction<Column[]>>;
 }
 
 export default function CustomizeColumnsDialog({

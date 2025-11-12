@@ -40,7 +40,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { getFirestoreDb } from '@/lib/firebase-client';
-import { type Supplier, SupplierFormData, supplierSchema } from '@/types';
+import { type Supplier, SupplierFormData, supplierSchema, type Column } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
@@ -53,10 +53,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import CustomizeColumnsDialog from '@/components/suppliers/customize-columns-dialog';
 
-type Column = {
-  id: keyof Supplier | 'actions';
-  label: string;
-};
 
 const initialColumns: Column[] = [
     { id: 'status', label: 'Status' },
@@ -275,7 +271,7 @@ export default function SuppliersPageContent() {
     }
   };
 
-  const renderCell = (supplier: Supplier, columnId: keyof Supplier | 'actions') => {
+  const renderCell = (supplier: Supplier, columnId: string) => {
       switch (columnId) {
           case 'status':
               return <Badge variant={supplier.status === 'active' ? 'default' : 'secondary'} className={supplier.status === 'active' ? 'bg-green-100 text-green-800' : ''}>{supplier.status}</Badge>;
