@@ -154,12 +154,16 @@ export default function StockPageContent() {
             case 'casesOnOrder':
             case 'casesAvailable':
                 const key = columnId as keyof InventoryItem;
-                return item[key] || 0;
+                return item[key] as number || 0;
             case 'sublocation':
                  return item.sublocation || '';
             default:
                 const defaultKey = columnId as keyof InventoryItem;
-                return item[defaultKey] as string | number | null || '';
+                const value = item[defaultKey];
+                 if (value instanceof Date) {
+                    return value.toLocaleDateString();
+                }
+                return value as string | number | null || '';
         }
     };
 
