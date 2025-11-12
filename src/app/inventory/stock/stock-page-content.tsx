@@ -37,7 +37,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type InventoryItem } from '@/types';
+import { type InventoryItem, type Column } from '@/types';
 import { useAuth } from '@/context/auth-context';
 import { getFirestoreDb } from '@/lib/firebase-client';
 import { useToast } from '@/hooks/use-toast';
@@ -46,13 +46,8 @@ import { errorEmitter } from '@/lib/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase-errors';
 import CustomizeColumnsDialog from '@/components/inventory/stock/customize-columns-dialog';
 
-type Column = {
-  id: keyof InventoryItem | 'id' | 'image' | 'totalValue' | 'actions';
-  label: string;
-}
-
 const initialColumns: Column[] = [
-    { id: 'actions', label: '' },
+    { id: 'actions', label: 'Actions' },
     { id: 'image', label: 'Img' },
     { id: 'sku', label: 'Product ID (SKU)' },
     { id: 'quantity', label: 'Quantity on hand' },
@@ -128,7 +123,7 @@ export default function StockPageContent() {
     
     const formatNumber = (num: number | undefined) => (num || 0).toFixed(2);
     
-    const renderCell = (item: InventoryItem, columnId: Column['id']) => {
+    const renderCell = (item: InventoryItem, columnId: string) => {
         switch (columnId) {
             case 'actions':
                 return (
@@ -158,11 +153,13 @@ export default function StockPageContent() {
             case 'casesOnHand':
             case 'casesOnOrder':
             case 'casesAvailable':
-                return item[columnId] || 0;
+                const key = columnId as keyof InventoryItem;
+                return item[key] || 0;
             case 'sublocation':
                  return item.sublocation || '';
             default:
-                return null;
+                const defaultKey = columnId as keyof InventoryItem;
+                return item[defaultKey] as string | number | null || '';
         }
     };
 
@@ -204,7 +201,7 @@ export default function StockPageContent() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                <Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize columns</DropdownMenuItem>
