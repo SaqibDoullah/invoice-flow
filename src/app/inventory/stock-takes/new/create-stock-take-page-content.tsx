@@ -83,7 +83,7 @@ export default function CreateStockTakePageContent() {
         }
 
         const unsub = onSnapshot(collection(db, "users", user.uid, "inventory"), (snapshot) => {
-            const items = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+            const items = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as InventoryItem));
             setInventory(items.map(item => ({...item, qoh: item.quantity, count: null, variance: null, uom: 'ea' })));
             setLoading(false);
         });
@@ -197,7 +197,7 @@ export default function CreateStockTakePageContent() {
                      <div className="flex items-center gap-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4"/></Button>
+                                <Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4"/></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Stock take to PDF</DropdownMenuItem>
