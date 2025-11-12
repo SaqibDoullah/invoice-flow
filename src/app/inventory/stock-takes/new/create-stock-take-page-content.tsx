@@ -229,7 +229,7 @@ export default function CreateStockTakePageContent() {
                      <Select defaultValue="all-locations"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all-locations">All locations</SelectItem></SelectContent></Select>
                      <Select defaultValue="all-categories"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all-categories">All categories</SelectItem></SelectContent></Select>
                      <Select defaultValue="all-manufacturers"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all-manufacturers">All manufacturers</SelectItem></SelectContent></Select>
-                     <Select defaultValue="count-gt-0"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="count-gt-0">QoH or Count > 0</SelectItem></SelectContent></Select>
+                     <Select defaultValue="count-gt-0"><SelectTrigger className="w-auto"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="count-gt-0">QoH or Count {'>'} 0</SelectItem></SelectContent></Select>
                      <Input placeholder="All lot ids" className="w-auto" />
                  </div>
 
