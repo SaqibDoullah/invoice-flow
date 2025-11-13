@@ -120,13 +120,13 @@ export default function ReorderPageContent() {
     
     const uniqueCategories = useMemo(() => {
         return Array.from(
-            new Set(
-                inventoryItems
-                    .map((item) => item.category)
-                    .filter((c): c is string => typeof c === 'string' && c.length > 0)
-            )
+          new Set(
+            inventoryItems
+              .map((item) => item.category)
+              .filter((c): c is string => typeof c === 'string' && c.length > 0)
+          )
         );
-    }, [inventoryItems]);
+      }, [inventoryItems]);
 
     const salesVelocityMap = useMemo(() => {
         const velocityMap: Record<string, number> = {};
@@ -272,7 +272,9 @@ export default function ReorderPageContent() {
                             </SelectTrigger>
                              <SelectContent>
                                 <SelectItem value="all">All categories</SelectItem>
-                                {uniqueCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                {uniqueCategories.filter((c): c is string => c !== undefined).map(c => (
+                                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
