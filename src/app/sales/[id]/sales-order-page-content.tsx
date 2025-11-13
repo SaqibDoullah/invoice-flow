@@ -380,8 +380,24 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
     };
 
     const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
-    const uniqueCategories = useMemo(() => [...new Set(inventoryItems.map(item => item.category).filter(Boolean))], [inventoryItems]);
-    const uniqueManufacturers = useMemo(() => [...new Set(inventoryItems.map(item => item.manufacturer).filter(Boolean))], [inventoryItems]);
+    const uniqueCategories = useMemo(() => {
+        return Array.from(
+          new Set(
+            inventoryItems
+              .map((item) => item.category)
+              .filter((c): c is string => typeof c === 'string' && c.length > 0)
+          )
+        );
+    }, [inventoryItems]);
+    const uniqueManufacturers = useMemo(() => {
+        return Array.from(
+          new Set(
+            inventoryItems
+              .map((item) => item.manufacturer)
+              .filter((m): m is string => typeof m === 'string' && m.length > 0)
+          )
+        );
+    }, [inventoryItems]);
 
     const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -953,3 +969,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
