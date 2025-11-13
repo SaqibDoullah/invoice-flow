@@ -119,8 +119,13 @@ export default function ReorderPageContent() {
     }, [user, authLoading, toast]);
     
     const uniqueCategories = useMemo(() => {
-        const categories = new Set(inventoryItems.map(item => item.category).filter(Boolean));
-        return Array.from(categories);
+        return Array.from(
+            new Set(
+                inventoryItems
+                    .map((item) => item.category)
+                    .filter((c): c is string => typeof c === 'string' && c.length > 0)
+            )
+        );
     }, [inventoryItems]);
 
     const salesVelocityMap = useMemo(() => {
@@ -212,7 +217,7 @@ export default function ReorderPageContent() {
                         <Button variant="outline">Reset quantity</Button>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Export <ChevronDown className="ml-2 w-4 h-4" /></Button>
+                                <Button variant="outline">Export <ChevronDown className="ml-2 h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Export CSV</DropdownMenuItem>
@@ -220,7 +225,7 @@ export default function ReorderPageContent() {
                         </DropdownMenu>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions <ChevronDown className="w-4 h-4 ml-2" /></Button>
+                                <Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Action 1</DropdownMenuItem>
