@@ -120,7 +120,7 @@ export default function ReorderPageContent() {
     
     const uniqueCategories = useMemo(() => {
         const categories = new Set(inventoryItems.map(item => item.category).filter(Boolean));
-        return Array.from(categories as string[]);
+        return Array.from(categories);
     }, [inventoryItems]);
 
     const salesVelocityMap = useMemo(() => {
@@ -220,7 +220,7 @@ export default function ReorderPageContent() {
                         </DropdownMenu>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">Actions <ChevronDown className="ml-2 w-4 h-4 ml-2" /></Button>
+                                <Button variant="outline">Actions <ChevronDown className="w-4 h-4 ml-2" /></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuItem>Action 1</DropdownMenuItem>
@@ -254,7 +254,7 @@ export default function ReorderPageContent() {
                          <Select value={quantityFilter} onValueChange={setQuantityFilter}>
                             <SelectTrigger><SelectValue/></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="gt-zero">Recommended quantity: Quantity to order > 0</SelectItem>
+                                <SelectItem value="gt-zero">Recommended quantity: Quantity to order {'>'} 0</SelectItem>
                                 <SelectItem value="all">All quantities</SelectItem>
                             </SelectContent>
                         </Select>
