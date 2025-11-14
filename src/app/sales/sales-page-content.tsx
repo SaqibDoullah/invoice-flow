@@ -144,7 +144,9 @@ export default function SalesPageContent() {
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-2">
-            <Button>Create sales order</Button>
+            <Button asChild>
+                <Link href="/sales/new">Create sales order</Link>
+            </Button>
             <Button variant="outline">Import sales orders</Button>
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
