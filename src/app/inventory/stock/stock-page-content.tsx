@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Timestamp } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -171,20 +172,20 @@ export default function StockPageContent() {
     
           if (val == null) return '';
     
-          // Normalize Date
           if (val instanceof Date) {
             return val.toLocaleDateString();
           }
     
-          // Normalize objects (e.g., Supplier or any nested object)
           if (typeof val === 'object') {
+            if (val instanceof Timestamp) {
+                return val.toDate().toLocaleDateString();
+            }
             const anyVal = val as Record<string, unknown>;
             if (typeof anyVal.name === 'string') return anyVal.name;
             if (typeof anyVal.id === 'string') return anyVal.id;
             return JSON.stringify(anyVal);
           }
     
-          // string | number | boolean, etc.
           return String(val);
         }
       }
