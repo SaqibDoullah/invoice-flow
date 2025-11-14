@@ -3,7 +3,7 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, onSnapshot, getDocs, Timestamp } from 'firebase/firestore';
 import {
   Home,
   ChevronRight,
@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Timestamp } from 'firebase/firestore';
 
 import AuthGuard from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
