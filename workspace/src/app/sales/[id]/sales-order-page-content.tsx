@@ -381,14 +381,14 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
 
     const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
     const uniqueCategories = useMemo(() => {
-        return Array.from(
-          new Set(
-            inventoryItems
-              .map((item) => item.category)
-              .filter((c): c is string => typeof c === 'string' && c.length > 0)
-          )
-        );
-      }, [inventoryItems]);
+      return Array.from(
+        new Set(
+          inventoryItems
+            .map((item) => item.category)
+            .filter((c): c is string => typeof c === 'string' && c.length > 0)
+        )
+      );
+    }, [inventoryItems]);
     const uniqueManufacturers = useMemo(() => {
         return Array.from(
           new Set(
