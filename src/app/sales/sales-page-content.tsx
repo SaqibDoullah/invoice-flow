@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type SalesOrder } from '@/types';
+import { type SalesOrder, type Customer } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // helper
