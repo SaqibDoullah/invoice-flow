@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import AuthGuard from '@/components/auth/auth-guard';
@@ -138,6 +138,8 @@ export default function ApplicationSettingsPageContent() {
             companyColorEnabled: false,
         },
     });
+
+    const companyLogoUrl = form.watch('companyLogoUrl');
 
     useEffect(() => {
         if (profile) {
@@ -415,8 +417,8 @@ export default function ApplicationSettingsPageContent() {
                                                 <div className="w-48 h-24 mx-auto bg-gray-100 dark:bg-gray-800 p-4 rounded-md flex items-center justify-center relative">
                                                     {isUploading ? (
                                                         <Loader2 className="w-8 h-8 animate-spin" />
-                                                    ) : form.watch('companyLogoUrl') ? (
-                                                        <Image src={form.watch('companyLogoUrl')} alt="Company Logo" layout="fill" objectFit="contain" />
+                                                    ) : companyLogoUrl ? (
+                                                        <Image src={companyLogoUrl} alt="Company Logo" layout="fill" objectFit="contain" />
                                                     ) : (
                                                         <ImageIcon className="w-12 h-12 text-muted-foreground" />
                                                     )}
@@ -424,7 +426,7 @@ export default function ApplicationSettingsPageContent() {
                                                 <div className="mt-4">
                                                     <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
                                                     <Button type="button" variant="link" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>Change image</Button>
-                                                    <Button type="button" variant="link" className="text-destructive" onClick={handleRemoveImage} disabled={isUploading || !form.watch('companyLogoUrl')}>Remove image</Button>
+                                                    <Button type="button" variant="link" className="text-destructive" onClick={handleRemoveImage} disabled={isUploading || !companyLogoUrl}>Remove image</Button>
                                                 </div>
                                                 <p className="text-xs text-muted-foreground mt-2">Supported formats: JPG, PNG. For best results, we recommend resizing your image to 150 x 540 pixels.</p>
                                             </CardContent>
