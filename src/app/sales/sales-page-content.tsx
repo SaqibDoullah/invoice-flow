@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot, type Timestamp } from 'firebase/firestore';
 import { Home, ChevronRight, DollarSign, ChevronDown, Search, Filter, ArrowUpDown, MessageCircle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
@@ -32,6 +32,32 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type SalesOrder } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// helper
+function formatDate(
+  value: Date | Timestamp | string | number | null | undefined
+): string {
+  if (!value) return '';
+  let d: Date;
+
+  // Firebase Timestamp
+  if (typeof value === 'object' && value !== null && 'toDate' in value) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    d = (value as any as Timestamp).toDate();
+  } else if (value instanceof Date) {
+    d = value;
+  } else {
+    // ISO string or epoch ms
+    d = new Date(value);
+  }
+
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+  });
+}
 
 
 export default function SalesPageContent() {
@@ -195,9 +221,9 @@ export default function SalesPageContent() {
                           <TableRow key={order.orderId}>
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
-                            <TableCell>{order.orderDate}</TableCell>
+                            <TableCell>{formatDate(order.orderDate)}</TableCell>
                             <TableCell className="font-medium text-primary">{order.orderId}</TableCell>
-                            <TableCell className="text-primary">{order.customer}</TableCell>
+                            <TableCell className="text-primary">{order.customer?.name}</TableCell>
                             <TableCell>{order.shipToName}</TableCell>
                             <TableCell>{order.source}</TableCell>
                             <TableCell>{order.origin}</TableCell>
