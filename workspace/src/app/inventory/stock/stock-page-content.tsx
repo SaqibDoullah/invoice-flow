@@ -1,6 +1,7 @@
 
 'use client';
 
+import type React from 'react';
 import { useEffect, useState } from 'react';
 import { collection, query, onSnapshot, getDocs } from 'firebase/firestore';
 import {
@@ -121,46 +122,72 @@ export default function StockPageContent() {
       maximumFractionDigits: 2,
     }).format(amount || 0);
     
-    const formatNumber = (num: number | undefined) => (num || 0).toFixed(2);
+    const renderCell = (item: InventoryItem, columnId: string): React.ReactNode => {
+      switch (columnId) {
+        case 'actions':
+          return (
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+              <Plus className="w-4 h-4" />
+            </Button>
+          );
     
-    const renderCell = (item: InventoryItem, columnId: string) => {
-        switch (columnId) {
-            case 'actions':
-                return (
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <Plus className="w-4 h-4" />
-                    </Button>
-                );
-            case 'image':
-                return <ImageIcon className="w-4 h-4 text-muted-foreground" />;
-            case 'sku':
-                return (
-                    <div>
-                        <p className="font-medium text-primary">{item.sku || item.id}</p>
-                        <p className="text-xs text-muted-foreground">{item.name}</p>
-                    </div>
-                );
-            case 'totalValue':
-                return formatCurrency((item.averageCost || 0) * (item.quantity || 0));
-            case 'averageCost':
-                return formatCurrency(item.averageCost);
-            case 'salesVelocity':
-                return formatNumber(item.salesVelocity);
-            case 'quantity':
-            case 'quantityReserved':
-            case 'quantityOnOrder':
-            case 'quantityAvailable':
-            case 'casesOnHand':
-            case 'casesOnOrder':
-            case 'casesAvailable':
-                const key = columnId as keyof InventoryItem;
-                return item[key] || 0;
-            case 'sublocation':
-                 return item.sublocation || '';
-            default:
-                const defaultKey = columnId as keyof InventoryItem;
-                return item[defaultKey] as string | number | null || '';
+        case 'image':
+          return <ImageIcon className="w-4 h-4 text-muted-foreground" />;
+    
+        case 'sku':
+          return (
+            <div>
+              <p className="font-medium text-primary">{item.sku || item.id}</p>
+              <p className="text-xs text-muted-foreground">{item.name}</p>
+            </div>
+          );
+    
+        case 'totalValue':
+          return formatCurrency((item.averageCost || 0) * (item.quantity || 0));
+    
+        case 'averageCost':
+          return formatCurrency(item.averageCost);
+    
+        case 'salesVelocity':
+          return (item.salesVelocity ?? 0).toFixed(2);
+    
+        case 'quantity':
+        case 'quantityReserved':
+        case 'quantityOnOrder':
+        case 'quantityAvailable':
+        case 'casesOnHand':
+        case 'casesOnOrder':
+        case 'casesAvailable': {
+          const key = columnId as keyof InventoryItem;
+          return (Number(item[key] ?? 0)).toString();
         }
+    
+        case 'sublocation':
+          return item.sublocation || '';
+    
+        default: {
+          const key = columnId as keyof InventoryItem;
+          const val = item[key] as unknown;
+    
+          if (val == null) return '';
+    
+          if (val instanceof Date) {
+            return val.toLocaleDateString();
+          }
+    
+          if (typeof val === 'object') {
+            if (val instanceof Timestamp) {
+                return val.toDate().toLocaleDateString();
+            }
+            const anyVal = val as Record<string, unknown>;
+            if (typeof anyVal.name === 'string') return anyVal.name;
+            if (typeof anyVal.id === 'string') return anyVal.id;
+            return JSON.stringify(anyVal);
+          }
+    
+          return String(val);
+        }
+      }
     };
 
 
@@ -307,5 +334,3 @@ export default function StockPageContent() {
     </AuthGuard>
   );
 }
-
-    
