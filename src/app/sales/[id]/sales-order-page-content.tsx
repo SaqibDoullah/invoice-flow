@@ -742,7 +742,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All quantities" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">All quantities</SelectItem>
-                                                <SelectItem value="gt_zero">QoH total > 0</SelectItem>
+                                                <SelectItem value="gt_zero">QoH total &gt; 0</SelectItem>
                                             </SelectContent>
                                         </Select>
                                      </div>
@@ -969,5 +969,3 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
-
-    
