@@ -43,6 +43,7 @@ import { type InventoryItem } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import CustomizeColumnsDialog from '@/components/inventory/stock-takes/customize-columns-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 type Column = {
   id: string;
@@ -73,6 +74,7 @@ export default function CreateStockTakePageContent() {
     const { user, loading: authLoading } = useAuth();
     const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
     const [columns, setColumns] = useState<Column[]>(initialColumns);
+    const { toast } = useToast();
     
     useEffect(() => {
         const db = getFirestoreDb();
@@ -105,6 +107,13 @@ export default function CreateStockTakePageContent() {
         });
         setInventory(newInventory);
     }
+
+    const showComingSoon = () => {
+        toast({
+            title: 'Coming Soon',
+            description: 'This feature is not yet implemented.',
+        });
+    };
     
     const renderCell = (item: any, columnId: string) => {
         switch (columnId) {
@@ -199,10 +208,10 @@ export default function CreateStockTakePageContent() {
                                 <Button variant="outline">Actions <ChevronDown className="ml-2 h-4 w-4"/></Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem>Stock take to PDF</DropdownMenuItem>
-                                <DropdownMenuItem>Stock take to Excel</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={showComingSoon}>Stock take to PDF</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={showComingSoon}>Stock take to Excel</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => setIsCustomizeOpen(true)}>Customize this screen</DropdownMenuItem>
-                                <DropdownMenuItem>Customize stock variance reasons</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={showComingSoon}>Customize stock variance reasons</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <Button>Save changes</Button>
