@@ -85,7 +85,7 @@ export default function SalesPageContent() {
             const data = doc.data() as Partial<SalesOrder>;
             return {
                 id: doc.id,
-                ownerId: ownerId,
+                ownerId,
                 orderId: data.orderId || '',
                 orderDate: data.orderDate || new Date(),
                 customerId: data.customerId || null,
@@ -275,7 +275,7 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}?ownerId=${order.ownerId}`)} className="cursor-pointer">
+                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}`)} className="cursor-pointer">
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>
