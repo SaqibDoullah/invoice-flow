@@ -83,10 +83,9 @@ export default function SalesPageContent() {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
             const data = doc.data() as Partial<SalesOrder>;
-            // Robustly create the SalesOrder object with defaults for all fields
             return {
                 id: doc.id,
-                ownerId: ownerId || undefined,
+                ownerId,
                 orderId: data.orderId || '',
                 orderDate: data.orderDate || new Date(),
                 customerId: data.customerId || null,
