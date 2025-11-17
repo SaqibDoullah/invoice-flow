@@ -82,7 +82,12 @@ export default function SalesPageContent() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
-            return { id: doc.id, ownerId, ...(doc.data() as SalesOrder) }
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                ownerId,
+            } as SalesOrder;
         });
         setSalesOrders(orders);
         setLoading(false);

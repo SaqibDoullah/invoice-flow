@@ -82,7 +82,12 @@ export default function SalesPageContent() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
-            return { id: doc.id, ownerId, ...(doc.data() as SalesOrder) }
+            const data = doc.data() as Omit<SalesOrder, 'id' | 'ownerId'>;
+            return {
+                id: doc.id,
+                ownerId,
+                ...data,
+            } as SalesOrder;
         });
         setSalesOrders(orders);
         setLoading(false);
@@ -234,7 +239,7 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.id}?ownerId=${order.ownerId}`)} className="cursor-pointer">
+                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}?ownerId=${order.ownerId}`)} className="cursor-pointer">
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>
