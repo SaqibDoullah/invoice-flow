@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type SalesOrder, type Customer } from '@/types';
+import { type SalesOrder } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 
@@ -83,9 +83,10 @@ export default function SalesPageContent() {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
             const data = doc.data() as Partial<SalesOrder>;
+            // Robustly create the SalesOrder object with defaults for all fields
             return {
                 id: doc.id,
-                ownerId,
+                ownerId: ownerId || undefined,
                 orderId: data.orderId || '',
                 orderDate: data.orderDate || new Date(),
                 customerId: data.customerId || null,
@@ -275,7 +276,7 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}`)} className="cursor-pointer">
+                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}?ownerId=${order.ownerId}`)} className="cursor-pointer">
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>

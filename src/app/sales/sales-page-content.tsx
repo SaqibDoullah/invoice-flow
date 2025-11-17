@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type SalesOrder, type Customer } from '@/types';
+import { type SalesOrder } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 
@@ -82,7 +82,7 @@ export default function SalesPageContent() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
-            const data = doc.data();
+            const data = doc.data() as Partial<SalesOrder>;
             return {
                 id: doc.id,
                 ownerId,

@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -320,6 +321,7 @@ export interface StockHistoryEntry {
 
 export interface SalesOrder {
     id: string;
+    ownerId?: string;
     orderId: string;
     orderDate: Date | Timestamp;
     customerId: string | null;
