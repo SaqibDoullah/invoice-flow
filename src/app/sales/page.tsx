@@ -1,5 +1,5 @@
-import SalesPageContent from './sales-page-content';
+import SalesPageContent from './content';
 
 export default function SalesPage() {
-    return <SalesPageContent />;
+  return <SalesPageContent />;
 }

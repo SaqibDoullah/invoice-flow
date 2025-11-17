@@ -1,8 +1,5 @@
-
-import CustomersPageContent from './customers-page-content';
+import CustomersPageContent from './content';
 
 export default function CustomersPage() {
-    return (
-        <CustomersPageContent />
-    )
+  return <CustomersPageContent />;
 }
