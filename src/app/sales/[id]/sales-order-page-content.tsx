@@ -229,6 +229,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                 ...prev,
                 customerId: customerId,
                 customer: customer,
+                customerName: customer.name,
                 shipToName: customer.name,
                 billToAddress: customer.address || '--',
                 shipToAddress: customer.address || '--',
@@ -380,7 +381,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         });
     };
 
-    const selectedCustomerName = salesOrder.customer?.name || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
+    const selectedCustomerName = salesOrder.customerName || customers.find(c => c.id === salesOrder.customerId)?.name || 'Unspecified';
     const uniqueCategories = useMemo(() => {
         return Array.from(
           new Set(
@@ -743,7 +744,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All quantities" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">All quantities</SelectItem>
-                                                <SelectItem value="gt_zero">QoH total &gt; 0</SelectItem>
+                                                <SelectItem value="gt_zero">QoH total > 0</SelectItem>
                                             </SelectContent>
                                         </Select>
                                      </div>
@@ -970,3 +971,5 @@ const LabelWithTooltip = ({ label, tooltip }: { label: string, tooltip: string }
         </TooltipProvider>
     </div>
 );
+
+    
