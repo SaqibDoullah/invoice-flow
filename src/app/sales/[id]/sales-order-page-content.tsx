@@ -744,7 +744,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All quantities" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="all">All quantities</SelectItem>
-                                                <SelectItem value="gt_zero">QoH total > 0</SelectItem>
+                                                <SelectItem value="gt_zero">QoH total &gt; 0</SelectItem>
                                             </SelectContent>
                                         </Select>
                                      </div>
@@ -801,8 +801,8 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
                                                                 }}
                                                             />
                                                         </TableCell>
-                                                        <TableCell className="p-2 text-right border-l">{product.casesOnHand}</TableCell>
-                                                        <TableCell className="p-2 text-right">{product.casesAvailable}</TableCell>
+                                                        <TableCell className="p-2 text-right border-l">{product.casesOnHand || 0}</TableCell>
+                                                        <TableCell className="p-2 text-right">{product.casesAvailable || 0}</TableCell>
                                                         <TableCell className="p-1 text-right w-24"><Input type="number" className="h-8 text-right"/></TableCell>
                                                         <TableCell className="p-2 border-l">{product.sublocation}</TableCell>
                                                     </TableRow>
