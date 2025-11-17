@@ -80,7 +80,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     try {
       let q = query(
         collectionGroup(db, 'invoices'),
-        orderBy('invoiceDate', 'desc'),
+        // orderBy('invoiceDate', 'desc'), // This line is causing the error without an index
         limit(PAGE_SIZE)
       );
 
