@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collectionGroup, query, onSnapshot, type Timestamp, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, type Timestamp, orderBy } from 'firebase/firestore';
 import { Home, ChevronRight, DollarSign, ChevronDown, Search, Filter, ArrowUpDown, MessageCircle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
@@ -70,80 +69,70 @@ export default function SalesPageContent() {
 
   useEffect(() => {
     const db = getFirestoreDb();
-    if (authLoading || !db) {
+    if (!user || authLoading || !db) {
         if (!authLoading) setLoading(false);
         return;
     }
 
     setLoading(true);
-    const salesCollectionRef = collectionGroup(db, 'sales');
+    const salesCollectionRef = collection(db, 'users', user.uid, 'sales');
     const q = query(salesCollectionRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => {
-            const ownerId = doc.ref.parent.parent?.id;
             const data = doc.data() as Partial<SalesOrder>;
             return {
                 id: doc.id,
-                ownerId,
-                orderId: data.orderId || '',
-                orderDate: data.orderDate || new Date(),
-                customerId: data.customerId || null,
-                customerName: data.customerName || 'N/A',
-                customer: data.customer || null,
-                source: data.source || '',
-                origin: data.origin || '',
-                estimatedShipDate: data.estimatedShipDate || null,
-                customerPO: data.customerPO || '',
-                fulfillment: data.fulfillment || '',
-                terms: data.terms || '',
-                requestedShipping: data.requestedShipping || '',
-                priceLevel: data.priceLevel || '',
-                batchId: data.batchId || '',
-                billToAddress: data.billToAddress || '',
-                shipToAddress: data.shipToAddress || '',
-                shipToName: data.shipToName || '',
-                employeeName: data.employeeName || '',
-                productType: data.productType || '',
-                salesPerson: data.salesPerson || '',
-                businessType: data.businessType || '',
-                items: data.items || [],
-                subtotal: data.subtotal || 0,
-                discount: data.discount || 0,
-                discountType: data.discountType || 'percentage',
-                total: data.total || 0,
-                status: data.status || 'Draft',
-                fulfillmentStatus: data.fulfillmentStatus || '',
-                shipments: data.shipments || '',
-                shipmentsStatusSummary: data.shipmentsStatusSummary || '',
-                invoicesStatusSummary: data.invoicesStatusSummary || '',
-                carrier: data.carrier || '',
-                trackingNumber: data.trackingNumber || '',
-                shipmentDate: data.shipmentDate || null,
-                deliveryDate: data.deliveryDate || null,
-                publicNotes: data.publicNotes || '',
-                internalNotes: data.internalNotes || '',
+                ownerId: user.uid,
+                orderId: data.orderId ?? '',
+                orderDate: data.orderDate ?? new Date(),
+                customerId: data.customerId ?? null,
+                customerName: data.customerName ?? 'N/A',
+                customer: data.customer ?? null,
+                source: data.source ?? '',
+                origin: data.origin ?? '',
+                estimatedShipDate: data.estimatedShipDate ?? null,
+                customerPO: data.customerPO ?? '',
+                fulfillment: data.fulfillment ?? '',
+                terms: data.terms ?? '',
+                requestedShipping: data.requestedShipping ?? '',
+                priceLevel: data.priceLevel ?? '',
+                batchId: data.batchId ?? '',
+                billToAddress: data.billToAddress ?? '',
+                shipToAddress: data.shipToAddress ?? '',
+                shipToName: data.shipToName ?? '',
+                employeeName: data.employeeName ?? '',
+                productType: data.productType ?? '',
+                salesPerson: data.salesPerson ?? '',
+                businessType: data.businessType ?? '',
+                items: data.items ?? [],
+                subtotal: data.subtotal ?? 0,
+                discount: data.discount ?? 0,
+                discountType: data.discountType ?? 'percentage',
+                total: data.total ?? 0,
+                status: data.status ?? 'Draft',
+                fulfillmentStatus: data.fulfillmentStatus ?? '',
+                shipments: data.shipments ?? '',
+                shipmentsStatusSummary: data.shipmentsStatusSummary ?? '',
+                invoicesStatusSummary: data.invoicesStatusSummary ?? '',
+                carrier: data.carrier ?? '',
+                trackingNumber: data.trackingNumber ?? '',
+                shipmentDate: data.shipmentDate ?? null,
+                deliveryDate: data.deliveryDate ?? null,
+                publicNotes: data.publicNotes ?? '',
+                internalNotes: data.internalNotes ?? '',
             } as SalesOrder;
         });
         setSalesOrders(orders);
         setLoading(false);
     }, (error) => {
         console.error("Error fetching sales orders:", error);
-         if (error.code === 'failed-precondition') {
-             toast({
-              variant: "destructive",
-              title: "Firestore Index Required",
-              description: "Please create a composite index for the 'sales' collection group on 'orderDate' descending.",
-              duration: 10000,
-            });
-        } else {
-            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.'});
-        }
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.'});
         setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [authLoading, toast]);
+  }, [user, authLoading, toast]);
 
 
   const formatCurrency = (amount: number) =>
@@ -275,7 +264,7 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}?ownerId=${order.ownerId}`)} className="cursor-pointer">
+                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}`)} className="cursor-pointer">
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>
