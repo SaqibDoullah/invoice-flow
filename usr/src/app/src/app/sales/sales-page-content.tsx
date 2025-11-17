@@ -82,11 +82,11 @@ export default function SalesPageContent() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
-            const data = doc.data() as Omit<SalesOrder, 'id'>; // Cast the data part
+            const data = doc.data() as Omit<SalesOrder, 'id' | 'ownerId'>;
             return {
-                id: doc.id, // Explicitly provide the document ID
-                ...data,    // Spread the rest of the data
-                ownerId: ownerId, // Add the ownerId
+                id: doc.id,
+                ownerId,
+                ...data,
             } as SalesOrder;
         });
         setSalesOrders(orders);

@@ -77,16 +77,52 @@ export default function SalesPageContent() {
 
     setLoading(true);
     const salesCollectionRef = collectionGroup(db, 'sales');
-    const q = query(salesCollectionRef, orderBy('orderDate', 'desc'));
+    const q = query(salesCollectionRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => {
             const ownerId = doc.ref.parent.parent?.id;
             const data = doc.data();
             return {
-                ...data,
                 id: doc.id,
                 ownerId,
+                orderId: data.orderId || '',
+                orderDate: data.orderDate || new Date(),
+                customerId: data.customerId || null,
+                customerName: data.customerName || 'N/A',
+                customer: data.customer || null,
+                source: data.source || '',
+                origin: data.origin || '',
+                estimatedShipDate: data.estimatedShipDate || null,
+                customerPO: data.customerPO || '',
+                fulfillment: data.fulfillment || '',
+                terms: data.terms || '',
+                requestedShipping: data.requestedShipping || '',
+                priceLevel: data.priceLevel || '',
+                batchId: data.batchId || '',
+                billToAddress: data.billToAddress || '',
+                shipToAddress: data.shipToAddress || '',
+                shipToName: data.shipToName || '',
+                employeeName: data.employeeName || '',
+                productType: data.productType || '',
+                salesPerson: data.salesPerson || '',
+                businessType: data.businessType || '',
+                items: data.items || [],
+                subtotal: data.subtotal || 0,
+                discount: data.discount || 0,
+                discountType: data.discountType || 'percentage',
+                total: data.total || 0,
+                status: data.status || 'Draft',
+                fulfillmentStatus: data.fulfillmentStatus || '',
+                shipments: data.shipments || '',
+                shipmentsStatusSummary: data.shipmentsStatusSummary || '',
+                invoicesStatusSummary: data.invoicesStatusSummary || '',
+                carrier: data.carrier || '',
+                trackingNumber: data.trackingNumber || '',
+                shipmentDate: data.shipmentDate || null,
+                deliveryDate: data.deliveryDate || null,
+                publicNotes: data.publicNotes || '',
+                internalNotes: data.internalNotes || '',
             } as SalesOrder;
         });
         setSalesOrders(orders);
@@ -239,7 +275,7 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.id}?ownerId=${order.ownerId}`)} className="cursor-pointer">
+                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.orderId}?ownerId=${order.ownerId}`)} className="cursor-pointer">
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>
