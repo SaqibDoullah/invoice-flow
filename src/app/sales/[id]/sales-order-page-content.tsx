@@ -92,6 +92,7 @@ export default function SalesOrderPageContent({ orderId }: SalesOrderPageContent
         orderId: orderId,
         orderDate: new Date(),
         customerId: null,
+        customerName: '',
         customer: null,
         source: '',
         origin: 'Tawakkal Warehouse',
