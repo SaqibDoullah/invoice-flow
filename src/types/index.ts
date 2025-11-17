@@ -1,6 +1,3 @@
-
-
-
 import { z } from 'zod';
 import type { Timestamp } from 'firebase/firestore';
 
@@ -82,7 +79,7 @@ export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 export interface Invoice
   extends Omit<
     InvoiceFormData,
-    'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt' | 'ownerId'
+    'invoiceDate' | 'dueDate' | 'invoiceNumber' | 'createdAt'
   > {
   id: string;
   invoiceNumber: string;
@@ -126,6 +123,7 @@ export type CustomerFormData = z.infer<typeof customerSchema>;
 
 export interface Customer extends CustomerFormData {
   id: string;
+  ownerId?: string;
 }
 
 export const supplierSchema = z.object({
@@ -325,6 +323,7 @@ export interface SalesOrder {
     orderId: string;
     orderDate: Date | Timestamp;
     customerId: string | null;
+    customerName: string;
     customer: Customer | null;
     source: string;
     origin: string;

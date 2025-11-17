@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  collection,
+  collectionGroup,
   query,
   orderBy,
   limit,
@@ -65,10 +65,12 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [selectedInvoiceOwnerId, setSelectedInvoiceOwnerId] = useState<string | null>(null);
+
 
   const fetchInvoices = useCallback(async (loadMore = false) => {
     const db = getFirestoreDb();
-    if (!user || !db) {
+    if (!db) {
         setDataLoading(false);
         return;
     };
@@ -76,7 +78,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
 
     try {
       let q = query(
-        collection(db, 'users', user.uid, 'invoices'),
+        collectionGroup(db, 'invoices'),
         orderBy('invoiceDate', 'desc'),
         limit(PAGE_SIZE)
       );
@@ -86,7 +88,11 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
       }
 
       const querySnapshot = await getDocs(q);
-      const newInvoices = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
+      const newInvoices = querySnapshot.docs.map(doc => {
+          const parentPath = doc.ref.parent.parent?.path;
+          const ownerId = parentPath ? parentPath.split('/')[1] : 'unknown';
+          return { id: doc.id, ownerId, ...doc.data() } as Invoice
+      });
 
       setInvoices(prev => loadMore ? [...prev, ...newInvoices] : newInvoices);
       setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
@@ -103,26 +109,23 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     } finally {
       setDataLoading(false);
     }
-  }, [lastDoc, toast, user]);
+  }, [lastDoc, toast]);
   
   useEffect(() => {
-    if (!authLoading && user) {
+    // No user needed for this fetch anymore, but we wait for auth to be checked
+    if (!authLoading) {
       fetchInvoices(false);
-    } else if (!authLoading && !user) {
-        setInvoices([]);
-        setHasMore(false);
-        setDataLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user]);
+  }, [authLoading]);
 
 
   const handleDelete = async () => {
-    if (!selectedInvoiceId) return;
+    if (!selectedInvoiceId || !selectedInvoiceOwnerId) return;
     const db = getFirestoreDb();
-    if (!user || !db) return;
+    if (!db) return;
     try {
-      await deleteDoc(doc(db, 'users', user.uid, 'invoices', selectedInvoiceId));
+      await deleteDoc(doc(db, 'users', selectedInvoiceOwnerId, 'invoices', selectedInvoiceId));
       setInvoices(prev => prev.filter(inv => inv.id !== selectedInvoiceId));
       toast({
         title: "Success",
@@ -138,6 +141,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     } finally {
         setDialogOpen(false);
         setSelectedInvoiceId(null);
+        setSelectedInvoiceOwnerId(null);
     }
   };
 
@@ -216,6 +220,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                             <DropdownMenuItem 
                                 onSelect={() => {
                                     setSelectedInvoiceId(invoice.id);
+                                    setSelectedInvoiceOwnerId(invoice.ownerId || null);
                                     setDialogOpen(true);
                                 }}
                                 className="text-destructive focus:text-destructive cursor-pointer">

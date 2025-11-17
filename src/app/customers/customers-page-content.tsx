@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, collectionGroup } from 'firebase/firestore';
 import { PlusCircle, MoreHorizontal, Edit, Trash2, Users } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
@@ -63,25 +62,29 @@ export default function CustomersPageContent() {
 
   useEffect(() => {
     const db = getFirestoreDb();
-    if (!user || authLoading || !db) {
+    if (authLoading || !db) {
       if (!authLoading) setLoading(false);
       return;
     }
 
     setLoading(true);
-    const customerCollectionRef = collection(db, 'users', user.uid, 'customers');
+    const customerCollectionRef = collectionGroup(db, 'customers');
     const q = query(customerCollectionRef);
 
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
-        const customersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
+        const customersList = querySnapshot.docs.map(doc => {
+            const parentPath = doc.ref.parent.parent?.path;
+            const ownerId = parentPath ? parentPath.split('/')[1] : 'unknown';
+            return { id: doc.id, ownerId, ...doc.data() } as Customer
+        });
         setCustomers(customersList);
         setLoading(false);
       },
       (serverError) => {
         const permissionError = new FirestorePermissionError({
-            path: customerCollectionRef.path,
+            path: 'customers (collectionGroup)',
             operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
@@ -99,7 +102,7 @@ export default function CustomersPageContent() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [user, authLoading, toast]);
+  }, [authLoading, toast]);
 
   const handleEditClick = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -113,9 +116,9 @@ export default function CustomersPageContent() {
 
   const handleDeleteConfirm = async () => {
     const db = getFirestoreDb();
-    if (!selectedCustomer || !user || !db) return;
+    if (!selectedCustomer || !selectedCustomer.ownerId || !db) return;
 
-    const docRef = doc(db, 'users', user.uid, 'customers', selectedCustomer.id);
+    const docRef = doc(db, 'users', selectedCustomer.ownerId, 'customers', selectedCustomer.id);
     deleteDoc(docRef)
         .then(() => {
             toast({

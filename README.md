@@ -1,4 +1,3 @@
-
 # CoreOps
 
 CoreOps is a production-ready Invoice Generator web app built with Next.js, Firebase, and Tailwind CSS. It allows users to securely manage their invoices with features like creation, editing, PDF export, and status tracking, all while being optimized for Firebase's free tier.
@@ -51,109 +50,108 @@ Follow these instructions to get a copy of the project up and running on your lo
       service cloud.firestore {
         match /databases/{database}/documents {
           match /users/{userId} {
-            // Allow authenticated users to read the list of users for display in settings.
-            allow list: if request.auth != null;
-            // Allow a user to read and write their own user document (for settings)
-            allow read, write: if request.auth != null && request.auth.uid == userId;
+            // Allow authenticated users to read user documents for display purposes.
+            allow list, read: if request.auth != null;
+            // Allow a user to write to their own user document (for settings)
+            allow write: if request.auth != null && request.auth.uid == userId;
 
-            // A user can manage their own invoices subcollection
+            // Allow any authenticated user to manage invoices.
             match /invoices/{invoiceId} {
-              allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+              allow read, write, delete, list: if request.auth != null;
             }
             
-            // A user can manage their own quotes subcollection
+            // Allow any authenticated user to manage quotes.
             match /quotes/{quoteId} {
-              allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+              allow read, write, delete, list: if request.auth != null;
             }
             
-            // A user can manage their own customers subcollection
+            // Allow any authenticated user to manage customers.
             match /customers/{customerId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own suppliers subcollection
+            // Allow any authenticated user to manage suppliers.
             match /suppliers/{supplierId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own inventory subcollection
+            // Allow any authenticated user to manage inventory.
             match /inventory/{itemId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own product lookups subcollection
+            // Allow any authenticated user to manage product lookups.
             match /productLookups/{lookupId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own stock history subcollection
+            // Allow any authenticated user to manage stock history.
             match /stockHistory/{historyId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own purchases subcollection
+            // Allow any authenticated user to manage purchases.
             match /purchaseOrders/{purchaseOrderId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
             
-            // A user can manage their own bills subcollection
+            // Allow any authenticated user to manage bills.
             match /bills/{billId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own bill payments subcollection
+            // Allow any authenticated user to manage bill payments.
             match /billPayments/{billPaymentId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own sales subcollection
+            // Allow any authenticated user to manage sales.
             match /sales/{saleId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own returns subcollection
+            // Allow any authenticated user to manage returns.
             match /returns/{returnId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own stock takes subcollection
+            // Allow any authenticated user to manage stock takes.
             match /stockTakes/{stockTakeId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
             }
             
             // Accounting collections
             match /chart_of_accounts/{accountId} {
-              allow list, read: if request.auth != null; // Allow reading for all authenticated users
-              allow create, update, delete: if request.auth != null && request.auth.uid == userId; // Allow write only to own data
+              allow list, read, create, update, delete: if request.auth != null;
             }
             match /journals/{journalId} {
-               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+               allow create, read, update, delete, list: if request.auth != null;
             }
              match /journal_lines/{lineId} {
-               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+               allow create, read, update, delete, list: if request.auth != null;
             }
              match /bank_accounts/{accountId} {
-              allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow create, read, update, delete, list: if request.auth != null;
               
               match /transactions/{transactionId} {
-                allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+                allow create, read, update, delete, list: if request.auth != null;
               }
             }
 
-            // A user can manage their own averageCostChanges subcollection
+            // Allow any authenticated user to manage averageCostChanges.
             match /averageCostChanges/{changeId} {
-              allow read, write, delete, list: if request.auth != null && request.auth.uid == userId;
+              allow read, write, delete, list: if request.auth != null;
             }
 
-            // A user can manage their own creditNotes subcollection
+            // Allow any authenticated user to manage creditNotes.
             match /creditNotes/{noteId} {
-               allow create, read, update, delete, list: if request.auth != null && request.auth.uid == userId;
+               allow create, read, update, delete, list: if request.auth != null;
             }
           }
         }
       }
       ```
-      *Note: These rules ensure that a user can only access and manage their own data. They can manage their user settings document, and they can perform all actions (including listing) on the invoices and customers within their own subcollections.*
+      *Note: These rules allow any authenticated user to access and manage all data collections within any user's document, creating a collaborative environment.*
 
 6.  **Enable Firebase Authentication:**
     - In the Firebase Console, go to **Authentication**.

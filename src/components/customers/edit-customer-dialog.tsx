@@ -64,11 +64,11 @@ export default function EditCustomerDialog({
 
   const handleSubmit = async (data: CustomerFormData) => {
     const db = getFirestoreDb();
-    if (!user || !db || !customer) return;
+    if (!customer?.ownerId || !db) return;
 
     setIsSubmitting(true);
     
-    const docRef = doc(db, 'users', user.uid, 'customers', customer.id);
+    const docRef = doc(db, 'users', customer.ownerId, 'customers', customer.id);
     
     updateDoc(docRef, data)
       .then(() => {

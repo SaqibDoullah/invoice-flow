@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, type Timestamp } from 'firebase/firestore';
+import { collectionGroup, query, onSnapshot, type Timestamp } from 'firebase/firestore';
 import { Home, ChevronRight, DollarSign, ChevronDown, Search, Filter, ArrowUpDown, MessageCircle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
@@ -30,7 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type SalesOrder, type Customer } from '@/types';
+import { type SalesOrder } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // helper
@@ -63,18 +62,18 @@ function formatDate(
 export default function SalesPageContent() {
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     const db = getFirestoreDb();
-    if (!user || authLoading || !db) {
+    if (authLoading || !db) {
         if (!authLoading) setLoading(false);
         return;
     }
 
     setLoading(true);
-    const salesCollectionRef = collection(db, 'users', user.uid, 'sales');
+    const salesCollectionRef = collectionGroup(db, 'sales');
     const q = query(salesCollectionRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -88,7 +87,7 @@ export default function SalesPageContent() {
     });
 
     return () => unsubscribe();
-  }, [user, authLoading, toast]);
+  }, [authLoading, toast]);
 
 
   const formatCurrency = (amount: number) =>
@@ -220,12 +219,12 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.orderId}>
+                          <TableRow key={order.id}>
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>
                             <TableCell className="font-medium text-primary">{order.orderId}</TableCell>
-                            <TableCell className="text-primary">{order.customer?.name}</TableCell>
+                            <TableCell className="text-primary">{order.customerName || 'N/A'}</TableCell>
                             <TableCell>{order.shipToName}</TableCell>
                             <TableCell>{order.source}</TableCell>
                             <TableCell>{order.origin}</TableCell>

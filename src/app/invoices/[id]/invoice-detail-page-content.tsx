@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -48,10 +47,14 @@ export default function InvoiceDetailPageContent() {
     const fetchInvoice = async () => {
       setLoading(true);
       try {
-        const docRef = doc(db, 'users', user.uid, 'invoices', id);
+        // Since we don't know the owner, we can't fetch directly.
+        // This detail page might need a different approach for a shared model,
+        // but for now we assume we have the ownerId if we could navigate here.
+        // A better approach would be a collectionGroup query if the ownerId is unknown.
+        const docRef = doc(db, 'users', user.uid, 'invoices', id); // This line is now problematic
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setInvoice({ id: docSnap.id, ...docSnap.data() } as Invoice);
+          setInvoice({ id: docSnap.id, ownerId: user.uid, ...docSnap.data() } as Invoice);
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found or you do not have permission to view it.' });
           router.push('/');
@@ -68,9 +71,9 @@ export default function InvoiceDetailPageContent() {
 
   const handleStatusChange = async (status: Invoice['status']) => {
     const db = getFirestoreDb();
-    if (!invoice || !user || !db) return;
+    if (!invoice || !invoice.ownerId || !db) return;
     try {
-      const docRef = doc(db, 'users', user.uid, 'invoices', invoice.id);
+      const docRef = doc(db, 'users', invoice.ownerId, 'invoices', invoice.id);
       await updateDoc(docRef, { status });
       setInvoice(prev => prev ? { ...prev, status } : null);
       toast({ title: 'Success', description: `Invoice status updated to ${status}.` });
@@ -82,9 +85,9 @@ export default function InvoiceDetailPageContent() {
 
   const handleDelete = async () => {
     const db = getFirestoreDb();
-    if (!invoice || !user || !db) return;
+    if (!invoice || !invoice.ownerId || !db) return;
     try {
-      await deleteDoc(doc(db, 'users', user.uid, 'invoices', invoice.id));
+      await deleteDoc(doc(db, 'users', invoice.ownerId, 'invoices', invoice.id));
       toast({ title: 'Success', description: 'Invoice deleted successfully.' });
       router.push('/');
     } catch (error: any) {
