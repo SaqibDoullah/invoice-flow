@@ -85,7 +85,7 @@ export default function SalesPageContent() {
             const data = doc.data() as Partial<SalesOrder>;
             return {
                 id: doc.id,
-                ownerId: ownerId || 'unknown',
+                ownerId: ownerId,
                 orderId: data.orderId || '',
                 orderDate: data.orderDate || new Date(),
                 customerId: data.customerId || null,
@@ -314,5 +314,3 @@ export default function SalesPageContent() {
     </AuthGuard>
   );
 }
-
-    
