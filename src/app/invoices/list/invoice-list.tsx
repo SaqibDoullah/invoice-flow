@@ -4,7 +4,6 @@
 import {
   collectionGroup,
   query,
-  orderBy,
   limit,
   getDocs,
   deleteDoc,
