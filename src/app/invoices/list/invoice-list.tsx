@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -80,7 +81,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     try {
       let q = query(
         collectionGroup(db, 'invoices'),
-        // orderBy('invoiceDate', 'desc'), // This line is causing the error without an index
+        orderBy('invoiceDate', 'desc'),
         limit(PAGE_SIZE)
       );
 
@@ -101,7 +102,14 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
         setDataLoading(false);
       }, (error) => {
         console.error("Firestore read failed:", error.message, error);
-        if (error.code !== 'unavailable') {
+        if (error.code === 'failed-precondition') {
+             toast({
+              variant: "destructive",
+              title: "Firestore Index Required",
+              description: "Please create a composite index for the 'invoices' collection group on 'invoiceDate' descending.",
+              duration: 10000,
+            });
+        } else if (error.code !== 'unavailable') {
             toast({
               variant: "destructive",
               title: "Error Fetching Invoices",
@@ -221,7 +229,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/invoices/${invoice.id}`} className="cursor-pointer">
+                              <Link href={`/invoices/${invoice.id}?ownerId=${invoice.ownerId}`} className="cursor-pointer">
                                 <Eye className="mr-2 h-4 w-4" /> View
                               </Link>
                             </DropdownMenuItem>
@@ -280,6 +288,14 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+        
+      {hasMore && filteredInvoices.length > 0 && (
+        <div className="text-center mt-6">
+          <Button onClick={() => fetchInvoices(true)} disabled={dataLoading}>
+            {dataLoading ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
     </>
   );
 }

@@ -1,8 +1,9 @@
+
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 import AuthGuard from '@/components/auth/auth-guard';
@@ -25,10 +26,12 @@ import {
 import GenerateReminderDialog from '@/components/invoices/generate-reminder-dialog';
 import SendInvoiceDialog from '@/components/invoices/send-invoice-dialog';
 
-export default function InvoiceDetailPageContent() {
+function InvoiceDetailContent() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { id } = params;
+  const ownerId = searchParams.get('ownerId');
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -39,7 +42,7 @@ export default function InvoiceDetailPageContent() {
 
   useEffect(() => {
     const db = getFirestoreDb();
-    if (authLoading || !user || typeof id !== 'string' || !db) {
+    if (authLoading || typeof id !== 'string' || !db) {
         if (!authLoading) setLoading(false);
         return;
     };
@@ -47,14 +50,23 @@ export default function InvoiceDetailPageContent() {
     const fetchInvoice = async () => {
       setLoading(true);
       try {
-        // Since we don't know the owner, we can't fetch directly.
-        // This detail page might need a different approach for a shared model,
-        // but for now we assume we have the ownerId if we could navigate here.
-        // A better approach would be a collectionGroup query if the ownerId is unknown.
-        const docRef = doc(db, 'users', user.uid, 'invoices', id); // This line is now problematic
+        let docRef;
+
+        if (ownerId) {
+          docRef = doc(db, 'users', ownerId, 'invoices', id);
+        } else if (user) {
+          // Fallback for direct navigation or old links
+          docRef = doc(db, 'users', user.uid, 'invoices', id);
+        } else {
+            setLoading(false);
+            return;
+        }
+        
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
-          setInvoice({ id: docSnap.id, ownerId: user.uid, ...docSnap.data() } as Invoice);
+          const fetchedOwnerId = docSnap.ref.parent.parent?.id || 'unknown';
+          setInvoice({ id: docSnap.id, ownerId: fetchedOwnerId, ...docSnap.data() } as Invoice);
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Invoice not found or you do not have permission to view it.' });
           router.push('/');
@@ -67,7 +79,7 @@ export default function InvoiceDetailPageContent() {
       }
     };
     fetchInvoice();
-  }, [id, router, toast, user, authLoading]);
+  }, [id, ownerId, user, router, toast, authLoading]);
 
   const handleStatusChange = async (status: Invoice['status']) => {
     const db = getFirestoreDb();
@@ -117,7 +129,7 @@ export default function InvoiceDetailPageContent() {
   }
 
   return (
-    <AuthGuard>
+    <>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <section id="invoice-print" className="bg-card rounded-xl shadow overflow-hidden max-w-full">
              <div className="mx-auto w-full max-w-[1100px]">
@@ -170,6 +182,15 @@ export default function InvoiceDetailPageContent() {
         invoice={invoice}
         onEmailSent={handleEmailSent}
       />
-    </AuthGuard>
+    </>
   );
+}
+
+
+export default function InvoiceDetailPageContent() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>}>
+      <InvoiceDetailContent />
+    </Suspense>
+  )
 }

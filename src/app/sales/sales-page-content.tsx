@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collectionGroup, query, onSnapshot, type Timestamp } from 'firebase/firestore';
+import { collectionGroup, query, onSnapshot, type Timestamp, orderBy } from 'firebase/firestore';
 import { Home, ChevronRight, DollarSign, ChevronDown, Search, Filter, ArrowUpDown, MessageCircle, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
@@ -29,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { type SalesOrder } from '@/types';
+import { type SalesOrder, type Customer } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 
@@ -76,15 +77,27 @@ export default function SalesPageContent() {
 
     setLoading(true);
     const salesCollectionRef = collectionGroup(db, 'sales');
-    const q = query(salesCollectionRef);
+    const q = query(salesCollectionRef, orderBy('orderDate', 'desc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-        const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SalesOrder));
+        const orders = snapshot.docs.map(doc => {
+            const ownerId = doc.ref.parent.parent?.id;
+            return { id: doc.id, ownerId, ...doc.data() } as SalesOrder
+        });
         setSalesOrders(orders);
         setLoading(false);
     }, (error) => {
         console.error("Error fetching sales orders:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.'});
+         if (error.code === 'failed-precondition') {
+             toast({
+              variant: "destructive",
+              title: "Firestore Index Required",
+              description: "Please create a composite index for the 'sales' collection group on 'orderDate' descending.",
+              duration: 10000,
+            });
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch sales orders.'});
+        }
         setLoading(false);
     });
 
@@ -221,7 +234,7 @@ export default function SalesPageContent() {
                     <TableBody>
                       {salesOrders.length > 0 ? (
                         salesOrders.map((order) => (
-                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.id}`)} className="cursor-pointer">
+                          <TableRow key={order.id} onClick={() => router.push(`/sales/${order.id}?ownerId=${order.ownerId}`)} className="cursor-pointer">
                             <TableCell><Checkbox /></TableCell>
                             <TableCell><Badge variant="secondary" className={getStatusBadge(order.status)}>{order.status}</Badge></TableCell>
                             <TableCell>{formatDate(order.orderDate)}</TableCell>
