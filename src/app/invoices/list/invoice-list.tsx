@@ -81,7 +81,7 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     try {
       let q = query(
         collectionGroup(db, 'invoices'),
-        orderBy('invoiceDate', 'desc'),
+        // orderBy('invoiceDate', 'desc'), // Removed to prevent missing index error
         limit(PAGE_SIZE)
       );
 
@@ -106,10 +106,10 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
              toast({
               variant: "destructive",
               title: "Firestore Index Required",
-              description: "Please create a composite index for the 'invoices' collection group on 'invoiceDate' descending.",
+              description: "A composite index is required for this query. Please check your Firestore settings.",
               duration: 10000,
             });
-        } else if (error.code !== 'unavailable') {
+        } else if (error.code !== 'unavailable' && error.code !== 'permission-denied') {
             toast({
               variant: "destructive",
               title: "Error Fetching Invoices",
