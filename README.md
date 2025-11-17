@@ -49,104 +49,73 @@ Follow these instructions to get a copy of the project up and running on your lo
       rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
+          // Allow users to manage their own profile.
           match /users/{userId} {
-            // Allow authenticated users to read user documents for display purposes.
-            allow list, read: if request.auth != null;
-            // Allow a user to write to their own user document (for settings)
-            allow write: if request.auth != null && request.auth.uid == userId;
+            allow read, write: if request.auth != null && request.auth.uid == userId;
+            // Allow authenticated users to see the list of other users.
+            allow list: if request.auth != null;
+          }
 
-            // Allow any authenticated user to manage invoices.
-            match /invoices/{invoiceId} {
-              allow read, write, delete, list: if request.auth != null;
-            }
-            
-            // Allow any authenticated user to manage quotes.
-            match /quotes/{quoteId} {
-              allow read, write, delete, list: if request.auth != null;
-            }
-            
-            // Allow any authenticated user to manage customers.
-            match /customers/{customerId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage suppliers.
-            match /suppliers/{supplierId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage inventory.
-            match /inventory/{itemId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage product lookups.
-            match /productLookups/{lookupId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage stock history.
-            match /stockHistory/{historyId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage purchases.
-            match /purchaseOrders/{purchaseOrderId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-            
-            // Allow any authenticated user to manage bills.
-            match /bills/{billId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage bill payments.
-            match /billPayments/{billPaymentId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage sales.
-            match /sales/{saleId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage returns.
-            match /returns/{returnId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage stock takes.
-            match /stockTakes/{stockTakeId} {
-              allow create, read, update, delete, list: if request.auth != null;
-            }
-            
-            // Accounting collections
-            match /chart_of_accounts/{accountId} {
-              allow list, read, create, update, delete: if request.auth != null;
-            }
-            match /journals/{journalId} {
-               allow create, read, update, delete, list: if request.auth != null;
-            }
-             match /journal_lines/{lineId} {
-               allow create, read, update, delete, list: if request.auth != null;
-            }
-             match /bank_accounts/{accountId} {
-              allow create, read, update, delete, list: if request.auth != null;
-              
-              match /transactions/{transactionId} {
-                allow create, read, update, delete, list: if request.auth != null;
-              }
-            }
-
-            // Allow any authenticated user to manage averageCostChanges.
-            match /averageCostChanges/{changeId} {
-              allow read, write, delete, list: if request.auth != null;
-            }
-
-            // Allow any authenticated user to manage creditNotes.
-            match /creditNotes/{noteId} {
-               allow create, read, update, delete, list: if request.auth != null;
-            }
+          // Collection group rules for collaborative access
+          match /{path=**}/invoices/{invoiceId} {
+            allow read, write, delete: if request.auth != null;
+          }
+           match /{path=**}/customers/{customerId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/quotes/{quoteId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/suppliers/{supplierId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/inventory/{itemId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/productLookups/{lookupId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/stockHistory/{historyId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/purchaseOrders/{purchaseOrderId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/bills/{billId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/billPayments/{billPaymentId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/sales/{saleId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/returns/{returnId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/stockTakes/{stockTakeId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/chart_of_accounts/{accountId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/journals/{journalId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/journal_lines/{lineId} {
+            allow read, write, delete: if request.auth != null;
+          }
+           match /{path=**}/bank_accounts/{accountId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/transactions/{transactionId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/averageCostChanges/{changeId} {
+            allow read, write, delete: if request.auth != null;
+          }
+          match /{path=**}/creditNotes/{noteId} {
+            allow read, write, delete: if request.auth != null;
           }
         }
       }
@@ -197,4 +166,5 @@ To deploy the application to Firebase Hosting:
     ```
 
 After deployment, Firebase CLI will provide you with the URL to your live application.
+
 

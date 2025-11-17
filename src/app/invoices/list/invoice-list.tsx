@@ -11,6 +11,7 @@ import {
   startAfter,
   QueryDocumentSnapshot,
   DocumentData,
+  onSnapshot,
 } from 'firebase/firestore';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
@@ -87,35 +88,53 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
         q = query(q, startAfter(lastDoc));
       }
 
-      const querySnapshot = await getDocs(q);
-      const newInvoices = querySnapshot.docs.map(doc => {
-          const parentPath = doc.ref.parent.parent?.path;
-          const ownerId = parentPath ? parentPath.split('/')[1] : 'unknown';
-          return { id: doc.id, ownerId, ...doc.data() } as Invoice
-      });
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const newInvoices = querySnapshot.docs.map(doc => {
+            const parentPath = doc.ref.parent.parent?.path;
+            const ownerId = parentPath ? parentPath.split('/')[1] : 'unknown';
+            return { id: doc.id, ownerId, ...doc.data() } as Invoice
+        });
 
-      setInvoices(prev => loadMore ? [...prev, ...newInvoices] : newInvoices);
-      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
-      setHasMore(newInvoices.length === PAGE_SIZE);
+        setInvoices(prev => loadMore ? [...prev, ...newInvoices] : newInvoices);
+        setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1] || null);
+        setHasMore(newInvoices.length === PAGE_SIZE);
+        setDataLoading(false);
+      }, (error) => {
+        console.error("Firestore read failed:", error.message, error);
+        if (error.code !== 'unavailable') {
+            toast({
+              variant: "destructive",
+              title: "Error Fetching Invoices",
+              description: "Could not fetch invoices. Please check your connection and security rules.",
+            });
+        }
+        setDataLoading(false);
+      });
+      return unsubscribe;
+
     } catch (error: any) {
-       console.error("Firestore read failed:", error.message, error);
-       if (error.code !== 'unavailable') {
-          toast({
-            variant: "destructive",
-            title: "Error Fetching Invoices",
-            description: "Could not fetch invoices. Please check your connection and security rules.",
-          });
-       }
-    } finally {
-      setDataLoading(false);
+       console.error("Firestore query setup failed:", error.message, error);
+       toast({
+         variant: "destructive",
+         title: "Error",
+         description: "Failed to set up invoice listener.",
+       });
+       setDataLoading(false);
     }
   }, [lastDoc, toast]);
   
   useEffect(() => {
-    // No user needed for this fetch anymore, but we wait for auth to be checked
+    let unsubscribe: (() => void) | undefined;
     if (!authLoading) {
-      fetchInvoices(false);
+      fetchInvoices(false).then(unsub => {
+        if(unsub) unsubscribe = unsub;
+      });
     }
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
 
@@ -126,7 +145,6 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
     if (!db) return;
     try {
       await deleteDoc(doc(db, 'users', selectedInvoiceOwnerId, 'invoices', selectedInvoiceId));
-      setInvoices(prev => prev.filter(inv => inv.id !== selectedInvoiceId));
       toast({
         title: "Success",
         description: "Invoice deleted successfully.",
@@ -262,14 +280,6 @@ export default function InvoiceList({ searchTerm, statusFilter }: InvoiceListPro
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-
-      {hasMore && filteredInvoices.length > 0 && (
-        <div className="text-center mt-6">
-          <Button onClick={() => fetchInvoices(true)} disabled={dataLoading}>
-            {dataLoading ? 'Loading...' : 'Load More'}
-          </Button>
-        </div>
-      )}
     </>
   );
 }
