@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import InvoiceList from "./list/invoice-list";
+import InvoiceList from "@/components/invoices/invoice-list";
 import AuthGuard from '@/components/auth/auth-guard';
 
 export const metadata = {
