@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2, CalendarIcon } from 'lucide-react';
-import { serverTimestamp, getDoc, doc, collection, getDocs, query } from 'firebase/firestore';
+import { serverTimestamp, getDoc, doc, collection, getDocs, query, collectionGroup } from 'firebase/firestore';
 import { format, addDays } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,7 @@ export default function InvoiceForm(props: InvoiceFormProps) {
         const db = getFirestoreDb();
         if (!user || !db) return;
         
-        const q = query(collection(db, 'users', user.uid, 'customers'));
+        const q = query(collectionGroup(db, 'customers'));
         const querySnapshot = await getDocs(q);
         const customersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer));
         setCustomers(customersList);
